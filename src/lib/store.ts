@@ -24,6 +24,8 @@ interface State {
   /** Emulator id → update available; null until checked this session. */
   updates: Record<string, boolean> | null;
   checkingUpdates: boolean;
+  /** In-game quick menu is open (Lumen is in front of the paused game). */
+  quickMenu: boolean;
 }
 
 let state: State = {
@@ -36,6 +38,7 @@ let state: State = {
   scanning: false,
   updates: null,
   checkingUpdates: false,
+  quickMenu: false,
 };
 
 const subscribers = new Set<() => void>();
@@ -88,8 +91,13 @@ export const actions = {
         }, 1600);
       }
     });
+    api.onQuickMenu(() => {
+      if (!state.runningGameId || state.quickMenu) return;
+      sfx.confirm();
+      set({ quickMenu: true });
+    });
     api.onGameExited(async () => {
-      set({ runningGameId: null });
+      set({ runningGameId: null, quickMenu: false });
       sfx.back();
       set({ games: await api.getLibrary() });
     });
@@ -144,8 +152,14 @@ export const actions = {
     }
   },
 
+  async resume() {
+    set({ quickMenu: false });
+    sfx.back();
+    await api.resumeGame();
+  },
+
   /** Installs whatever is missing for the game's system, then launches it. */
-  async play(game: Game): Promise<void> {
+  async play(game: Game, fresh = false): Promise<void> {
     const status = state.overview?.systems.find((s) => s.id === game.systemId);
     const missingBios = status?.usingFallback ? undefined : status?.bios.find((b) => !b.found && !b.optional);
     if (missingBios) {
@@ -158,7 +172,7 @@ export const actions = {
       if (!(await actions.install([game.systemId]))) return;
     }
     try {
-      await api.launchGame(game.id);
+      await api.launchGame(game.id, fresh);
       sfx.launch();
       set({ runningGameId: game.id });
     } catch (e) {
@@ -168,6 +182,7 @@ export const actions = {
   },
 
   async stop() {
+    set({ quickMenu: false });
     await api.stopGame();
   },
 

@@ -19,7 +19,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let state = state::AppState::load(app.handle())?;
-            input::spawn(state.running.clone());
+            input::spawn(app.handle().clone(), state.running.clone());
             app.manage(state);
             Ok(())
         })
@@ -36,6 +36,8 @@ pub fn run() {
             commands::set_graphics,
             commands::check_updates,
             commands::update_emulator,
+            commands::resume_game,
+            commands::is_resumable,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lumen");

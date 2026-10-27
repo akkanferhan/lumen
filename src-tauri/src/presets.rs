@@ -4,6 +4,9 @@
 //! `config.rs` owns paths, BIOS and controller wiring; this module owns how
 //! games look and run. Every key was checked against the emulator's current
 //! source; tier values follow community guidance for Ally/Deck-class APUs.
+//!
+//! Emulators that support it pause on focus loss: Lumen's quick menu takes
+//! focus, which pauses the game until "back to game" returns it.
 
 use crate::config::{set_cfg, set_ini};
 use crate::device::Tier;
@@ -32,18 +35,22 @@ pub fn apply(emu: &Emulator, exe_dir: &Path, tier: Tier) -> anyhow::Result<()> {
 }
 
 /// Extra arguments placed before the emulator's own launch arguments.
-pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier) -> Vec<String> {
+pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier, fresh: bool) -> Vec<String> {
     let high = tier == Tier::High;
     match emu.id.as_str() {
         // Our settings live in their own file layered over retroarch.cfg, so
         // the user's own RetroArch config is never rewritten.
-        "retroarch" => vec![
-            "--appendconfig".into(),
-            exe_dir
-                .join(RETROARCH_OVERRIDES)
-                .to_string_lossy()
-                .into_owned(),
-        ],
+        "retroarch" => {
+            let mut layers = vec![exe_dir.join(RETROARCH_OVERRIDES)];
+            if fresh {
+                layers.push(exe_dir.join(RETROARCH_FRESH));
+            }
+            let layers: Vec<String> = layers
+                .iter()
+                .map(|p| p.to_string_lossy().into_owned())
+                .collect();
+            vec!["--appendconfig".into(), layers.join("|")]
+        }
         // Every Xenia cvar accepts `--name=value`; command line wins over the
         // config file and is never written back to it.
         "xenia" => {
@@ -140,7 +147,7 @@ fn rpcs3(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             entry(
                 &["Miscellaneous"],
                 "Pause emulation on RPCS3 focus loss",
-                false,
+                true,
             ),
         ],
     )?;
@@ -219,7 +226,7 @@ fn dolphin(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("Display", "RenderToMain", "False".into()),
             ("Interface", "ConfirmStop", "False".into()),
             ("Interface", "CursorVisibility", "0".into()),
-            ("Interface", "PauseOnFocusLost", "False".into()),
+            ("Interface", "PauseOnFocusLost", "True".into()),
             ("Interface", "UsePanicHandlers", "False".into()),
             ("Analytics", "PermissionAsked", "True".into()),
             ("Analytics", "Enabled", "False".into()),
@@ -314,7 +321,7 @@ fn melonds(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             entry(&["Instance0", "Window0"], "ScreenLayout", 2),
             entry(&["Instance0", "Window0"], "ScreenSizing", 0),
             entry(&["Instance0", "Window0"], "ShowOSD", false),
-            entry(&[], "PauseLostFocus", false),
+            entry(&[], "PauseLostFocus", true),
             entry(&["Mouse"], "Hide", true),
             entry(&["Mouse"], "HideSeconds", 1),
         ],
@@ -345,7 +352,7 @@ fn azahar(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
     setting("Layout", "small_screen_position", "2");
     setting("UI", "fullscreen", "true");
     setting("UI", "confirmClose", "false");
-    setting("UI", "pauseWhenInBackground", "false");
+    setting("UI", "pauseWhenInBackground", "true");
     setting("UI", "hideInactiveMouse", "true");
     setting("UI", "singleWindowMode", "true");
     setting("Miscellaneous", "check_for_update_on_start", "false");
@@ -361,6 +368,8 @@ fn azahar(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
 }
 
 const RETROARCH_OVERRIDES: &str = "lumen.cfg";
+/// Layered on top for "start over": skips loading the auto save state.
+const RETROARCH_FRESH: &str = "lumen-fresh.cfg";
 
 fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
     let on = |v: bool| if v { "true" } else { "false" }.to_string();
@@ -395,6 +404,10 @@ fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("menu_driver", "ozone".into()),
             ("config_save_on_exit", on(false)),
         ],
+    )?;
+    set_cfg(
+        &exe_dir.join(RETROARCH_FRESH),
+        &[("savestate_auto_load", on(false))],
     )?;
     set_cfg(
         &exe_dir.join("retroarch-core-options.cfg"),
@@ -448,7 +461,7 @@ fn duckstation(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("Main", "HideCursorInFullscreen", "true".into()),
             ("Main", "ConfirmPowerOff", "false".into()),
             ("Main", "SaveStateOnExit", "true".into()),
-            ("Main", "PauseOnFocusLoss", "false".into()),
+            ("Main", "PauseOnFocusLoss", "true".into()),
             // The panel runs at 120 Hz; don't speed games up to match it.
             ("Main", "SyncToHostRefreshRate", "false".into()),
             ("Main", "ApplyCompatibilitySettings", "true".into()),
@@ -483,7 +496,7 @@ fn pcsx2(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("UI", "StartFullscreen", "true".into()),
             ("UI", "ConfirmShutdown", "false".into()),
             ("UI", "HideMouseCursor", "true".into()),
-            ("UI", "PauseOnFocusLoss", "false".into()),
+            ("UI", "PauseOnFocusLoss", "true".into()),
             ("AutoUpdater", "CheckAtStartup", "false".into()),
             // 14 = Vulkan (GSRendererType).
             ("EmuCore/GS", "Renderer", "14".into()),
@@ -526,7 +539,7 @@ fn ppsspp(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("General", "FirstRun", "False".into()),
             ("General", "CheckForNewVersion", "False".into()),
             ("General", "AskForExitConfirmationAfterSeconds", "0".into()),
-            ("General", "PauseOnLostFocus", "False".into()),
+            ("General", "PauseOnLostFocus", "True".into()),
             ("CPU", "CPUCore", "1".into()),
             ("CPU", "FastMemoryAccess", "True".into()),
             ("Graphics", "GraphicsBackend", "3 (VULKAN)".into()),
@@ -607,8 +620,8 @@ mod tests {
     #[test]
     fn xenia_settings_go_on_the_command_line() {
         let xenia = crate::manifest::emulator("xenia").unwrap();
-        let standard = launch_args(xenia, Path::new("."), Tier::Standard);
-        let high = launch_args(xenia, Path::new("."), Tier::High);
+        let standard = launch_args(xenia, Path::new("."), Tier::Standard, false);
+        let high = launch_args(xenia, Path::new("."), Tier::High, false);
         assert!(standard.contains(&"--draw_resolution_scale_x=1".to_string()));
         assert!(high.contains(&"--draw_resolution_scale_x=2".to_string()));
         assert!(standard.iter().all(|a| !a.ends_with('=')), "no empty cvars");
