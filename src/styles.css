@@ -1127,10 +1127,14 @@ button {
 
 .onboarding {
   position: absolute;
-  inset: 0 0 4.2rem;
+  /* Full screen so the hint bar (a child) sits at the very bottom; the
+     bottom padding keeps content clear of it. */
+  inset: 0;
   display: grid;
+  /* One row as tall as the screen, so steps can cap their height and scroll inside. */
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
-  padding: 2rem var(--gutter);
+  padding: 2rem var(--gutter) calc(4.2rem + 1.6rem);
   overflow: hidden;
 }
 
@@ -1276,19 +1280,68 @@ button {
   color: var(--text-dim);
 }
 
-.install-list {
+/* Header and buttons stay put; only the list scrolls when it outgrows the screen. */
+.install-step {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-  margin: 1.8rem 0 2.4rem;
+  max-height: 100%;
+  min-height: 0;
+}
+
+.install-step h1 {
+  font-size: clamp(2rem, 3.4vw, 3rem);
+}
+
+.install-step .actions {
+  flex: none;
+}
+
+.install-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.install-list {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem 2.4rem;
+  margin: 1.2rem 0 1.4rem;
+  padding: 0.6rem 0;
+  mask-image: linear-gradient(180deg, transparent 0, #000 0.6rem, #000 calc(100% - 0.6rem), transparent);
+}
+
+.install-list::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .install-list {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .install-row {
   display: grid;
-  grid-template-columns: 12rem 1fr 6.5rem;
+  grid-template-columns: minmax(8rem, 11rem) 1fr 6rem;
   align-items: center;
   gap: 1.2rem;
   font-size: 0.95rem;
+}
+
+.install-row > span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .install-row .state {

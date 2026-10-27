@@ -272,6 +272,8 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
     setSeen((prev) => ({ ...prev, ...installs }));
   }, [installs]);
 
+  const listRef = useRef<HTMLDivElement>(null);
+
   useInput((a) => {
     if (a === "a" && finished) {
       sfx.confirm();
@@ -281,9 +283,22 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
       sfx.back();
       onDone();
     }
+    // The list can outgrow the screen; let the stick/D-pad scroll it.
+    if (a === "up" || a === "down") {
+      listRef.current?.scrollBy({ top: (a === "up" ? -1 : 1) * 120, behavior: "smooth" });
+    }
   }, Layer.screen);
 
   const rows = Object.values(seen);
+  const completed = rows.filter((r) => r.stage === "done" || r.stage === "error").length;
+  const active = rows.find((r) => r.stage !== "done" && r.stage !== "error");
+
+  // Keep whatever is downloading in view.
+  useEffect(() => {
+    if (!active) return;
+    const row = listRef.current?.querySelector(`[data-id="${CSS.escape(active.id)}"]`);
+    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [active?.id]);
   const failed = rows.filter((r) => r.stage === "error").length;
   const missingBios = (overview?.systems ?? [])
     .filter((s) => s.gameCount > 0 && !s.usingFallback)
@@ -291,7 +306,7 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
 
   return (
     <>
-      <div className="step">
+      <div className="step install-step">
         <h1>{finished ? (failed ? "Neredeyse hazır" : "Hazırsın") : "Emülatörler hazırlanıyor"}</h1>
         <p className="lead" style={{ margin: 0 }}>
           {!overview?.platformSupported
@@ -304,9 +319,18 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
         </p>
 
         {rows.length > 0 && (
-          <div className="install-list">
+          <div className="install-summary">
+            <span>
+              {completed} / {rows.length} tamamlandı
+            </span>
+            <ProgressBar value={rows.length ? completed / rows.length : 0} />
+          </div>
+        )}
+
+        {rows.length > 0 && (
+          <div className="install-list" ref={listRef}>
             {rows.map((p) => (
-              <div className={`install-row ${p.stage}`} key={p.id}>
+              <div className={`install-row ${p.stage}`} key={p.id} data-id={p.id}>
                 <span>{installLabel(p.id)}</span>
                 <ProgressBar
                   value={p.stage === "downloading" ? p.progress : 1}
