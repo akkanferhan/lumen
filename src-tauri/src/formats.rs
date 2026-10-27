@@ -140,6 +140,56 @@ pub fn merge_json(path: &Path, entries: &[Entry]) -> anyhow::Result<()> {
     write(path, serde_json::to_string_pretty(&root)?)
 }
 
+/// Whether a nested TOML table exists (used to write controller maps only once).
+pub fn toml_has_table(path: &Path, table: &[&str]) -> bool {
+    let Ok(doc) = fs::read_to_string(path)
+        .unwrap_or_default()
+        .parse::<toml_edit::DocumentMut>()
+    else {
+        return false;
+    };
+    let mut item = doc.as_item();
+    for name in table {
+        match item.get(name) {
+            Some(next) => item = next,
+            None => return false,
+        }
+    }
+    item.is_table_like()
+}
+
+/// Sets `<tag>value</tag>` inside the first `<parent>` block (or anywhere when
+/// `parent` is None). Tags that don't exist yet are left alone; the emulator
+/// writes every known element when it saves, so they appear after first run.
+pub fn patch_xml(text: &str, parent: Option<&str>, tag: &str, value: &str) -> String {
+    let (start, end) = match parent {
+        Some(p) => {
+            let open = format!("<{p}>");
+            let close = format!("</{p}>");
+            match (text.find(&open), text.find(&close)) {
+                (Some(s), Some(e)) if s < e => (s, e),
+                _ => return text.to_string(),
+            }
+        }
+        None => (0, text.len()),
+    };
+    let scope = &text[start..end];
+    let open = format!("<{tag}>");
+    let close = format!("</{tag}>");
+    let Some(rel_open) = scope.find(&open) else {
+        return text.to_string();
+    };
+    let value_start = start + rel_open + open.len();
+    let Some(rel_close) = text[value_start..end].find(&close) else {
+        return text.to_string();
+    };
+    format!(
+        "{}{value}{}",
+        &text[..value_start],
+        &text[value_start + rel_close..]
+    )
+}
+
 fn write(path: &Path, text: String) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
@@ -236,6 +286,24 @@ mod tests {
         assert_eq!(doc["GPU"]["window_width"], serde_json::json!(1920));
         assert_eq!(doc["General"]["home_dir"], "C:/saves");
         assert_eq!(doc["Debug"]["config_version"], "x");
+    }
+
+    #[test]
+    fn xml_patch_is_scoped_to_parent() {
+        let xml = "<content><Audio><api>0</api></Audio><Graphic><api>0</api><VSync>0</VSync></Graphic></content>";
+        let patched = patch_xml(xml, Some("Graphic"), "api", "1");
+        assert_eq!(
+            patched,
+            "<content><Audio><api>0</api></Audio><Graphic><api>1</api><VSync>0</VSync></Graphic></content>"
+        );
+        assert_eq!(patch_xml(xml, Some("Graphic"), "Missing", "1"), xml);
+    }
+
+    #[test]
+    fn toml_table_lookup() {
+        let path = temp("melon.toml", "[Instance0.Joystick]\nA = 1\n");
+        assert!(toml_has_table(&path, &["Instance0", "Joystick"]));
+        assert!(!toml_has_table(&path, &["Instance0", "Keyboard"]));
     }
 
     #[test]
