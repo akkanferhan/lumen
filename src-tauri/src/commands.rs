@@ -445,3 +445,50 @@ pub async fn game_info(app: AppHandle, game_id: String) -> Option<crate::metadat
     };
     crate::metadata::lookup(&info, &game).cloned()
 }
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppUpdate {
+    pub version: String,
+    pub notes: Option<String>,
+}
+
+/// A newer signed Lumen release, if any (GitHub releases' latest.json).
+#[tauri::command]
+pub async fn check_app_update(app: AppHandle) -> CmdResult<Option<AppUpdate>> {
+    use tauri_plugin_updater::UpdaterExt;
+    let update = app.updater().map_err(err)?.check().await.map_err(err)?;
+    Ok(update.map(|u| AppUpdate {
+        version: u.version,
+        notes: u.body,
+    }))
+}
+
+pub const APP_UPDATE_EVENT: &str = "app-update-progress";
+
+/// Downloads, verifies the signature, installs (passive installer) and restarts.
+#[tauri::command]
+pub async fn install_app_update(app: AppHandle) -> CmdResult<()> {
+    use tauri::Emitter;
+    use tauri_plugin_updater::UpdaterExt;
+    if app.state::<AppState>().running.lock().unwrap().is_some() {
+        return Err("Oyun açıkken güncelleme yapılamaz".into());
+    }
+    let Some(update) = app.updater().map_err(err)?.check().await.map_err(err)? else {
+        return Ok(());
+    };
+    let mut received = 0usize;
+    let progress_app = app.clone();
+    update
+        .download_and_install(
+            move |chunk, total| {
+                received += chunk;
+                let progress = total.map_or(0.0, |t| received as f32 / t as f32);
+                let _ = progress_app.emit(APP_UPDATE_EVENT, progress);
+            },
+            || {},
+        )
+        .await
+        .map_err(err)?;
+    app.restart();
+}

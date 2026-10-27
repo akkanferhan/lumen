@@ -193,6 +193,9 @@ export const mockApi: Api = {
     return user.favorite;
   },
   setSounds: async () => {},
+  checkAppUpdate: async () => null,
+  installAppUpdate: async () => {},
+  onAppUpdateProgress: () => () => {},
   checkUpdates: async () => {
     await sleep(700);
     // Demo: whatever is installed has an update except RetroArch.

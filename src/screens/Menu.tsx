@@ -37,7 +37,28 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
   const pendingUpdates = Object.values(updates ?? {}).filter(Boolean).length;
   const sounds = overview?.settings.sounds ?? true;
 
+  const appUpdate = useStore((s) => s.appUpdate);
+  const appUpdateProgress = useStore((s) => s.appUpdateProgress);
+
   const main: Item[] = [
+    ...(appUpdate
+      ? [
+          {
+            id: "app-update",
+            title: `Lumen'i güncelle (${appUpdate.version})`,
+            sub: "İndirilir, kurulur ve Lumen yeniden başlar",
+            value:
+              appUpdateProgress !== null ? (
+                <span style={{ width: "5rem", display: "inline-block" }}>
+                  <ProgressBar value={appUpdateProgress} indeterminate={appUpdateProgress === 0} />
+                </span>
+              ) : (
+                <span className="pill update">Yeni</span>
+              ),
+            run: () => actions.installAppUpdate(),
+          },
+        ]
+      : []),
     {
       id: "rescan",
       title: "Kütüphaneyi yenile",
