@@ -88,6 +88,11 @@ export interface InstallProgress {
   message: string | null;
 }
 
+export interface EmulatorUpdate {
+  id: string;
+  updateAvailable: boolean;
+}
+
 export interface GameExited {
   gameId: string;
   sessionSeconds: number;

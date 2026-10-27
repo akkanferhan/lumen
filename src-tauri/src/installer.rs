@@ -73,9 +73,9 @@ pub async fn install_emulator(
     tier: Tier,
 ) -> anyhow::Result<PathBuf> {
     emit(app, &emu.id, "downloading", 0.0, None);
-    let url = resolve_url(&emu.source).await?;
+    let release = resolve_release(&emu.source).await?;
     let target = emulators_dir.join(&emu.id);
-    let archive = download(app, &emu.id, &url, downloads_dir).await?;
+    let archive = download(app, &emu.id, &release.url, downloads_dir).await?;
 
     emit(app, &emu.id, "extracting", 1.0, None);
     // Extract over an existing install so portable saves and settings survive updates.
@@ -92,9 +92,17 @@ pub async fn install_emulator(
         }
     }
     config::configure(emu, exe_dir, bios, tier)?;
+    std::fs::write(target.join(VERSION_FILE), &release.version)?;
 
     emit(app, &emu.id, "done", 1.0, None);
     Ok(exe)
+}
+
+/// Records which build is installed, so updates compare against it.
+const VERSION_FILE: &str = ".lumen-version";
+
+pub fn installed_version(install_dir: &Path) -> Option<String> {
+    std::fs::read_to_string(install_dir.join(VERSION_FILE)).ok()
 }
 
 pub async fn install_core(
@@ -177,17 +185,40 @@ pub async fn ensure_xbox_hdd(
 }
 
 async fn resolve_url(source: &Source) -> anyhow::Result<String> {
+    Ok(resolve_release(source).await?.url)
+}
+
+/// A downloadable build and an id that changes whenever the build does.
+pub struct Release {
+    pub url: String,
+    pub version: String,
+}
+
+pub async fn resolve_release(source: &Source) -> anyhow::Result<Release> {
     match source {
-        Source::Url { url } => Ok(url.clone()),
+        // Rolling URLs (RetroArch nightly): the server's ETag/Last-Modified tells builds apart.
+        Source::Url { url } => {
+            let head = client().head(url).send().await?.error_for_status()?;
+            let stamp = ["etag", "last-modified"]
+                .iter()
+                .find_map(|h| head.headers().get(*h)?.to_str().ok().map(String::from))
+                .unwrap_or_default();
+            Ok(Release {
+                url: url.clone(),
+                version: format!("{url}@{stamp}"),
+            })
+        }
         Source::Github { repo, asset, tag } => {
             #[derive(Deserialize)]
-            struct Release {
+            struct GithubRelease {
+                tag_name: String,
                 assets: Vec<Asset>,
             }
             #[derive(Deserialize)]
             struct Asset {
                 name: String,
                 browser_download_url: String,
+                updated_at: String,
             }
 
             let api = match tag {
@@ -201,7 +232,7 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
             if let Ok(token) = std::env::var("GITHUB_TOKEN") {
                 request = request.bearer_auth(token);
             }
-            let release: Release = request
+            let release: GithubRelease = request
                 .send()
                 .await?
                 .error_for_status()
@@ -210,11 +241,16 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
                 .await?;
 
             let pattern = Regex::new(asset)?;
+            let tag_name = release.tag_name;
             release
                 .assets
                 .into_iter()
                 .find(|a| pattern.is_match(&a.name))
-                .map(|a| a.browser_download_url)
+                // Rolling tags (DuckStation's `latest`) keep the URL; updated_at moves.
+                .map(|a| Release {
+                    version: format!("{tag_name}/{}/{}", a.name, a.updated_at),
+                    url: a.browser_download_url,
+                })
                 .ok_or_else(|| anyhow!("{repo} sürümünde Windows paketi bulunamadı"))
         }
         Source::Page {
@@ -234,9 +270,14 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
                 .find(&body)
                 .map(|m| m.as_str().to_string())
                 .ok_or_else(|| anyhow!("İndirme bağlantısı bulunamadı: {page}"))?;
-            Ok(match base {
+            let url = match base {
                 Some(base) if found.starts_with('/') => format!("{base}{found}"),
                 _ => found,
+            };
+            // Page links carry the version (dolphin-2609a, 1_20_4).
+            Ok(Release {
+                version: url.clone(),
+                url,
             })
         }
     }

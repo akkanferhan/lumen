@@ -34,6 +34,8 @@ pub fn run() {
             commands::toggle_favorite,
             commands::set_sounds,
             commands::set_graphics,
+            commands::check_updates,
+            commands::update_emulator,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lumen");
