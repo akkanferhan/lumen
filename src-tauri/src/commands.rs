@@ -56,8 +56,26 @@ pub struct GameView {
     pub play_seconds: u64,
 }
 
+// Startup commands run off the main thread (async), so a bug that blocks
+// them can't freeze the window and hide the error screen.
 #[tauri::command]
-pub fn get_overview(app: AppHandle, state: State<'_, AppState>) -> Overview {
+pub async fn get_overview(app: AppHandle) -> Overview {
+    let state = app.state::<AppState>();
+    overview(&state, autostart_enabled(&app))
+}
+
+/// Never hold a lock across a call that takes the same lock again: std
+/// mutexes aren't re-entrant, and this runs on the main thread, so a
+/// self-deadlock freezes the whole app on a black screen.
+fn overview(state: &AppState, autostart: bool) -> Overview {
+    let settings = state.settings.lock().unwrap().clone();
+    let tier = state.tier();
+    let running_game_id = state
+        .running
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|g| g.game_id.clone());
     let library = state.library.lock().unwrap();
     let bios = state.bios_dir();
 
@@ -89,25 +107,20 @@ pub fn get_overview(app: AppHandle, state: State<'_, AppState>) -> Overview {
         .collect();
 
     Overview {
-        settings: state.settings.lock().unwrap().clone(),
+        settings,
         systems,
         device: device::device().clone(),
-        tier: state.tier(),
+        tier,
         power_available: crate::power::available(),
-        autostart: autostart_enabled(&app),
-        running_game_id: state
-            .running
-            .lock()
-            .unwrap()
-            .as_ref()
-            .map(|g| g.game_id.clone()),
+        autostart,
+        running_game_id,
         platform_supported: cfg!(target_os = "windows"),
     }
 }
 
 #[tauri::command]
-pub fn get_library(state: State<'_, AppState>) -> Vec<GameView> {
-    library_view(&state)
+pub async fn get_library(app: AppHandle) -> Vec<GameView> {
+    library_view(&app.state::<AppState>())
 }
 
 fn library_view(state: &AppState) -> Vec<GameView> {
@@ -496,4 +509,34 @@ pub async fn install_app_update(app: AppHandle) -> CmdResult<()> {
         .await
         .map_err(err)?;
     app.restart();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{sync::mpsc, time::Duration};
+
+    fn temp_state(name: &str) -> AppState {
+        let dir = std::env::temp_dir().join(format!("lumen-state-{}-{name}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        AppState::at(dir).unwrap()
+    }
+
+    /// Regression: get_overview re-locked `settings` (via `tier()`) while
+    /// holding it, deadlocking the main thread on start (black screen).
+    #[test]
+    fn overview_and_library_return_without_deadlock() {
+        let (tx, rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            let state = temp_state("overview");
+            let overview = overview(&state, false);
+            let library = library_view(&state);
+            tx.send((overview.systems.len(), library.len())).unwrap();
+        });
+        let (systems, games) = rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("overview deadlocked");
+        assert_eq!(systems, manifest().systems.len());
+        assert_eq!(games, 0);
+    }
 }
