@@ -113,6 +113,69 @@ pub async fn install_core(
     Ok(())
 }
 
+/// Sony's official PS3 system software list (plain HTTP is all Sony serves).
+const PS3_UPDATE_LIST: &str =
+    "http://fus01.ps3.update.playstation.net/update/ps3/list/us/ps3-updatelist.txt";
+
+/// Downloads the PS3 system software from Sony, which distributes it for free.
+pub async fn download_ps3_firmware(
+    app: &AppHandle,
+    id: &str,
+    downloads_dir: &Path,
+) -> anyhow::Result<PathBuf> {
+    emit(app, id, "downloading", 0.0, None);
+    let list = client()
+        .get(PS3_UPDATE_LIST)
+        .send()
+        .await?
+        .error_for_status()
+        .context("Sony güncelleme listesine ulaşılamadı")?
+        .text()
+        .await?;
+    let url =
+        ps3_firmware_url(&list).ok_or_else(|| anyhow!("PS3 firmware bağlantısı bulunamadı"))?;
+    download(app, id, &url, downloads_dir).await
+}
+
+fn ps3_firmware_url(list: &str) -> Option<String> {
+    list.split([';', '\n'])
+        .filter_map(|field| field.trim().strip_prefix("CDN="))
+        .find(|url| url.ends_with("/PS3UPDAT.PUP"))
+        .map(String::from)
+}
+
+fn xbox_hdd_source() -> Source {
+    Source::Github {
+        repo: "xemu-project/xemu-hdd-image".into(),
+        asset: r"xbox_hdd\.qcow2\.zip$".into(),
+        tag: None,
+    }
+}
+
+/// xemu's own blank, pre-formatted Xbox HDD image (no Microsoft content).
+pub async fn ensure_xbox_hdd(
+    app: &AppHandle,
+    exe_dir: &Path,
+    downloads_dir: &Path,
+) -> anyhow::Result<()> {
+    if crate::library::find_file(exe_dir, "**/xbox_hdd.qcow2").is_some() {
+        return Ok(());
+    }
+    let id = "hdd:xbox";
+    let result = async {
+        let url = resolve_url(&xbox_hdd_source()).await?;
+        let archive = download(app, id, &url, downloads_dir).await?;
+        emit(app, id, "extracting", 1.0, None);
+        unpack(archive, exe_dir.to_path_buf()).await
+    }
+    .await;
+    match &result {
+        Ok(()) => emit(app, id, "done", 1.0, None),
+        Err(e) => emit(app, id, "error", 0.0, Some(e.to_string())),
+    }
+    result
+}
+
 async fn resolve_url(source: &Source) -> anyhow::Result<String> {
     match source {
         Source::Url { url } => Ok(url.clone()),
@@ -247,6 +310,17 @@ mod tests {
 
     /// Hits the real download sources. Run by the weekly `sources` workflow:
     /// `cargo test -- --ignored live_sources`.
+    #[test]
+    fn finds_full_ps3_firmware_in_sony_list() {
+        let list = "# US\nDest=84;CompatibleSystemSoftwareVersion=4.9300-;\n\
+            Dest=84;ImageVersion=00010b94;CDN=http://dus01.example/us/abc/PS3PATCH.PUP;CDN_Timeout=30;\n\
+            Dest=84;ImageVersion=00010b94;SystemSoftwareVersion=4.9300;CDN=http://dus01.example/us/abc/PS3UPDAT.PUP;CDN_Timeout=30;\n";
+        assert_eq!(
+            super::ps3_firmware_url(list).as_deref(),
+            Some("http://dus01.example/us/abc/PS3UPDAT.PUP")
+        );
+    }
+
     #[tokio::test]
     #[ignore = "needs network"]
     async fn live_sources_resolve() {
@@ -256,6 +330,23 @@ mod tests {
                 Ok(url) => println!("{:<12} {url}", emu.id),
                 Err(e) => failures.push(format!("{}: {e:#}", emu.id)),
             }
+        }
+        // Firmware and HDD sources fetched outside the manifest.
+        let list = super::client()
+            .get(super::PS3_UPDATE_LIST)
+            .send()
+            .await
+            .and_then(|r| r.error_for_status());
+        match list {
+            Ok(r) => match super::ps3_firmware_url(&r.text().await.unwrap_or_default()) {
+                Some(url) => println!("{:<12} {url}", "ps3-fw"),
+                None => failures.push("ps3-fw: no PS3UPDAT.PUP in list".into()),
+            },
+            Err(e) => failures.push(format!("ps3-fw: {e}")),
+        }
+        match super::resolve_url(&super::xbox_hdd_source()).await {
+            Ok(url) => println!("{:<12} {url}", "xbox-hdd"),
+            Err(e) => failures.push(format!("xbox-hdd: {e:#}")),
         }
         assert!(
             failures.is_empty(),

@@ -70,6 +70,7 @@
       "id": "saturn", "name": "Sega Saturn", "short": "Saturn", "maker": "Sega", "year": 1994, "accent": "#6c7a96",
       "extensions": ["cue", "chd", "m3u"], "folders": ["saturn"],
       "emulator": "retroarch", "core": "mednafen_saturn", "thumbnails": "Sega - Saturn",
+      "fallback": { "emulator": "retroarch", "core": "yabause" },
       "bios": [{ "label": "Saturn BIOS (sega_101.bin veya mpr-17933.bin)", "anyOf": ["sega_101.bin", "mpr-17933.bin"] }]
     },
     {
@@ -87,6 +88,7 @@
       "id": "ps1", "name": "PlayStation", "short": "PS1", "maker": "Sony", "year": 1994, "accent": "#a3a9b8",
       "extensions": ["cue", "chd", "m3u", "pbp", "iso"], "folders": ["ps1", "psx", "playstation"],
       "emulator": "duckstation", "thumbnails": "Sony - PlayStation",
+      "fallback": { "emulator": "retroarch", "core": "pcsx_rearmed" },
       "bios": [{ "label": "PS1 BIOS (bios/ps1 içine, ör. scph5501.bin)", "anyOf": ["ps1/*.bin"] }]
     },
     {
@@ -103,8 +105,7 @@
     {
       "id": "ps3", "name": "PlayStation 3", "short": "PS3", "maker": "Sony", "year": 2006, "accent": "#1f6fd1",
       "extensions": ["iso"], "folders": ["ps3"], "folderMarker": "PS3_GAME", "launchFile": "PS3_GAME/USRDIR/EBOOT.BIN",
-      "emulator": "rpcs3", "thumbnails": "Sony - PlayStation 3",
-      "bios": [{ "label": "PS3 firmware (bios/ps3/PS3UPDAT.PUP, Sony'nin sitesinden ücretsiz)", "anyOf": ["ps3/PS3UPDAT.PUP"] }]
+      "emulator": "rpcs3", "thumbnails": "Sony - PlayStation 3"
     },
     {
       "id": "ps4", "name": "PlayStation 4", "short": "PS4", "maker": "Sony", "year": 2013, "accent": "#2e6be6",
@@ -118,8 +119,7 @@
       "emulator": "xemu", "thumbnails": "Microsoft - Xbox",
       "bios": [
         { "label": "MCPX boot ROM (bios/xbox/mcpx_1.0.bin)", "anyOf": ["xbox/mcpx*.bin"] },
-        { "label": "Xbox flash BIOS (bios/xbox içine)", "anyOf": ["xbox/*bios*.bin", "xbox/complex*.bin"] },
-        { "label": "Xbox HDD imajı (bios/xbox/*.qcow2)", "anyOf": ["xbox/*.qcow2"] }
+        { "label": "Xbox flash BIOS (bios/xbox içine)", "anyOf": ["xbox/*bios*.bin", "xbox/complex*.bin"] }
       ]
     },
     {

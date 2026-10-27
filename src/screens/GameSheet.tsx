@@ -19,8 +19,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
   const system = game && systemOf(game.systemId);
   const status = overview?.systems.find((s) => s.id === game?.systemId);
-  const missing = status?.bios.filter((b) => !b.found && !b.optional) ?? [];
-  const emulator = system && emulatorOf(system.emulator);
+  const fallback = !!status?.usingFallback;
+  const missingAll = status?.bios.filter((b) => !b.found && !b.optional) ?? [];
+  // With a fallback the game still runs (HLE BIOS), so nothing blocks it.
+  const missing = fallback ? [] : missingAll;
+  const emulator = system && emulatorOf(fallback && system.fallback ? system.fallback.emulator : system.emulator);
   const needsInstall = !!status && (!status.emulatorInstalled || !status.coreInstalled);
   const install = system
     ? installs[system.emulator] ?? (system.core ? installs[`core:${system.core}`] : undefined)
@@ -112,6 +115,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
                 Bu sistem için bir dosya eksik: <b>{missing.map((m) => m.label).join(", ")}</b>
                 <br />
                 Dosyayı <code>{bios}</code> klasörüne koyduktan sonra menüden kütüphaneyi yenile.
+              </div>
+            </div>
+          )}
+          {fallback && (
+            <div className="callout info">
+              <span>i</span>
+              <div>
+                BIOS bulunamadı; oyun açık kaynak yerleşik BIOS ile çalışacak. Daha iyi uyumluluk için{" "}
+                <b>{missingAll.map((m) => m.label).join(", ")}</b> dosyasını <code>{bios}</code> klasörüne koyabilirsin.
               </div>
             </div>
           )}

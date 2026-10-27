@@ -36,6 +36,8 @@ pub struct SystemStatus {
     pub id: String,
     pub emulator_installed: bool,
     pub core_installed: bool,
+    /// Running on the built-in (HLE) BIOS because the user's BIOS is missing.
+    pub using_fallback: bool,
     pub bios: Vec<BiosStatus>,
     pub game_count: usize,
 }
@@ -59,9 +61,10 @@ pub fn get_overview(state: State<'_, AppState>) -> Overview {
         .systems
         .iter()
         .map(|system| {
-            let emu = manifest::emulator(&system.emulator);
+            let runner = library::effective(system, bios.as_deref());
+            let emu = manifest::emulator(runner.emulator);
             let exe = emu.and_then(|e| installer::find_exe(e, &state.dirs.emulators.join(&e.id)));
-            let core_installed = match (&system.core, &exe) {
+            let core_installed = match (runner.core, &exe) {
                 (None, _) => true,
                 (Some(core), Some(exe)) => exe.parent().is_some_and(|d| {
                     d.join("cores")
@@ -74,6 +77,7 @@ pub fn get_overview(state: State<'_, AppState>) -> Overview {
                 id: system.id.clone(),
                 emulator_installed: exe.is_some(),
                 core_installed,
+                using_fallback: runner.fallback,
                 bios: library::bios_status(system, bios.as_deref()),
                 game_count: library.iter().filter(|g| g.system_id == system.id).count(),
             }
@@ -162,11 +166,13 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
     let state = app.state::<AppState>();
     let bios = state.bios_dir();
 
-    let systems: Vec<_> = system_ids
+    // What actually runs each system right now (the HLE fallback without BIOS).
+    let runners: Vec<_> = system_ids
         .iter()
         .filter_map(|id| manifest::system(id))
+        .map(|s| library::effective(s, bios.as_deref()))
         .collect();
-    let mut emulator_ids: Vec<&str> = systems.iter().map(|s| s.emulator.as_str()).collect();
+    let mut emulator_ids: Vec<&str> = runners.iter().map(|r| r.emulator).collect();
     emulator_ids.sort();
     emulator_ids.dedup();
 
@@ -197,10 +203,10 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
 
         match exe {
             Ok(exe) => {
-                let mut cores: Vec<&str> = systems
+                let mut cores: Vec<&str> = runners
                     .iter()
-                    .filter(|s| s.emulator == emu.id)
-                    .filter_map(|s| s.core.as_deref())
+                    .filter(|r| r.emulator == emu.id)
+                    .filter_map(|r| r.core)
                     .collect();
                 cores.sort();
                 cores.dedup();

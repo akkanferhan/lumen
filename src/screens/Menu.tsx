@@ -85,7 +85,9 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
     const served = systems.filter((s) => s.emulator === emu.id);
     const statuses = overview?.systems.filter((s) => served.some((x) => x.id === s.id)) ?? [];
     const installed = statuses.some((s) => s.emulatorInstalled);
-    const missingBios = statuses.flatMap((s) => s.bios.filter((b) => !b.found && !b.optional));
+    const missingBios = statuses
+      .filter((s) => !s.usingFallback)
+      .flatMap((s) => s.bios.filter((b) => !b.found && !b.optional));
     const job = installs[emu.id] ?? Object.values(installs).find((p) => p.id.startsWith("core:") && emu.id === "retroarch");
     const withGames = served.filter((s) => statuses.find((x) => x.id === s.id)?.gameCount);
 

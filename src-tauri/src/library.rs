@@ -215,6 +215,32 @@ pub fn clean_title(stem: &str) -> String {
     }
 }
 
+/// The emulator/core that will run `system` with the BIOS files present.
+pub struct Effective<'a> {
+    pub emulator: &'a str,
+    pub core: Option<&'a str>,
+    /// True when running on the fallback because the user's BIOS is missing.
+    pub fallback: bool,
+}
+
+pub fn effective<'a>(system: &'a System, bios_dir: Option<&Path>) -> Effective<'a> {
+    let missing = bios_status(system, bios_dir)
+        .iter()
+        .any(|b| !b.found && !b.optional);
+    match (&system.fallback, missing) {
+        (Some(runner), true) => Effective {
+            emulator: &runner.emulator,
+            core: runner.core.as_deref(),
+            fallback: true,
+        },
+        _ => Effective {
+            emulator: &system.emulator,
+            core: system.core.as_deref(),
+            fallback: false,
+        },
+    }
+}
+
 pub fn bios_status(system: &System, bios_dir: Option<&Path>) -> Vec<BiosStatus> {
     system
         .bios

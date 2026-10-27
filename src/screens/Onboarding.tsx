@@ -283,7 +283,7 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
   const rows = Object.values(seen);
   const failed = rows.filter((r) => r.stage === "error").length;
   const missingBios = (overview?.systems ?? [])
-    .filter((s) => s.gameCount > 0)
+    .filter((s) => s.gameCount > 0 && !s.usingFallback)
     .flatMap((s) => s.bios.filter((b) => !b.found && !b.optional).map((b) => ({ system: systemOf(s.id)?.short, ...b })));
 
   return (

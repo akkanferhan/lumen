@@ -99,9 +99,17 @@ pub fn configure(
                 {
                     entries.push(formats::entry(&["sys", "files"], "flashrom_path", path(p)));
                 }
-                if let Some(p) = find_file(b, "xbox/*.qcow2") {
-                    entries.push(formats::entry(&["sys", "files"], "hdd_path", path(p)));
-                }
+            }
+            // The user's own HDD image wins over xemu's blank one Lumen downloads.
+            let hdd = bios
+                .and_then(|b| find_file(b, "xbox/*.qcow2"))
+                .or_else(|| find_file(exe_dir, "**/xbox_hdd.qcow2"));
+            if let Some(p) = hdd {
+                entries.push(formats::entry(
+                    &["sys", "files"],
+                    "hdd_path",
+                    p.to_string_lossy().into_owned(),
+                ));
             }
             formats::merge_toml(&exe_dir.join("xemu.toml"), &entries)
         }

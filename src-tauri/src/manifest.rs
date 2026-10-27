@@ -38,6 +38,18 @@ pub struct System {
     /// For folder games: the file inside the folder handed to the emulator.
     #[serde(default)]
     pub launch_file: Option<String>,
+    /// Runs the system without the user's BIOS (open-source HLE BIOS) when a
+    /// required BIOS file for the main emulator is missing.
+    #[serde(default)]
+    pub fallback: Option<Runner>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Runner {
+    pub emulator: String,
+    #[serde(default)]
+    pub core: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

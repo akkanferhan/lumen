@@ -14,6 +14,8 @@ export interface SystemDef {
   bios?: { label: string; anyOf: string[]; optional?: boolean }[];
   folderMarker?: string;
   launchFile?: string;
+  /** Runs on an open-source HLE BIOS when the user's BIOS is missing. */
+  fallback?: { emulator: string; core?: string };
 }
 
 export interface EmulatorDef {
@@ -48,6 +50,8 @@ export interface SystemStatus {
   id: string;
   emulatorInstalled: boolean;
   coreInstalled: boolean;
+  /** No BIOS: running on the built-in (HLE) BIOS of the fallback emulator. */
+  usingFallback: boolean;
   bios: BiosStatus[];
   gameCount: number;
 }

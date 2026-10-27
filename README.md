@@ -36,8 +36,19 @@ Emulators keep their own state in their config files, so Lumen only sets the key
 
 ## Games and BIOS files
 
-Lumen never downloads games or BIOS files. Use dumps of games and hardware you own.
-Put them in the folders Lumen creates:
+Lumen never downloads games or copyrighted BIOS files. Use dumps of games and hardware you own.
+What Lumen does provide on its own:
+
+| System | Without your BIOS |
+|---|---|
+| PS1 | Runs on PCSX ReARMed's open-source HLE BIOS (DuckStation is used once a BIOS is added) |
+| Saturn | Runs on Yabause's HLE BIOS (Beetle Saturn is used once a BIOS is added) |
+| PS3 | System software is downloaded from Sony's official update server (free) |
+| Xbox | xemu's blank HDD image is downloaded; the MCPX and flash BIOS are still required |
+| GBA, DS, Dreamcast, 3DS | Built-in BIOS replacements, nothing needed |
+| PS2 | A BIOS dump is required (no open-source replacement runs games) |
+
+Put your own files in the folders Lumen creates:
 
 ```
 <game folder>/
