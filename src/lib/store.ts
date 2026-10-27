@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 import { api } from "./api";
 import { installLabel, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
-import type { Game, InstallProgress, Overview } from "./types";
+import type { Game, GraphicsSetting, InstallProgress, Overview } from "./types";
 
 export interface Notice {
   id: number;
@@ -177,6 +177,11 @@ export const actions = {
       flip();
       notify(errorText(e), "error");
     }
+  },
+
+  async setGraphics(graphics: GraphicsSetting) {
+    await api.setGraphics(graphics);
+    await refreshOverview();
   },
 
   async setSounds(enabled: boolean) {

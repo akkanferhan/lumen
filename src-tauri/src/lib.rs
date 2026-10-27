@@ -1,10 +1,13 @@
 mod commands;
 mod config;
+mod device;
+mod formats;
 mod input;
 mod installer;
 mod launcher;
 mod library;
 mod manifest;
+mod presets;
 mod state;
 
 use tauri::Manager;
@@ -29,6 +32,7 @@ pub fn run() {
             commands::stop_game,
             commands::toggle_favorite,
             commands::set_sounds,
+            commands::set_graphics,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lumen");

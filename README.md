@@ -24,6 +24,16 @@ PS3 and PS4 games are folder dumps (`PS3_GAME` / `sce_sys`); their titles are re
 PS4 support uses [shadPS4](https://github.com/shadps4-emu/shadPS4) and is experimental. There is no usable PS5 emulator,
 so PS5 is not supported.
 
+## Tuned for the ROG Ally
+
+Lumen detects the chip (Z1, Z1 Extreme, Z2 A, Z2 Extreme) and writes tuned settings into every
+emulator before each launch: Vulkan renderers, internal resolution per GPU tier, asynchronous shader
+compilation, borderless fullscreen, controller mapping and no first-run wizards or update prompts.
+Emulator settings never need to be opened. The tier can be overridden in Menu → Graphics profile.
+
+Emulators keep their own state in their config files, so Lumen only sets the keys it owns
+(read–merge–write for INI, TOML, YAML and JSON); Xenia gets its settings as command-line flags.
+
 ## Games and BIOS files
 
 Lumen never downloads games or BIOS files. Use dumps of games and hardware you own.

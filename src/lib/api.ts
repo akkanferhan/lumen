@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { mockApi } from "./mock";
-import type { Game, GameExited, InstallProgress, Overview } from "./types";
+import type { Game, GameExited, GraphicsSetting, InstallProgress, Overview } from "./types";
 
 export interface Api {
   getOverview(): Promise<Overview>;
@@ -15,6 +15,7 @@ export interface Api {
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
   setSounds(enabled: boolean): Promise<void>;
+  setGraphics(graphics: GraphicsSetting): Promise<void>;
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
 }
@@ -49,6 +50,7 @@ const tauriApi: Api = {
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
+  setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),
 };
