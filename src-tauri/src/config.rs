@@ -4,6 +4,7 @@
 //! Only the keys we own are touched; everything else the user changes is kept.
 
 use crate::device::Tier;
+use crate::formats;
 use crate::library::find_file;
 use crate::manifest::Emulator;
 use crate::presets;
@@ -104,27 +105,67 @@ pub fn configure(
             ],
         ),
         "xemu" => {
-            // xemu reads xemu.toml next to the exe (portable mode); TOML sections
-            // are close enough to INI for the flat keys we set.
-            let mut entries = vec![("general", "show_welcome", "false".to_string())];
+            // xemu.toml next to the exe is what turns on portable mode.
+            let mut entries = Vec::new();
             if let Some(b) = bios {
-                let quote = |p: std::path::PathBuf| format!("'{}'", p.to_string_lossy());
+                let path = |p: std::path::PathBuf| p.to_string_lossy().into_owned();
                 if let Some(p) = find_file(b, "xbox/mcpx*.bin") {
-                    entries.push(("sys.files", "bootrom_path", quote(p)));
+                    entries.push(formats::entry(&["sys", "files"], "bootrom_path", path(p)));
                 }
                 if let Some(p) =
                     find_file(b, "xbox/*bios*.bin").or_else(|| find_file(b, "xbox/complex*.bin"))
                 {
-                    entries.push(("sys.files", "flashrom_path", quote(p)));
+                    entries.push(formats::entry(&["sys", "files"], "flashrom_path", path(p)));
                 }
                 if let Some(p) = find_file(b, "xbox/*.qcow2") {
-                    entries.push(("sys.files", "hdd_path", quote(p)));
+                    entries.push(formats::entry(&["sys", "files"], "hdd_path", path(p)));
                 }
             }
-            set_ini(&exe_dir.join("xemu.toml"), &entries)
+            formats::merge_toml(&exe_dir.join("xemu.toml"), &entries)
+        }
+        "rpcs3" => {
+            // Without a profile RPCS3 drives player 1 from the keyboard. Handler and
+            // Device are enough: RPCS3 fills the XInput button defaults. Written once
+            // so in-emulator remaps survive.
+            let inputs = exe_dir.join("config").join("input_configs");
+            let profile = inputs.join("global").join("Default.yml");
+            if !profile.exists() {
+                formats::merge_yaml(
+                    &profile,
+                    &[
+                        formats::entry(&["Player 1 Input"], "Handler", "XInput"),
+                        formats::entry(&["Player 1 Input"], "Device", "XInput Pad #1"),
+                    ],
+                )?;
+            }
+            let active = inputs.join("active_input_configurations.yml");
+            if !active.exists() {
+                formats::merge_yaml(
+                    &active,
+                    &[formats::entry(
+                        &["Active Configurations"],
+                        "global",
+                        "Default",
+                    )],
+                )?;
+            }
+            Ok(())
         }
         "shadps4" => {
-            // shadPS4 looks for LLE system modules in its portable user dir.
+            // Portable mode is `<cwd>/user`; Lumen launches with cwd = exe dir.
+            // Pre-made home dirs skip shadPS4's blocking save-migration dialog.
+            for user in 1000..=1003 {
+                for sub in ["savedata", "trophy", "inputs"] {
+                    fs::create_dir_all(
+                        exe_dir
+                            .join("user")
+                            .join("home")
+                            .join(user.to_string())
+                            .join(sub),
+                    )?;
+                }
+            }
+            // LLE system modules are looked up in the portable user dir.
             if let Some(b) = bios {
                 let modules = exe_dir.join("user").join("sys_modules");
                 copy_missing(&b.join("ps4"), &modules, "sprx")?;
@@ -268,7 +309,7 @@ fn set_cfg(path: &Path, entries: &[(&str, String)]) -> anyhow::Result<()> {
 }
 
 /// `[Section]` + `Key = Value` files. Keys are matched case-insensitively.
-fn set_ini(path: &Path, entries: &[(&str, &str, String)]) -> anyhow::Result<()> {
+pub(crate) fn set_ini(path: &Path, entries: &[(&str, &str, String)]) -> anyhow::Result<()> {
     let mut lines = read_lines(path);
     for (section, key, value) in entries {
         let header = format!("[{section}]");
