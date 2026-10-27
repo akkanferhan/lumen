@@ -107,9 +107,12 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
                 Some(t) => format!("https://api.github.com/repos/{repo}/releases/tags/{t}"),
                 None => format!("https://api.github.com/repos/{repo}/releases/latest"),
             };
-            let release: Release = client()
-                .get(&api)
-                .header("Accept", "application/vnd.github+json")
+            let mut request = client().get(&api).header("Accept", "application/vnd.github+json");
+            // Optional; only lifts the 60 requests/hour anonymous limit (used by CI).
+            if let Ok(token) = std::env::var("GITHUB_TOKEN") {
+                request = request.bearer_auth(token);
+            }
+            let release: Release = request
                 .send()
                 .await?
                 .error_for_status()
@@ -124,6 +127,24 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
                 .find(|a| pattern.is_match(&a.name))
                 .map(|a| a.browser_download_url)
                 .ok_or_else(|| anyhow!("{repo} sürümünde Windows paketi bulunamadı"))
+        }
+        Source::Page { page, pattern, base } => {
+            let body = client()
+                .get(page)
+                .send()
+                .await?
+                .error_for_status()
+                .with_context(|| format!("İndirme sayfası açılamadı: {page}"))?
+                .text()
+                .await?;
+            let found = Regex::new(pattern)?
+                .find(&body)
+                .map(|m| m.as_str().to_string())
+                .ok_or_else(|| anyhow!("İndirme bağlantısı bulunamadı: {page}"))?;
+            Ok(match base {
+                Some(base) if found.starts_with('/') => format!("{base}{found}"),
+                _ => found,
+            })
         }
     }
 }
@@ -174,4 +195,24 @@ async fn unpack(archive: PathBuf, target: PathBuf) -> anyhow::Result<()> {
         result
     })
     .await?
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::manifest::manifest;
+
+    /// Hits the real download sources. Run by the weekly `sources` workflow:
+    /// `cargo test -- --ignored live_sources`.
+    #[tokio::test]
+    #[ignore = "needs network"]
+    async fn live_sources_resolve() {
+        let mut failures = Vec::new();
+        for emu in &manifest().emulators {
+            match super::resolve_url(&emu.source).await {
+                Ok(url) => println!("{:<12} {url}", emu.id),
+                Err(e) => failures.push(format!("{}: {e:#}", emu.id)),
+            }
+        }
+        assert!(failures.is_empty(), "unresolved sources:\n{}", failures.join("\n"));
+    }
 }
