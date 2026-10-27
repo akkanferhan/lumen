@@ -163,6 +163,17 @@ export const mockApi: Api = {
     return user.favorite;
   },
   setSounds: async () => {},
+  checkUpdates: async () => {
+    await sleep(700);
+    // Demo: whatever is installed has an update except RetroArch.
+    return store.installed
+      .filter((id) => !id.startsWith("core:"))
+      .map((id) => ({ id, updateAvailable: id !== "retroarch" }));
+  },
+  updateEmulator: async (id) => {
+    store.installed = store.installed.filter((x) => x !== id);
+    await simulateInstall(id);
+  },
   setGraphics: async (value) => {
     graphics = value;
   },

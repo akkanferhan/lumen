@@ -24,6 +24,9 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
   const overview = useStore((s) => s.overview);
   const games = useStore((s) => s.games);
   const installs = useStore((s) => s.installs);
+  const updates = useStore((s) => s.updates);
+  const checkingUpdates = useStore((s) => s.checkingUpdates);
+  const pendingUpdates = Object.values(updates ?? {}).filter(Boolean).length;
   const sounds = overview?.settings.sounds ?? true;
 
   const main: Item[] = [
@@ -81,7 +84,19 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
       : []),
   ];
 
-  const emulatorItems: Item[] = emulators.map((emu) => {
+  const updateAllItem: Item[] =
+    pendingUpdates > 0
+      ? [
+          {
+            id: "update-all",
+            title: `Hepsini güncelle (${pendingUpdates})`,
+            sub: "Kayıtlar ve ayarlar korunur",
+            run: () => actions.updateAll(),
+          },
+        ]
+      : [];
+
+  const emulatorItems: Item[] = [...updateAllItem, ...emulators.map((emu) => {
     const served = systems.filter((s) => s.emulator === emu.id);
     const statuses = overview?.systems.filter((s) => served.some((x) => x.id === s.id)) ?? [];
     const installed = statuses.some((s) => s.emulatorInstalled);
@@ -101,8 +116,12 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
         <span style={{ width: "5rem", display: "inline-block" }}>
           <ProgressBar value={job.stage === "downloading" ? job.progress : 1} />
         </span>
+      ) : installed && updates?.[emu.id] ? (
+        <span className="pill update">Güncelleme var</span>
       ) : installed ? (
-        <span className={`pill ${missingBios.length ? "warn" : "ok"}`}>{missingBios.length ? "BIOS eksik" : "Kurulu"}</span>
+        <span className={`pill ${missingBios.length ? "warn" : "ok"}`}>
+          {missingBios.length ? "BIOS eksik" : checkingUpdates ? "Kontrol ediliyor…" : "Güncel"}
+        </span>
       ) : (
         <span className="pill">Kur</span>
       ),
@@ -113,13 +132,18 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
           notify("Emülatör kurulumu şimdilik sadece Windows'ta destekleniyor", "error");
           return;
         }
+        if (installed) {
+          if (updates?.[emu.id]) actions.updateEmulator(emu.id);
+          else notify(`${installLabel(emu.id)} güncel`, "success");
+          return;
+        }
         // RetroArch serves many systems; only fetch cores that are actually needed.
         const targets = emu.id === "retroarch" && withGames.length ? withGames : served;
-        notify(`${installLabel(emu.id)} ${installed ? "güncelleniyor" : "kuruluyor"}…`);
+        notify(`${installLabel(emu.id)} kuruluyor…`);
         actions.install(targets.map((s) => s.id));
       },
     };
-  });
+  })];
 
   const items = page === "main" ? main : emulatorItems;
   const [focus, setFocus] = useState(0);
@@ -127,6 +151,9 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
   const index = Math.min(focus, items.length - 1);
 
   useEffect(() => setFocus(0), [page]);
+  useEffect(() => {
+    if (page === "emulators" && overview?.platformSupported) actions.checkUpdates();
+  }, [page, overview?.platformSupported]);
   useEffect(() => {
     listRef.current?.children[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [index]);

@@ -779,6 +779,11 @@ button {
   color: var(--success);
 }
 
+.pill.update {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
 .pill.warn {
   background: rgba(255, 107, 107, 0.14);
   color: var(--danger);

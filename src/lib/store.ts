@@ -21,6 +21,9 @@ interface State {
   runningGameId: string | null;
   notices: Notice[];
   scanning: boolean;
+  /** Emulator id → update available; null until checked this session. */
+  updates: Record<string, boolean> | null;
+  checkingUpdates: boolean;
 }
 
 let state: State = {
@@ -31,6 +34,8 @@ let state: State = {
   runningGameId: null,
   notices: [],
   scanning: false,
+  updates: null,
+  checkingUpdates: false,
 };
 
 const subscribers = new Set<() => void>();
@@ -177,6 +182,40 @@ export const actions = {
       flip();
       notify(errorText(e), "error");
     }
+  },
+
+  async checkUpdates() {
+    if (state.checkingUpdates) return;
+    set({ checkingUpdates: true });
+    try {
+      const list = await api.checkUpdates();
+      set({ updates: Object.fromEntries(list.map((u) => [u.id, u.updateAvailable])) });
+    } catch {
+      set({ updates: {} });
+    } finally {
+      set({ checkingUpdates: false });
+    }
+  },
+
+  async updateEmulator(id: string): Promise<boolean> {
+    try {
+      await api.updateEmulator(id);
+      set((s) => ({ updates: { ...s.updates, [id]: false } }));
+      return true;
+    } catch (e) {
+      notify(errorText(e), "error", 7000);
+      return false;
+    } finally {
+      await refreshOverview();
+    }
+  },
+
+  async updateAll() {
+    const pending = Object.entries(state.updates ?? {})
+      .filter(([, available]) => available)
+      .map(([id]) => id);
+    for (const id of pending) await actions.updateEmulator(id);
+    if (pending.length) notify("Emülatörler güncellendi", "success");
   },
 
   async setGraphics(graphics: GraphicsSetting) {
