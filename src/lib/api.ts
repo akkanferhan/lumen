@@ -2,7 +2,15 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { mockApi } from "./mock";
-import type { EmulatorUpdate, Game, GameExited, GraphicsSetting, InstallProgress, Overview } from "./types";
+import type {
+  EmulatorUpdate,
+  Game,
+  GameExited,
+  GraphicsSetting,
+  InstallProgress,
+  Overview,
+  PowerSetting,
+} from "./types";
 
 export interface Api {
   getOverview(): Promise<Overview>;
@@ -20,6 +28,8 @@ export interface Api {
   setSounds(enabled: boolean): Promise<void>;
   setGraphics(graphics: GraphicsSetting): Promise<void>;
   checkUpdates(): Promise<EmulatorUpdate[]>;
+  setPower(power: PowerSetting): Promise<void>;
+  setAutostart(enabled: boolean): Promise<void>;
   updateEmulator(id: string): Promise<void>;
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
@@ -60,6 +70,8 @@ const tauriApi: Api = {
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   checkUpdates: () => invoke("check_updates"),
+  setPower: (power) => invoke("set_power", { power }),
+  setAutostart: (enabled) => invoke("set_autostart", { enabled }),
   updateEmulator: (id) => invoke("update_emulator", { id }),
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),

@@ -34,6 +34,13 @@ Emulator settings never need to be opened. The tier can be overridden in Menu �
 Emulators keep their own state in their config files, so Lumen only sets the keys it owns
 (read–merge–write for INI, TOML, YAML and JSON); Xenia gets its settings as command-line flags.
 
+### Console mode and power
+
+- **Console mode** (Menu): Lumen starts with Windows, fullscreen.
+- **Power mode** (Menu, ROG Ally): switches the ASUS power mode per system through the same
+  firmware interface Armoury Crate uses: Silent for 2D systems, Turbo for PS2/PS3/PS4/Xbox 360/
+  Wii U/GameCube/Wii, Performance otherwise. Performance is restored when the game ends.
+
 ## Games and BIOS files
 
 Lumen never downloads games or copyrighted BIOS files. Use dumps of games and hardware you own.

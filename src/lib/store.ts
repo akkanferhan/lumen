@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 import { api } from "./api";
 import { installLabel, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
-import type { Game, GraphicsSetting, InstallProgress, Overview } from "./types";
+import type { Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 export interface Notice {
   id: number;
@@ -231,6 +231,21 @@ export const actions = {
       .map(([id]) => id);
     for (const id of pending) await actions.updateEmulator(id);
     if (pending.length) notify("Emülatörler güncellendi", "success");
+  },
+
+  async setPower(power: PowerSetting) {
+    await api.setPower(power);
+    await refreshOverview();
+  },
+
+  async setAutostart(enabled: boolean) {
+    try {
+      await api.setAutostart(enabled);
+      if (enabled) notify("Lumen artık Windows ile birlikte açılacak", "success");
+    } catch (e) {
+      notify(errorText(e), "error");
+    }
+    await refreshOverview();
   },
 
   async setGraphics(graphics: GraphicsSetting) {

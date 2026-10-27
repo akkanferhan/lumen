@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { Game, GameExited, GraphicsSetting, InstallProgress, Overview } from "./types";
+import type { Game, GameExited, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -67,6 +67,8 @@ const progressListeners = new Set<(p: InstallProgress) => void>();
 const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
+let power: PowerSetting = "auto";
+let autostart = false;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -82,7 +84,9 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power },
+    powerAvailable: true,
+    autostart,
     runningGameId: running?.id ?? null,
     device: { cpu: "AMD Ryzen Z1 Extreme", model: "ROG Ally / Ally X (Z1 Extreme)", detectedTier: "high" },
     tier: graphics === "auto" ? "high" : graphics,
@@ -175,6 +179,12 @@ export const mockApi: Api = {
   updateEmulator: async (id) => {
     store.installed = store.installed.filter((x) => x !== id);
     await simulateInstall(id);
+  },
+  setPower: async (value) => {
+    power = value;
+  },
+  setAutostart: async (value) => {
+    autostart = value;
   },
   setGraphics: async (value) => {
     graphics = value;
