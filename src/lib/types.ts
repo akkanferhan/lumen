@@ -105,6 +105,11 @@ export interface GameInfo {
   description: string | null;
 }
 
+export interface AppUpdate {
+  version: string;
+  notes: string | null;
+}
+
 export interface EmulatorUpdate {
   id: string;
   updateAvailable: boolean;

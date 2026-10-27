@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { mockApi } from "./mock";
 import type {
+  AppUpdate,
   EmulatorUpdate,
   Game,
   GameExited,
@@ -30,6 +31,9 @@ export interface Api {
   setSounds(enabled: boolean): Promise<void>;
   setGraphics(graphics: GraphicsSetting): Promise<void>;
   checkUpdates(): Promise<EmulatorUpdate[]>;
+  checkAppUpdate(): Promise<AppUpdate | null>;
+  installAppUpdate(): Promise<void>;
+  onAppUpdateProgress(cb: (progress: number) => void): () => void;
   setPower(power: PowerSetting): Promise<void>;
   setAutostart(enabled: boolean): Promise<void>;
   updateEmulator(id: string): Promise<void>;
@@ -73,6 +77,9 @@ const tauriApi: Api = {
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   checkUpdates: () => invoke("check_updates"),
+  checkAppUpdate: () => invoke("check_app_update"),
+  installAppUpdate: () => invoke("install_app_update"),
+  onAppUpdateProgress: (cb) => subscribe<number>("app-update-progress", cb),
   setPower: (power) => invoke("set_power", { power }),
   setAutostart: (enabled) => invoke("set_autostart", { enabled }),
   updateEmulator: (id) => invoke("update_emulator", { id }),

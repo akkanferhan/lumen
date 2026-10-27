@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 import { api } from "./api";
 import { installLabel, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
-import type { Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { AppUpdate, Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 export interface Notice {
   id: number;
@@ -26,6 +26,9 @@ interface State {
   checkingUpdates: boolean;
   /** In-game quick menu is open (Lumen is in front of the paused game). */
   quickMenu: boolean;
+  /** Newer Lumen release, and download progress once installing (0–1). */
+  appUpdate: AppUpdate | null;
+  appUpdateProgress: number | null;
 }
 
 let state: State = {
@@ -39,6 +42,8 @@ let state: State = {
   updates: null,
   checkingUpdates: false,
   quickMenu: false,
+  appUpdate: null,
+  appUpdateProgress: null,
 };
 
 const subscribers = new Set<() => void>();
@@ -104,6 +109,20 @@ export const actions = {
 
     const [, games] = await Promise.all([refreshOverview(), api.getLibrary()]);
     set({ games, ready: true });
+
+    // Quietly look for a new Lumen release once things have settled.
+    api.onAppUpdateProgress((p) => set({ appUpdateProgress: p }));
+    setTimeout(async () => {
+      try {
+        const update = await api.checkAppUpdate();
+        if (update) {
+          set({ appUpdate: update });
+          notify(`Lumen ${update.version} hazır · Menü'den güncelleyebilirsin`, "info", 7000);
+        }
+      } catch {
+        /* offline or no releases yet */
+      }
+    }, 5000);
   },
 
   async chooseRomRoot(): Promise<boolean> {
@@ -196,6 +215,17 @@ export const actions = {
     } catch (e) {
       flip();
       notify(errorText(e), "error");
+    }
+  },
+
+  async installAppUpdate() {
+    if (state.appUpdateProgress !== null) return;
+    set({ appUpdateProgress: 0 });
+    try {
+      await api.installAppUpdate(); // restarts Lumen on success
+    } catch (e) {
+      set({ appUpdateProgress: null });
+      notify(errorText(e), "error", 7000);
     }
   },
 
