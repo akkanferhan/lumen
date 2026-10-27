@@ -1,0 +1,24 @@
+src/lib/store.ts
+  s_1b02c1f829b02f::t_09a947bca587ca 18-19,38,113-119
+src/App.tsx
+  s_1b02c1f829b02f::t_09a947bca587ca 2,33,66-92
+  s_1b02c1f829b02f::t_2cb55cb38cde8f 93-95
+src/styles.css
+  s_1b02c1f829b02f::t_09a947bca587ca 77-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "774ddeb651262b5c4fe3a586720f90d2a8a8142c",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
