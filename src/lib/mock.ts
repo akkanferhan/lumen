@@ -142,6 +142,8 @@ export const mockApi: Api = {
     }
     for (const job of jobs) await simulateInstall(job);
   },
+  isResumable: async (gameId) => (store.user[gameId]?.playSeconds ?? 0) > 0,
+  resumeGame: async () => {},
   launchGame: async (gameId) => {
     running = { id: gameId, started: Date.now() };
   },
@@ -180,6 +182,22 @@ export const mockApi: Api = {
   onInstallProgress: (cb) => {
     progressListeners.add(cb);
     return () => progressListeners.delete(cb);
+  },
+  onQuickMenu: (cb) => {
+    // Browser preview: Select+Start can't reach a real emulator, so `Q`+`E`
+    // together stands in for the in-game combo.
+    const keys = new Set<string>();
+    const down = (e: KeyboardEvent) => {
+      keys.add(e.key.toLowerCase());
+      if (running && keys.has("q") && keys.has("e")) cb();
+    };
+    const up = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase());
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
   },
   onGameExited: (cb) => {
     exitListeners.add(cb);

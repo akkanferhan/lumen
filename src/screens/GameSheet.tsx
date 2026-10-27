@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Cover } from "../components/Cover";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
@@ -6,6 +6,7 @@ import { emulatorOf, systemOf } from "../lib/catalog";
 import { formatLastPlayed, formatPlaytime } from "../lib/format";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
+import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
 import type { Game } from "../lib/types";
 
@@ -16,6 +17,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   const installs = useStore((s) => s.installs);
   const [focus, setFocus] = useState(0);
   const [busy, setBusy] = useState(false);
+  // A save from the last session exists: offer "continue" and "start over".
+  const [resumable, setResumable] = useState(false);
+  useEffect(() => {
+    let live = true;
+    api.isResumable(gameId).then((r) => live && setResumable(r)).catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [gameId, game?.lastPlayed]);
 
   const system = game && systemOf(game.systemId);
   const status = overview?.systems.find((s) => s.id === game?.systemId);
@@ -30,16 +40,16 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     : undefined;
   const canPlay = missing.length === 0 && !busy;
 
-  const buttons = ["play", "fav"] as const;
+  const buttons = resumable ? (["play", "fresh", "fav"] as const) : (["play", "fav"] as const);
 
-  const play = async (g: Game) => {
+  const play = async (g: Game, fresh = false) => {
     if (!canPlay) {
       sfx.error();
       return;
     }
     setBusy(true);
     rumble(0.6, 60);
-    await actions.play(g);
+    await actions.play(g, fresh);
     setBusy(false);
   };
 
@@ -57,6 +67,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
       }
       case "a":
         if (buttons[focus] === "play") play(game);
+        else if (buttons[focus] === "fresh") play(game, true);
         else {
           sfx.confirm();
           actions.toggleFavorite(game.id);
@@ -76,7 +87,16 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   if (!game || !system) return null;
 
   const bios = overview?.settings.romRoot ? `${overview.settings.romRoot}${sep(overview.settings.romRoot)}bios` : "bios";
-  const playLabel = busy ? (install ? "Hazırlanıyor…" : "Başlatılıyor…") : missing.length ? "Dosya gerekli" : "Oyna";
+  const playLabel = busy
+    ? install
+      ? "Hazırlanıyor…"
+      : "Başlatılıyor…"
+    : missing.length
+      ? "Dosya gerekli"
+      : resumable
+        ? "Devam et"
+        : "Oyna";
+  const focusOf = (id: (typeof buttons)[number]) => (buttons as readonly string[]).indexOf(id) === focus;
 
   return (
     <>
@@ -138,7 +158,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
           <div className="actions">
             <button
-              className={`btn primary${focus === 0 ? " focused" : ""}`}
+              className={`btn primary${focusOf("play") ? " focused" : ""}`}
               disabled={!canPlay}
               onClick={() => play(game)}
             >
@@ -149,8 +169,17 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
                 </span>
               )}
             </button>
+            {resumable && (
+              <button
+                className={`btn${focusOf("fresh") ? " focused" : ""}`}
+                disabled={!canPlay}
+                onClick={() => play(game, true)}
+              >
+                Baştan başla
+              </button>
+            )}
             <button
-              className={`btn${focus === 1 ? " focused" : ""}`}
+              className={`btn${focusOf("fav") ? " focused" : ""}`}
               onClick={() => actions.toggleFavorite(game.id)}
             >
               {game.favorite ? "★ Favorilerde" : "☆ Favorilere ekle"}

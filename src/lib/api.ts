@@ -11,7 +11,10 @@ export interface Api {
   setRomRoot(path: string): Promise<Game[]>;
   scanLibrary(): Promise<Game[]>;
   installSystems(systemIds: string[]): Promise<void>;
-  launchGame(gameId: string): Promise<void>;
+  /** `fresh` starts over instead of continuing from the last session. */
+  launchGame(gameId: string, fresh?: boolean): Promise<void>;
+  isResumable(gameId: string): Promise<boolean>;
+  resumeGame(): Promise<void>;
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
   setSounds(enabled: boolean): Promise<void>;
@@ -20,6 +23,7 @@ export interface Api {
   updateEmulator(id: string): Promise<void>;
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
+  onQuickMenu(cb: () => void): () => void;
 }
 
 export const isTauri = "__TAURI_INTERNALS__" in window;
@@ -48,7 +52,9 @@ const tauriApi: Api = {
   setRomRoot: (path) => invoke("set_rom_root", { path }),
   scanLibrary: () => invoke("scan_library"),
   installSystems: (systemIds) => invoke("install_systems", { systemIds }),
-  launchGame: (gameId) => invoke("launch_game", { gameId }),
+  launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
+  isResumable: (gameId) => invoke("is_resumable", { gameId }),
+  resumeGame: () => invoke("resume_game"),
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
@@ -57,6 +63,7 @@ const tauriApi: Api = {
   updateEmulator: (id) => invoke("update_emulator", { id }),
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),
+  onQuickMenu: (cb) => subscribe<null>("quick-menu", () => cb()),
 };
 
 /** In a plain browser (UI development on macOS) everything is simulated. */
