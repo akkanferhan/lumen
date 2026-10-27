@@ -13,6 +13,7 @@ export interface SystemDef {
   thumbnails: string;
   bios?: { label: string; anyOf: string[]; optional?: boolean }[];
   folderMarker?: string;
+  launchFile?: string;
 }
 
 export interface EmulatorDef {
