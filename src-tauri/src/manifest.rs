@@ -42,6 +42,13 @@ pub struct System {
     /// required BIOS file for the main emulator is missing.
     #[serde(default)]
     pub fallback: Option<Runner>,
+    /// ASUS power mode the system needs: silent for 2D, turbo for 6th/7th gen.
+    #[serde(default = "default_power")]
+    pub power: crate::power::PowerMode,
+}
+
+fn default_power() -> crate::power::PowerMode {
+    crate::power::PowerMode::Performance
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
