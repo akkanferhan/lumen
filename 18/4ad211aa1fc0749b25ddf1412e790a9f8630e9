@@ -1,0 +1,22 @@
+src-tauri/src/state.rs
+  s_1b02c1f829b02f::t_77446de048926e 80-84
+src-tauri/src/commands.rs
+  s_1b02c1f829b02f::t_77446de048926e 64-78,110,113,115-116,513-542
+  s_1b02c1f829b02f::t_86985addc302dd 59-60,62-63,122-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "184ad211aa1fc0749b25ddf1412e790a9f8630e9",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
