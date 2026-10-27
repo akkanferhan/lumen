@@ -1,0 +1,21 @@
+src/screens/GameSheet.tsx
+  s_1b02c1f829b02f::t_2ee3750ddcd502 1-163
+src/screens/Running.tsx
+  s_1b02c1f829b02f::t_96bc25ac5ccf4a 1-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0ff776bc262d542c345ff51b6b40b18876a652c",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "unknown"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
