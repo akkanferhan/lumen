@@ -1,0 +1,30 @@
+src-tauri/src/state.rs
+  s_1b02c1f829b02f::t_ce2019ca119a87 74-75,95
+src-tauri/src/lib.rs
+  s_1b02c1f829b02f::t_ce2019ca119a87 10,48
+src/styles.css
+  s_1b02c1f829b02f::t_adc35d94a6f54a 564-605,609
+  s_1b02c1f829b02f::t_3d81dfb70c218c 990,999,1004
+src-tauri/src/metadata.rs
+  s_1b02c1f829b02f::t_ce2019ca119a87 1-169
+src-tauri/src/installer.rs
+  s_1b02c1f829b02f::t_ce2019ca119a87 50-54
+src-tauri/src/commands.rs
+  s_1b02c1f829b02f::t_ce2019ca119a87 418-447
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1ec68d2e81119a876c25ffaf2d04bb65d3c8c300",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
