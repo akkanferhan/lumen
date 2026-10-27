@@ -1,0 +1,241 @@
+//! Commands invoked from the UI. Errors are returned as user-facing strings.
+
+use crate::{
+    installer,
+    library::{self, BiosStatus, Game},
+    launcher,
+    manifest::{self, manifest, BIOS_SUBDIRS},
+    state::{AppState, Settings},
+};
+use serde::Serialize;
+use std::path::PathBuf;
+use tauri::{AppHandle, Manager, State};
+
+type CmdResult<T> = Result<T, String>;
+
+fn err(e: impl std::fmt::Display) -> String {
+    e.to_string()
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Overview {
+    pub settings: Settings,
+    pub systems: Vec<SystemStatus>,
+    pub running_game_id: Option<String>,
+    /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
+    pub platform_supported: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemStatus {
+    pub id: String,
+    pub emulator_installed: bool,
+    pub core_installed: bool,
+    pub bios: Vec<BiosStatus>,
+    pub game_count: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameView {
+    #[serde(flatten)]
+    pub game: Game,
+    pub favorite: bool,
+    pub last_played: Option<u64>,
+    pub play_seconds: u64,
+}
+
+#[tauri::command]
+pub fn get_overview(state: State<'_, AppState>) -> Overview {
+    let library = state.library.lock().unwrap();
+    let bios = state.bios_dir();
+
+    let systems = manifest()
+        .systems
+        .iter()
+        .map(|system| {
+            let emu = manifest::emulator(&system.emulator);
+            let exe = emu.and_then(|e| installer::find_exe(e, &state.dirs.emulators.join(&e.id)));
+            let core_installed = match (&system.core, &exe) {
+                (None, _) => true,
+                (Some(core), Some(exe)) => exe
+                    .parent()
+                    .is_some_and(|d| d.join("cores").join(format!("{core}_libretro.dll")).exists()),
+                (Some(_), None) => false,
+            };
+            SystemStatus {
+                id: system.id.clone(),
+                emulator_installed: exe.is_some(),
+                core_installed,
+                bios: library::bios_status(system, bios.as_deref()),
+                game_count: library.iter().filter(|g| g.system_id == system.id).count(),
+            }
+        })
+        .collect();
+
+    Overview {
+        settings: state.settings.lock().unwrap().clone(),
+        systems,
+        running_game_id: state.running.lock().unwrap().as_ref().map(|g| g.game_id.clone()),
+        platform_supported: cfg!(target_os = "windows"),
+    }
+}
+
+#[tauri::command]
+pub fn get_library(state: State<'_, AppState>) -> Vec<GameView> {
+    library_view(&state)
+}
+
+fn library_view(state: &AppState) -> Vec<GameView> {
+    let user = state.user.lock().unwrap();
+    state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|game| {
+            let data = user.get(&game.id).cloned().unwrap_or_default();
+            GameView {
+                game: game.clone(),
+                favorite: data.favorite,
+                last_played: data.last_played,
+                play_seconds: data.play_seconds,
+            }
+        })
+        .collect()
+}
+
+/// Sets the ROM root, creates one folder per system plus the BIOS folders, then scans.
+#[tauri::command]
+pub async fn set_rom_root(app: AppHandle, path: PathBuf) -> CmdResult<Vec<GameView>> {
+    for system in &manifest().systems {
+        let existing = system.folders.iter().any(|f| path.join(f).is_dir());
+        if !existing {
+            std::fs::create_dir_all(path.join(&system.folders[0])).map_err(err)?;
+        }
+    }
+    for sub in BIOS_SUBDIRS {
+        std::fs::create_dir_all(path.join("bios").join(sub)).map_err(err)?;
+    }
+
+    let state = app.state::<AppState>();
+    state.settings.lock().unwrap().rom_root = Some(path);
+    state.save_settings().map_err(err)?;
+    scan_library(app.clone()).await
+}
+
+#[tauri::command]
+pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
+    let state = app.state::<AppState>();
+    let Some(root) = state.rom_root() else { return Ok(Vec::new()) };
+    let games = tauri::async_runtime::spawn_blocking(move || library::scan(&root)).await.map_err(err)?;
+    *state.library.lock().unwrap() = games;
+    state.save_library().map_err(err)?;
+    Ok(library_view(&state))
+}
+
+/// Installs whatever the given systems are missing: their emulators and, for
+/// RetroArch systems, the libretro cores. Progress is streamed as events.
+#[tauri::command]
+pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResult<()> {
+    if !cfg!(target_os = "windows") {
+        return Err("Emülatör kurulumu şimdilik sadece Windows'ta destekleniyor".into());
+    }
+    let state = app.state::<AppState>();
+    let bios = state.bios_dir();
+
+    let systems: Vec<_> = system_ids.iter().filter_map(|id| manifest::system(id)).collect();
+    let mut emulator_ids: Vec<&str> = systems.iter().map(|s| s.emulator.as_str()).collect();
+    emulator_ids.sort();
+    emulator_ids.dedup();
+
+    let mut failures = Vec::new();
+    for emu_id in emulator_ids {
+        let Some(emu) = manifest::emulator(emu_id) else { continue };
+        if !state.installing.lock().unwrap().insert(emu.id.clone()) {
+            continue;
+        }
+
+        let install_dir = state.dirs.emulators.join(&emu.id);
+        let exe = match installer::find_exe(emu, &install_dir) {
+            Some(exe) => Ok(exe),
+            None => {
+                installer::install_emulator(&app, emu, &state.dirs.emulators, &state.dirs.downloads, bios.as_deref())
+                    .await
+            }
+        };
+
+        match exe {
+            Ok(exe) => {
+                let mut cores: Vec<&str> = systems
+                    .iter()
+                    .filter(|s| s.emulator == emu.id)
+                    .filter_map(|s| s.core.as_deref())
+                    .collect();
+                cores.sort();
+                cores.dedup();
+                let cores_dir = exe.parent().map(|d| d.join("cores")).unwrap_or_default();
+                for core in cores {
+                    if cores_dir.join(format!("{core}_libretro.dll")).exists() {
+                        continue;
+                    }
+                    if let Err(e) = installer::install_core(&app, core, &cores_dir, &state.dirs.downloads).await {
+                        installer::emit(&app, &format!("core:{core}"), "error", 0.0, Some(e.to_string()));
+                        failures.push(format!("{core}: {e}"));
+                    }
+                }
+            }
+            Err(e) => {
+                installer::emit(&app, &emu.id, "error", 0.0, Some(e.to_string()));
+                failures.push(format!("{}: {e}", emu.name));
+            }
+        }
+
+        state.installing.lock().unwrap().remove(&emu.id);
+    }
+
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        Err(failures.join("\n"))
+    }
+}
+
+#[tauri::command]
+pub async fn launch_game(app: AppHandle, game_id: String) -> CmdResult<()> {
+    let state = app.state::<AppState>();
+    let game = state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|g| g.id == game_id)
+        .cloned()
+        .ok_or("Oyun bulunamadı")?;
+    launcher::launch(&app, &game).map_err(err)
+}
+
+#[tauri::command]
+pub fn stop_game(state: State<'_, AppState>) {
+    launcher::stop(&state);
+}
+
+#[tauri::command]
+pub fn toggle_favorite(state: State<'_, AppState>, game_id: String) -> CmdResult<bool> {
+    let favorite = {
+        let mut user = state.user.lock().unwrap();
+        let entry = user.entry(game_id).or_default();
+        entry.favorite = !entry.favorite;
+        entry.favorite
+    };
+    state.save_user().map_err(err)?;
+    Ok(favorite)
+}
+
+#[tauri::command]
+pub fn set_sounds(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().sounds = enabled;
+    state.save_settings().map_err(err)
+}
