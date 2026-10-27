@@ -51,6 +51,10 @@ function load(): MockStore {
 }
 
 let store = load();
+// `?demo` skips onboarding with a sample library (handy for screenshots).
+if (new URLSearchParams(location.search).has("demo") && !store.romRoot) {
+  store = { romRoot: "C:\\Users\\Oyuncu\\Oyunlar", installed: [], user: { "mock-3": { favorite: true, lastPlayed: Math.floor(Date.now() / 1000) - 86_400, playSeconds: 7_420 } } };
+}
 function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(store));

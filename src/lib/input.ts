@@ -42,9 +42,11 @@ export function useInput(handler: Handler, layer: number, enabled = true) {
 }
 
 /** Notified whenever the active input device changes (used to swap glyphs / hide cursor). */
-export function onInputSource(cb: (source: "pad" | "keys") => void) {
+export function onInputSource(cb: (source: "pad" | "keys") => void): () => void {
   listeners.add(cb);
-  return () => listeners.delete(cb);
+  return () => {
+    listeners.delete(cb);
+  };
 }
 
 let source: "pad" | "keys" = "keys";
