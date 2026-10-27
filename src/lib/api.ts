@@ -6,6 +6,7 @@ import type {
   EmulatorUpdate,
   Game,
   GameExited,
+  GameInfo,
   GraphicsSetting,
   InstallProgress,
   Overview,
@@ -22,6 +23,7 @@ export interface Api {
   /** `fresh` starts over instead of continuing from the last session. */
   launchGame(gameId: string, fresh?: boolean): Promise<void>;
   isResumable(gameId: string): Promise<boolean>;
+  gameInfo(gameId: string): Promise<GameInfo | null>;
   resumeGame(): Promise<void>;
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
@@ -64,6 +66,7 @@ const tauriApi: Api = {
   installSystems: (systemIds) => invoke("install_systems", { systemIds }),
   launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
   isResumable: (gameId) => invoke("is_resumable", { gameId }),
+  gameInfo: (gameId) => invoke("game_info", { gameId }),
   resumeGame: () => invoke("resume_game"),
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),

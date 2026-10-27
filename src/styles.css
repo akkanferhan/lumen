@@ -561,10 +561,52 @@ button {
   text-wrap: balance;
 }
 
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: -0.8rem 0 1.2rem;
+}
+
+.facts span {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.description {
+  margin: 0 0 1.4rem;
+  max-width: 34rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  font-size: 0.92rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shots {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.6rem;
+}
+
+.shots img {
+  height: 7.5rem;
+  border-radius: var(--radius-s);
+  box-shadow: 0 0.8rem 1.6rem rgba(0, 0, 0, 0.4);
+  background: var(--surface);
+}
+
 .stats {
   display: flex;
   gap: 2.4rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.6rem;
 }
 
 .stat-label {
@@ -945,7 +987,7 @@ button {
   grid-template-columns: 2fr 1fr 1fr;
 }
 
-.key {
+.kb-key {
   padding: 0.7rem 0;
   border-radius: var(--radius-s);
   background: var(--surface);
@@ -954,12 +996,12 @@ button {
   outline: none;
 }
 
-.key.done {
+.kb-key.done {
   background: var(--brand-soft);
   color: var(--brand);
 }
 
-.key.focused {
+.kb-key.focused {
   background: var(--text);
   color: #10121a;
   transform: scale(1.08);

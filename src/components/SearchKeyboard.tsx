@@ -96,7 +96,7 @@ export function SearchKeyboard({
               {keys.map((key, c) => (
                 <button
                   key={key}
-                  className={`key${r === row && c === col ? " focused" : ""}`}
+                  className={`kb-key${r === row && c === col ? " focused" : ""}`}
                   onClick={() => type(key.toLowerCase())}
                   tabIndex={-1}
                 >
@@ -109,7 +109,7 @@ export function SearchKeyboard({
             {SPECIAL.map((label, c) => (
               <button
                 key={label}
-                className={`key wide${row === ROWS.length && c === col ? " focused" : ""}${label === "Bitti" ? " done" : ""}`}
+                className={`kb-key wide${row === ROWS.length && c === col ? " focused" : ""}${label === "Bitti" ? " done" : ""}`}
                 onClick={() => (label === "Boşluk" ? type(" ") : label === "Sil" ? erase() : onDone())}
                 tabIndex={-1}
               >

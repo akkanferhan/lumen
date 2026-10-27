@@ -96,6 +96,15 @@ export interface InstallProgress {
   message: string | null;
 }
 
+export interface GameInfo {
+  year: string | null;
+  developer: string | null;
+  publisher: string | null;
+  genre: string | null;
+  players: string | null;
+  description: string | null;
+}
+
 export interface EmulatorUpdate {
   id: string;
   updateAvailable: boolean;

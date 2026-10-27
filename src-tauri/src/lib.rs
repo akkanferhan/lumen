@@ -7,6 +7,7 @@ mod installer;
 mod launcher;
 mod library;
 mod manifest;
+mod metadata;
 mod power;
 mod presets;
 mod state;
@@ -44,6 +45,7 @@ pub fn run() {
             commands::resume_game,
             commands::is_resumable,
             commands::set_power,
+            commands::game_info,
             commands::set_autostart,
         ])
         .run(tauri::generate_context!())

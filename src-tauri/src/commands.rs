@@ -415,3 +415,33 @@ pub fn set_autostart(app: AppHandle, enabled: bool) -> CmdResult<()> {
     }
     .map_err(err)
 }
+
+/// Year, developer, genre, players and description for a game, if known.
+#[tauri::command]
+pub async fn game_info(app: AppHandle, game_id: String) -> Option<crate::metadata::GameInfo> {
+    let state = app.state::<AppState>();
+    let game = state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|g| g.id == game_id)
+        .cloned()?;
+    let system = manifest::system(&game.system_id)?;
+    let cached = state.metadata.lock().unwrap().get(&system.id).cloned();
+    let info = match cached {
+        Some(info) => info,
+        None => {
+            let info = std::sync::Arc::new(
+                crate::metadata::system_info(system, &state.dirs.data.join("metadata")).await,
+            );
+            state
+                .metadata
+                .lock()
+                .unwrap()
+                .insert(system.id.clone(), info.clone());
+            info
+        }
+    };
+    crate::metadata::lookup(&info, &game).cloned()
+}
