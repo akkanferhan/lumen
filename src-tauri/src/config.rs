@@ -88,8 +88,33 @@ pub fn configure(emu: &Emulator, exe_dir: &Path, bios: Option<&Path>) -> anyhow:
             }
             set_ini(&exe_dir.join("xemu.toml"), &entries)
         }
+        "shadps4" => {
+            // shadPS4 looks for LLE system modules in its portable user dir.
+            if let Some(b) = bios {
+                let modules = exe_dir.join("user").join("sys_modules");
+                copy_missing(&b.join("ps4"), &modules, "sprx")?;
+            }
+            Ok(())
+        }
         _ => Ok(()),
     }
+}
+
+/// Copies `*.<ext>` files from `from` into `to`, skipping ones already there.
+fn copy_missing(from: &Path, to: &Path, ext: &str) -> anyhow::Result<()> {
+    let Ok(entries) = fs::read_dir(from) else { return Ok(()) };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.extension().is_some_and(|e| e.eq_ignore_ascii_case(ext)) {
+            continue;
+        }
+        let target = to.join(entry.file_name());
+        if !target.exists() {
+            fs::create_dir_all(to)?;
+            fs::copy(&path, target)?;
+        }
+    }
+    Ok(())
 }
 
 /// RetroArch style: `key = "value"` lines, no sections.

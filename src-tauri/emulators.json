@@ -102,9 +102,15 @@
     },
     {
       "id": "ps3", "name": "PlayStation 3", "short": "PS3", "maker": "Sony", "year": 2006, "accent": "#1f6fd1",
-      "extensions": ["iso"], "folders": ["ps3"], "folderMarker": "PS3_GAME",
+      "extensions": ["iso"], "folders": ["ps3"], "folderMarker": "PS3_GAME", "launchFile": "PS3_GAME/USRDIR/EBOOT.BIN",
       "emulator": "rpcs3", "thumbnails": "Sony - PlayStation 3",
       "bios": [{ "label": "PS3 firmware (bios/ps3/PS3UPDAT.PUP, Sony'nin sitesinden ücretsiz)", "anyOf": ["ps3/PS3UPDAT.PUP"] }]
+    },
+    {
+      "id": "ps4", "name": "PlayStation 4", "short": "PS4", "maker": "Sony", "year": 2013, "accent": "#2e6be6",
+      "extensions": [], "folders": ["ps4"], "folderMarker": "sce_sys", "launchFile": "eboot.bin",
+      "emulator": "shadps4", "thumbnails": "Sony - PlayStation 4",
+      "bios": [{ "label": "PS4 sistem modülleri (bios/ps4 içine .sprx dosyaları)", "anyOf": ["ps4/*.sprx"], "optional": true }]
     },
     {
       "id": "xbox", "name": "Xbox", "short": "Xbox", "maker": "Microsoft", "year": 2001, "accent": "#5fbf3a",
@@ -166,7 +172,12 @@
     {
       "id": "rpcs3", "name": "RPCS3",
       "source": { "type": "github", "repo": "RPCS3/rpcs3-binaries-win", "asset": "\\.7z$" },
-      "exe": ["**/rpcs3.exe"], "args": ["--no-gui", "{rom}"]
+      "exe": ["**/rpcs3.exe"], "args": ["--no-gui", "--fullscreen", "{rom}"]
+    },
+    {
+      "id": "shadps4", "name": "shadPS4",
+      "source": { "type": "github", "repo": "shadps4-emu/shadPS4", "asset": "win64-sdl.*\\.zip$" },
+      "exe": ["**/shadPS4.exe"], "args": ["-f", "true", "-g", "{rom}"]
     },
     {
       "id": "xemu", "name": "xemu",

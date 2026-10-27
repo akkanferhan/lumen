@@ -18,7 +18,11 @@ game folders and launches games fullscreen — no separate emulator windows.
 ## Supported systems
 
 NES, SNES, N64, Game Boy / Color / Advance, Nintendo DS, 3DS, GameCube, Wii, Wii U,
-Master System, Mega Drive, Saturn, Dreamcast, Arcade (FBNeo), PlayStation 1/2/3, PSP, Xbox, Xbox 360.
+Master System, Mega Drive, Saturn, Dreamcast, Arcade (FBNeo), PlayStation 1/2/3/4, PSP, Xbox, Xbox 360.
+
+PS3 and PS4 games are folder dumps (`PS3_GAME` / `sce_sys`); their titles are read from `PARAM.SFO`.
+PS4 support uses [shadPS4](https://github.com/shadps4-emu/shadPS4) and is experimental. There is no usable PS5 emulator,
+so PS5 is not supported.
 
 ## Games and BIOS files
 
@@ -29,7 +33,7 @@ Put them in the folders Lumen creates:
 <game folder>/
 ├─ snes/  ps2/  gc/ ...   ← games, one folder per system
 └─ bios/
-   ├─ ps1/  ps2/  ps3/  xbox/  dc/
+   ├─ ps1/  ps2/  ps3/  ps4/  xbox/  dc/
    └─ (RetroArch BIOS files go in bios/ directly)
 ```
 

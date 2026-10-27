@@ -62,6 +62,10 @@ fn scan_system(system: &System, dir: &Path, out: &mut Vec<Game>) {
         let path = entry.path();
 
         if entry.file_type().is_dir() {
+            if is_addon_dir(path) {
+                walker.skip_current_dir();
+                continue;
+            }
             if let Some(marker) = &system.folder_marker {
                 if path.join(marker).is_dir() {
                     out.push(make_game(system, path));
@@ -84,6 +88,12 @@ fn scan_system(system: &System, dir: &Path, out: &mut Vec<Game>) {
             .filter(|f| !referenced.contains(*f))
             .map(|f| make_game(system, f)),
     );
+}
+
+/// PS4 updates/patches sit next to the game (`CUSA00552-UPDATE`) and are read by the emulator.
+fn is_addon_dir(path: &Path) -> bool {
+    let name = path.file_name().map(|n| n.to_string_lossy().to_lowercase()).unwrap_or_default();
+    name.ends_with("-update") || name.ends_with("-patch")
 }
 
 fn referenced_files(files: &[PathBuf]) -> HashSet<PathBuf> {
@@ -111,13 +121,15 @@ fn referenced_files(files: &[PathBuf]) -> HashSet<PathBuf> {
 }
 
 fn make_game(system: &System, path: &Path) -> Game {
-    let stem = if path.is_dir() {
-        path.file_name()
-    } else {
-        path.file_stem()
-    }
-    .map(|s| s.to_string_lossy().into_owned())
-    .unwrap_or_default();
+    // Folder dumps are named by product code (CUSA00552), so prefer the real title.
+    let sfo_title = path.is_dir().then(|| folder_title(path)).flatten();
+    let stem = sfo_title
+        .clone()
+        .or_else(|| {
+            if path.is_dir() { path.file_name() } else { path.file_stem() }
+                .map(|s| s.to_string_lossy().into_owned())
+        })
+        .unwrap_or_default();
 
     Game {
         id: format!("{:016x}", fnv1a(path.to_string_lossy().as_bytes())),
@@ -126,6 +138,40 @@ fn make_game(system: &System, path: &Path) -> Game {
         thumb_name: stem.replace(['&', '*', '/', ':', '`', '<', '>', '?', '\\', '|', '"'], "_"),
         path: path.to_path_buf(),
     }
+}
+
+/// Title from a PS3 (`PS3_GAME/PARAM.SFO`) or PS4 (`sce_sys/param.sfo`) folder dump.
+fn folder_title(dir: &Path) -> Option<String> {
+    ["PS3_GAME/PARAM.SFO", "sce_sys/param.sfo"]
+        .iter()
+        .find_map(|rel| fs::read(dir.join(rel)).ok())
+        .and_then(|bytes| sfo_string(&bytes, "TITLE"))
+        .map(|t| t.split_whitespace().collect::<Vec<_>>().join(" "))
+        .filter(|t| !t.is_empty())
+}
+
+/// Reads a UTF-8 value from a PlayStation SFO (PSF) key/value file.
+fn sfo_string(data: &[u8], wanted: &str) -> Option<String> {
+    let u16_at = |o: usize| data.get(o..o + 2).map(|b| u16::from_le_bytes([b[0], b[1]]) as usize);
+    let u32_at = |o: usize| data.get(o..o + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize);
+
+    if data.get(0..4)? != b"\0PSF" {
+        return None;
+    }
+    let (key_table, data_table, count) = (u32_at(8)?, u32_at(12)?, u32_at(16)?);
+    (0..count.min(256)).find_map(|i| {
+        let entry = 20 + i * 16;
+        let key_start = key_table + u16_at(entry)?;
+        let key_end = key_start + data.get(key_start..)?.iter().position(|&b| b == 0)?;
+        if &data[key_start..key_end] != wanted.as_bytes() {
+            return None;
+        }
+        let len = u32_at(entry + 4)?;
+        let start = data_table + u32_at(entry + 12)?;
+        let value = data.get(start..start + len)?;
+        let value = value.split(|&b| b == 0).next()?;
+        Some(String::from_utf8_lossy(value).into_owned())
+    })
 }
 
 /// "Legend of Zelda, The - A Link to the Past (USA) [!]" → "The Legend of Zelda - A Link to the Past"
@@ -172,6 +218,32 @@ fn fnv1a(bytes: &[u8]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::clean_title;
+
+    #[test]
+    fn reads_sfo_title() {
+        // Minimal PSF: one TITLE entry.
+        let key = b"TITLE\0";
+        let value = b"Bloodborne\0";
+        let key_table = 20 + 16;
+        let data_table = key_table + key.len();
+        let mut sfo = Vec::new();
+        sfo.extend_from_slice(b"\0PSF");
+        sfo.extend_from_slice(&0x0101u32.to_le_bytes());
+        sfo.extend_from_slice(&(key_table as u32).to_le_bytes());
+        sfo.extend_from_slice(&(data_table as u32).to_le_bytes());
+        sfo.extend_from_slice(&1u32.to_le_bytes());
+        sfo.extend_from_slice(&0u16.to_le_bytes()); // key offset
+        sfo.extend_from_slice(&0x0204u16.to_le_bytes()); // utf8 format
+        sfo.extend_from_slice(&(value.len() as u32).to_le_bytes());
+        sfo.extend_from_slice(&(value.len() as u32).to_le_bytes());
+        sfo.extend_from_slice(&0u32.to_le_bytes()); // data offset
+        sfo.extend_from_slice(key);
+        sfo.extend_from_slice(value);
+
+        assert_eq!(super::sfo_string(&sfo, "TITLE").as_deref(), Some("Bloodborne"));
+        assert_eq!(super::sfo_string(&sfo, "TITLE_ID"), None);
+        assert_eq!(super::sfo_string(b"garbage", "TITLE"), None);
+    }
 
     #[test]
     fn cleans_no_intro_names() {

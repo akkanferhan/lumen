@@ -35,6 +35,9 @@ pub struct System {
     /// A directory containing this child is a game by itself (e.g. PS3 `PS3_GAME`).
     #[serde(default)]
     pub folder_marker: Option<String>,
+    /// For folder games: the file inside the folder handed to the emulator.
+    #[serde(default)]
+    pub launch_file: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,4 +97,4 @@ pub fn emulator(id: &str) -> Option<&'static Emulator> {
 }
 
 /// Directories inside the BIOS folder that standalone emulators point at.
-pub const BIOS_SUBDIRS: &[&str] = &["ps1", "ps2", "ps3", "xbox", "dc"];
+pub const BIOS_SUBDIRS: &[&str] = &["ps1", "ps2", "ps3", "ps4", "xbox", "dc"];

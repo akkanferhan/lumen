@@ -53,7 +53,11 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         }
         None => String::new(),
     };
-    let rom = game.path.to_string_lossy();
+    let rom_path = match &system.launch_file {
+        Some(file) if game.path.is_dir() => game.path.join(file),
+        _ => game.path.clone(),
+    };
+    let rom = rom_path.to_string_lossy();
     let args: Vec<String> = emu
         .args
         .iter()
