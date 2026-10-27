@@ -47,6 +47,11 @@ pub fn emit(
     );
 }
 
+/// Shared HTTP client (user agent, timeouts, OS certificate store).
+pub fn http() -> &'static reqwest::Client {
+    client()
+}
+
 fn client() -> &'static reqwest::Client {
     static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
     CLIENT.get_or_init(|| {

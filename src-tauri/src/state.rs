@@ -71,6 +71,8 @@ pub struct AppState {
     pub running: Running,
     /// Emulator / core ids with an install in flight.
     pub installing: Mutex<HashSet<String>>,
+    /// Per-system game facts, loaded on first use.
+    pub metadata: Mutex<HashMap<String, Arc<crate::metadata::SystemInfo>>>,
 }
 
 impl AppState {
@@ -90,6 +92,7 @@ impl AppState {
             user: Mutex::new(read_json(&dirs.data.join("userdata.json")).unwrap_or_default()),
             running: Arc::new(Mutex::new(None)),
             installing: Mutex::new(HashSet::new()),
+            metadata: Mutex::new(HashMap::new()),
             dirs,
         })
     }
