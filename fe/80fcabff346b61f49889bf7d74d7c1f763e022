@@ -1,0 +1,25 @@
+src-tauri/emulators.json
+  s_1b02c1f829b02f::t_51c1955b82d783 149,154,189
+src-tauri/src/installer.rs
+  s_1b02c1f829b02f::t_8f59ddd24166d9 199-218
+  s_1b02c1f829b02f::t_d0ec106738af5c 113-115,131-148
+  s_1b02c1f829b02f::t_35771130b426a1 110-112
+src-tauri/src/manifest.rs
+  s_1b02c1f829b02f::t_d0ec106738af5c 82-90,110-189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fe80fcabff346b61f49889bf7d74d7c1f763e022",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
