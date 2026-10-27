@@ -57,6 +57,13 @@ Emulator installs and launching only work on Windows; on macOS/Linux the UI runs
 
 Lumen is licensed under the [GNU General Public License v3.0](LICENSE).
 
+## Installing on a handheld
+
+Every push to `develop` builds Windows installers. Open the latest
+[Windows build](../../actions/workflows/release.yml) run, download the `lumen-windows-…` artifact and run the
+`.exe` installer. The builds are not code-signed yet, so Windows SmartScreen asks for confirmation
+("More info" → "Run anyway").
+
 ## Branching
 
 - `main`: releases only
