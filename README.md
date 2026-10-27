@@ -49,6 +49,10 @@ npm run tauri dev
 
 Emulator installs and launching only work on Windows; on macOS/Linux the UI runs for development.
 
+## License
+
+Lumen is licensed under the [GNU General Public License v3.0](LICENSE).
+
 ## Branching
 
 - `main`: releases only
