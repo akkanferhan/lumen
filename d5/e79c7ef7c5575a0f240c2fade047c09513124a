@@ -1,0 +1,21 @@
+src/styles.css
+  s_1b02c1f829b02f::t_2f0cf9f800bd20 1-148,150-169,171-405,408-977,979,981,984,986-1088,1090-1111
+  s_1b02c1f829b02f::t_7c22746e054c6c 149,170
+  s_1b02c1f829b02f::t_0a24b06022065b 406-407,978,980,982-983,985,1089
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d5e79c7ef7c5575a0f240c2fade047c09513124a",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "unknown"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
