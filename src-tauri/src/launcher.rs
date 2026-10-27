@@ -31,29 +31,31 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
     }
 
     let system = manifest::system(&game.system_id).ok_or_else(|| anyhow!("Bilinmeyen sistem"))?;
-    let emu = manifest::emulator(&system.emulator).ok_or_else(|| anyhow!("Bilinmeyen emülatör"))?;
+    let bios = state.bios_dir();
+    let runner = crate::library::effective(system, bios.as_deref());
+    if !runner.fallback {
+        if let Some(missing) = crate::library::bios_status(system, bios.as_deref())
+            .into_iter()
+            .find(|b| !b.found && !b.optional)
+        {
+            bail!("Eksik dosya: {}", missing.label);
+        }
+    }
+    let emu = manifest::emulator(runner.emulator).ok_or_else(|| anyhow!("Bilinmeyen emülatör"))?;
     let exe = installer::find_exe(emu, &state.dirs.emulators.join(&emu.id))
         .ok_or_else(|| anyhow!("{} kurulu değil", emu.name))?;
     let exe_dir = exe
         .parent()
         .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
-    let bios = state.bios_dir();
-
-    if let Some(missing) = crate::library::bios_status(system, bios.as_deref())
-        .into_iter()
-        .find(|b| !b.found && !b.optional)
-    {
-        bail!("Eksik dosya: {}", missing.label);
-    }
 
     config::configure(emu, exe_dir, bios.as_deref(), state.tier())?;
-    if emu.id == "rpcs3" {
-        if let Some(bios) = &bios {
-            ensure_ps3_firmware(app, &exe, bios).await?;
-        }
+    match emu.id.as_str() {
+        "rpcs3" => ensure_ps3_firmware(app, &exe, bios.as_deref(), &state.dirs.downloads).await?,
+        "xemu" => installer::ensure_xbox_hdd(app, exe_dir, &state.dirs.downloads).await?,
+        _ => {}
     }
 
-    let core = match &system.core {
+    let core = match runner.core {
         Some(core) => {
             let path = exe_dir.join("cores").join(format!("{core}_libretro.dll"));
             if !path.exists() {
@@ -131,7 +133,12 @@ const PS3_FIRMWARE_ID: &str = "firmware:ps3";
 /// RPCS3 needs the PS3 system software installed once. Its `--installfw` only
 /// works with the GUI and doesn't exit afterwards, so we watch `dev_flash` and
 /// close RPCS3 once the extracted files stop changing.
-async fn ensure_ps3_firmware(app: &AppHandle, exe: &Path, bios: &Path) -> anyhow::Result<()> {
+async fn ensure_ps3_firmware(
+    app: &AppHandle,
+    exe: &Path,
+    bios: Option<&Path>,
+    downloads: &Path,
+) -> anyhow::Result<()> {
     let exe_dir = exe
         .parent()
         .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
@@ -140,8 +147,13 @@ async fn ensure_ps3_firmware(app: &AppHandle, exe: &Path, bios: &Path) -> anyhow
     if marker.exists() {
         return Ok(());
     }
-    let pup = crate::library::find_file(bios, "ps3/PS3UPDAT.PUP")
-        .ok_or_else(|| anyhow!("PS3 firmware bulunamadı (bios/ps3/PS3UPDAT.PUP)"))?;
+    // The user's copy wins; otherwise fetch it from Sony, who give it away free.
+    let user_copy = bios.and_then(|b| crate::library::find_file(b, "ps3/PS3UPDAT.PUP"));
+    let downloaded = user_copy.is_none();
+    let pup = match user_copy {
+        Some(pup) => pup,
+        None => installer::download_ps3_firmware(app, PS3_FIRMWARE_ID, downloads).await?,
+    };
 
     installer::emit(app, PS3_FIRMWARE_ID, "configuring", 1.0, None);
     let mut child = tokio::process::Command::new(exe)
@@ -179,6 +191,9 @@ async fn ensure_ps3_firmware(app: &AppHandle, exe: &Path, bios: &Path) -> anyhow
         }
     }
 
+    if downloaded {
+        let _ = std::fs::remove_file(&pup);
+    }
     if marker.exists() {
         installer::emit(app, PS3_FIRMWARE_ID, "done", 1.0, None);
         Ok(())
