@@ -49,8 +49,8 @@ pub struct Dirs {
 
 pub struct RunningGame {
     pub game_id: String,
-    /// Sending on this kills the emulator process.
-    pub kill: Option<oneshot::Sender<()>>,
+    /// Sending on this asks the emulator to close (and save) before it is killed.
+    pub stop: Option<oneshot::Sender<()>>,
 }
 
 pub type Running = Arc<Mutex<Option<RunningGame>>>;

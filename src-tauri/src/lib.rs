@@ -9,6 +9,7 @@ mod library;
 mod manifest;
 mod presets;
 mod state;
+mod windows;
 
 use tauri::Manager;
 
