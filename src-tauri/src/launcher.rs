@@ -31,7 +31,9 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
     let emu = manifest::emulator(&system.emulator).ok_or_else(|| anyhow!("Bilinmeyen emülatör"))?;
     let exe = installer::find_exe(emu, &state.dirs.emulators.join(&emu.id))
         .ok_or_else(|| anyhow!("{} kurulu değil", emu.name))?;
-    let exe_dir = exe.parent().ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
+    let exe_dir = exe
+        .parent()
+        .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
     let bios = state.bios_dir();
 
     if let Some(missing) = crate::library::bios_status(system, bios.as_deref())
@@ -64,9 +66,15 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         .map(|a| a.replace("{rom}", &rom).replace("{core}", &core))
         .collect();
 
-    let mut child = tokio::process::Command::new(&exe).args(&args).current_dir(exe_dir).spawn()?;
+    let mut child = tokio::process::Command::new(&exe)
+        .args(&args)
+        .current_dir(exe_dir)
+        .spawn()?;
     let (kill_tx, kill_rx) = oneshot::channel();
-    *state.running.lock().unwrap() = Some(RunningGame { game_id: game.id.clone(), kill: Some(kill_tx) });
+    *state.running.lock().unwrap() = Some(RunningGame {
+        game_id: game.id.clone(),
+        kill: Some(kill_tx),
+    });
 
     let app = app.clone();
     let game_id = game.id.clone();
@@ -84,7 +92,10 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
             let mut user = state.user.lock().unwrap();
             let entry = user.entry(game_id.clone()).or_default();
             entry.play_seconds += session_seconds;
-            entry.last_played = SystemTime::now().duration_since(UNIX_EPOCH).ok().map(|d| d.as_secs());
+            entry.last_played = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .ok()
+                .map(|d| d.as_secs());
         }
         let _ = state.save_user();
 
@@ -92,7 +103,13 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
             let _ = window.unminimize();
             let _ = window.set_focus();
         }
-        let _ = app.emit(EXITED_EVENT, Exited { game_id, session_seconds });
+        let _ = app.emit(
+            EXITED_EVENT,
+            Exited {
+                game_id,
+                session_seconds,
+            },
+        );
     });
 
     Ok(())

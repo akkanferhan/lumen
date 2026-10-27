@@ -21,7 +21,10 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { rom_root: None, sounds: true }
+        Self {
+            rom_root: None,
+            sounds: true,
+        }
     }
 }
 
@@ -80,15 +83,24 @@ impl AppState {
     }
 
     pub fn save_settings(&self) -> anyhow::Result<()> {
-        write_json(&self.dirs.data.join("settings.json"), &*self.settings.lock().unwrap())
+        write_json(
+            &self.dirs.data.join("settings.json"),
+            &*self.settings.lock().unwrap(),
+        )
     }
 
     pub fn save_library(&self) -> anyhow::Result<()> {
-        write_json(&self.dirs.data.join("library.json"), &*self.library.lock().unwrap())
+        write_json(
+            &self.dirs.data.join("library.json"),
+            &*self.library.lock().unwrap(),
+        )
     }
 
     pub fn save_user(&self) -> anyhow::Result<()> {
-        write_json(&self.dirs.data.join("userdata.json"), &*self.user.lock().unwrap())
+        write_json(
+            &self.dirs.data.join("userdata.json"),
+            &*self.user.lock().unwrap(),
+        )
     }
 
     pub fn rom_root(&self) -> Option<PathBuf> {
@@ -102,7 +114,9 @@ impl AppState {
 }
 
 fn read_json<T: DeserializeOwned>(path: &Path) -> Option<T> {
-    fs::read(path).ok().and_then(|b| serde_json::from_slice(&b).ok())
+    fs::read(path)
+        .ok()
+        .and_then(|b| serde_json::from_slice(&b).ok())
 }
 
 /// Write via a temp file so a crash never leaves a half-written file behind.

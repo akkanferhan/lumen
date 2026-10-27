@@ -32,7 +32,9 @@ pub struct BiosStatus {
 
 pub fn scan(root: &Path) -> Vec<Game> {
     let mut games = Vec::new();
-    let Ok(entries) = fs::read_dir(root) else { return games };
+    let Ok(entries) = fs::read_dir(root) else {
+        return games;
+    };
 
     for entry in entries.flatten() {
         let dir = entry.path();
@@ -40,7 +42,11 @@ pub fn scan(root: &Path) -> Vec<Game> {
             continue;
         }
         let name = entry.file_name().to_string_lossy().to_lowercase();
-        if let Some(system) = manifest().systems.iter().find(|s| s.folders.contains(&name)) {
+        if let Some(system) = manifest()
+            .systems
+            .iter()
+            .find(|s| s.folders.contains(&name))
+        {
             scan_system(system, &dir, &mut games);
         }
     }
@@ -92,7 +98,10 @@ fn scan_system(system: &System, dir: &Path, out: &mut Vec<Game>) {
 
 /// PS4 updates/patches sit next to the game (`CUSA00552-UPDATE`) and are read by the emulator.
 fn is_addon_dir(path: &Path) -> bool {
-    let name = path.file_name().map(|n| n.to_string_lossy().to_lowercase()).unwrap_or_default();
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
     name.ends_with("-update") || name.ends_with("-patch")
 }
 
@@ -103,7 +112,9 @@ fn referenced_files(files: &[PathBuf]) -> HashSet<PathBuf> {
         if !matches!(ext.as_deref(), Some("cue" | "m3u" | "gdi")) {
             continue;
         }
-        let (Ok(text), Some(dir)) = (fs::read_to_string(file), file.parent()) else { continue };
+        let (Ok(text), Some(dir)) = (fs::read_to_string(file), file.parent()) else {
+            continue;
+        };
         for line in text.lines().map(str::trim) {
             let name = match ext.as_deref() {
                 Some("cue") => line
@@ -126,8 +137,12 @@ fn make_game(system: &System, path: &Path) -> Game {
     let stem = sfo_title
         .clone()
         .or_else(|| {
-            if path.is_dir() { path.file_name() } else { path.file_stem() }
-                .map(|s| s.to_string_lossy().into_owned())
+            if path.is_dir() {
+                path.file_name()
+            } else {
+                path.file_stem()
+            }
+            .map(|s| s.to_string_lossy().into_owned())
         })
         .unwrap_or_default();
 
@@ -135,7 +150,10 @@ fn make_game(system: &System, path: &Path) -> Game {
         id: format!("{:016x}", fnv1a(path.to_string_lossy().as_bytes())),
         system_id: system.id.clone(),
         title: clean_title(&stem),
-        thumb_name: stem.replace(['&', '*', '/', ':', '`', '<', '>', '?', '\\', '|', '"'], "_"),
+        thumb_name: stem.replace(
+            ['&', '*', '/', ':', '`', '<', '>', '?', '\\', '|', '"'],
+            "_",
+        ),
         path: path.to_path_buf(),
     }
 }
@@ -152,8 +170,14 @@ fn folder_title(dir: &Path) -> Option<String> {
 
 /// Reads a UTF-8 value from a PlayStation SFO (PSF) key/value file.
 fn sfo_string(data: &[u8], wanted: &str) -> Option<String> {
-    let u16_at = |o: usize| data.get(o..o + 2).map(|b| u16::from_le_bytes([b[0], b[1]]) as usize);
-    let u32_at = |o: usize| data.get(o..o + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize);
+    let u16_at = |o: usize| {
+        data.get(o..o + 2)
+            .map(|b| u16::from_le_bytes([b[0], b[1]]) as usize)
+    };
+    let u32_at = |o: usize| {
+        data.get(o..o + 4)
+            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize)
+    };
 
     if data.get(0..4)? != b"\0PSF" {
         return None;
@@ -184,7 +208,11 @@ pub fn clean_title(stem: &str) -> String {
     let base = tags.replace_all(stem, "").replace('_', " ");
     let base = base.split_whitespace().collect::<Vec<_>>().join(" ");
     let title = article.replace(&base, "$2 $1$3").into_owned();
-    if title.is_empty() { stem.to_string() } else { title }
+    if title.is_empty() {
+        stem.to_string()
+    } else {
+        title
+    }
 }
 
 pub fn bios_status(system: &System, bios_dir: Option<&Path>) -> Vec<BiosStatus> {
@@ -194,15 +222,23 @@ pub fn bios_status(system: &System, bios_dir: Option<&Path>) -> Vec<BiosStatus> 
         .map(|req| BiosStatus {
             label: req.label.clone(),
             optional: req.optional,
-            found: bios_dir.is_some_and(|dir| req.any_of.iter().any(|p| find_file(dir, p).is_some())),
+            found: bios_dir
+                .is_some_and(|dir| req.any_of.iter().any(|p| find_file(dir, p).is_some())),
         })
         .collect()
 }
 
 /// Case-insensitive glob lookup relative to `dir`.
 pub fn find_file(dir: &Path, pattern: &str) -> Option<PathBuf> {
-    let full = format!("{}/{}", glob::Pattern::escape(&dir.to_string_lossy()), pattern);
-    let options = glob::MatchOptions { case_sensitive: false, ..Default::default() };
+    let full = format!(
+        "{}/{}",
+        glob::Pattern::escape(&dir.to_string_lossy()),
+        pattern
+    );
+    let options = glob::MatchOptions {
+        case_sensitive: false,
+        ..Default::default()
+    };
     glob::glob_with(&full, options).ok()?.flatten().next()
 }
 
@@ -212,7 +248,9 @@ fn extension(path: &Path) -> Option<String> {
 
 /// Stable across Rust versions, unlike `DefaultHasher`; game ids key user data.
 fn fnv1a(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(0xcbf29ce484222325, |hash, b| (hash ^ *b as u64).wrapping_mul(0x100000001b3))
+    bytes.iter().fold(0xcbf29ce484222325, |hash, b| {
+        (hash ^ *b as u64).wrapping_mul(0x100000001b3)
+    })
 }
 
 #[cfg(test)]
@@ -240,7 +278,10 @@ mod tests {
         sfo.extend_from_slice(key);
         sfo.extend_from_slice(value);
 
-        assert_eq!(super::sfo_string(&sfo, "TITLE").as_deref(), Some("Bloodborne"));
+        assert_eq!(
+            super::sfo_string(&sfo, "TITLE").as_deref(),
+            Some("Bloodborne")
+        );
         assert_eq!(super::sfo_string(&sfo, "TITLE_ID"), None);
         assert_eq!(super::sfo_string(b"garbage", "TITLE"), None);
     }
@@ -251,7 +292,10 @@ mod tests {
             clean_title("Legend of Zelda, The - A Link to the Past (USA)"),
             "The Legend of Zelda - A Link to the Past"
         );
-        assert_eq!(clean_title("Super Metroid (Japan, USA) (En,Ja) [!]"), "Super Metroid");
+        assert_eq!(
+            clean_title("Super Metroid (Japan, USA) (En,Ja) [!]"),
+            "Super Metroid"
+        );
         assert_eq!(clean_title("Crash_Bandicoot"), "Crash Bandicoot");
     }
 }
