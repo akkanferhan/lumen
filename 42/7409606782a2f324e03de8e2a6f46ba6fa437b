@@ -1,0 +1,21 @@
+src/screens/Onboarding.tsx
+  s_1b02c1f829b02f::t_ac70bf2173e73c 2-7,9-15,17-20,33-38,41-115,117-153,155-261,263-274,279-339,343-345
+  s_1b02c1f829b02f::t_3e314c34cdd1ef 8,16,21-32,39-40,116,154,262,275-278,340-342
+  s_1b02c1f829b02f::t_3d45528e9ac4cf 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "427409606782a2f324e03de8e2a6f46ba6fa437b",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "unknown"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
