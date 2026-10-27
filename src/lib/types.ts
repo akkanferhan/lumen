@@ -23,9 +23,19 @@ export interface EmulatorDef {
   args: string[];
 }
 
+export type Tier = "standard" | "high";
+export type GraphicsSetting = "auto" | Tier;
+
 export interface Settings {
   romRoot: string | null;
   sounds: boolean;
+  graphics: GraphicsSetting;
+}
+
+export interface Device {
+  cpu: string;
+  model: string | null;
+  detectedTier: Tier;
 }
 
 export interface BiosStatus {
@@ -46,6 +56,9 @@ export interface Overview {
   settings: Settings;
   systems: SystemStatus[];
   runningGameId: string | null;
+  device: Device;
+  /** Preset level in effect. */
+  tier: Tier;
   platformSupported: boolean;
 }
 

@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { Game, GameExited, InstallProgress, Overview } from "./types";
+import type { Game, GameExited, GraphicsSetting, InstallProgress, Overview } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -66,6 +66,7 @@ function save() {
 const progressListeners = new Set<(p: InstallProgress) => void>();
 const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
+let graphics: GraphicsSetting = "auto";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -81,8 +82,10 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true },
+    settings: { romRoot: store.romRoot, sounds: true, graphics },
     runningGameId: running?.id ?? null,
+    device: { cpu: "AMD Ryzen Z1 Extreme", model: "ROG Ally / Ally X (Z1 Extreme)", detectedTier: "high" },
+    tier: graphics === "auto" ? "high" : graphics,
     platformSupported: true,
     systems: systems.map((s) => ({
       id: s.id,
@@ -158,6 +161,9 @@ export const mockApi: Api = {
     return user.favorite;
   },
   setSounds: async () => {},
+  setGraphics: async (value) => {
+    graphics = value;
+  },
   onInstallProgress: (cb) => {
     progressListeners.add(cb);
     return () => progressListeners.delete(cb);

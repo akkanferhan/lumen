@@ -6,6 +6,10 @@ import { emulators, installLabel, systems } from "../lib/catalog";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
+import type { GraphicsSetting, Tier } from "../lib/types";
+
+const TIER_LABEL: Record<Tier, string> = { standard: "Dengeli", high: "Yüksek" };
+const GRAPHICS_LABEL: Record<GraphicsSetting, string> = { auto: "Otomatik", ...TIER_LABEL };
 
 interface Item {
   id: string;
@@ -33,6 +37,19 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
       },
     },
     { id: "emulators", title: "Emülatörler", sub: "Kurulum, durum ve BIOS dosyaları", value: "›", run: () => setPage("emulators") },
+    {
+      id: "graphics",
+      title: "Grafik profili",
+      sub: overview
+        ? `${overview.device.model ?? overview.device.cpu}${overview.settings.graphics === "auto" ? " · otomatik seçildi" : ""}`
+        : undefined,
+      value: overview ? `${GRAPHICS_LABEL[overview.settings.graphics]}${overview.settings.graphics === "auto" ? ` (${TIER_LABEL[overview.tier]})` : ""}` : "",
+      run: () => {
+        const order: GraphicsSetting[] = ["auto", "standard", "high"];
+        const current = overview?.settings.graphics ?? "auto";
+        actions.setGraphics(order[(order.indexOf(current) + 1) % order.length]);
+      },
+    },
     { id: "sounds", title: "Arayüz sesleri", value: sounds ? "Açık" : "Kapalı", run: () => actions.setSounds(!sounds) },
     {
       id: "root",
