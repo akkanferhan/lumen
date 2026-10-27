@@ -3,7 +3,7 @@
 
 import { useSyncExternalStore } from "react";
 import { api } from "./api";
-import { installLabel, systemOf } from "./catalog";
+import { installLabel, isPcSystem, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
 import type { AppUpdate, Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
@@ -179,6 +179,18 @@ export const actions = {
 
   /** Installs whatever is missing for the game's system, then launches it. */
   async play(game: Game, fresh = false): Promise<void> {
+    if (isPcSystem(game.systemId)) {
+      try {
+        await api.launchGame(game.id);
+        sfx.launch();
+        notify(`${game.title} ${systemOf(game.systemId)?.name} üzerinden açılıyor…`, "success");
+        set({ games: await api.getLibrary() });
+      } catch (e) {
+        sfx.error();
+        notify(errorText(e), "error", 6000);
+      }
+      return;
+    }
     const status = state.overview?.systems.find((s) => s.id === game.systemId);
     const missingBios = status?.usingFallback ? undefined : status?.bios.find((b) => !b.found && !b.optional);
     if (missingBios) {

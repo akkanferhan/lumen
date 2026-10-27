@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { BrandMark } from "../components/BrandMark";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
-import { emulatorOf, installLabel, systemOf, systems } from "../lib/catalog";
+import { emulatorOf, installLabel, isPcSystem, systemOf, systems as allSystems } from "../lib/catalog";
+
+// Store launchers (Steam, Epic) have nothing to install.
+const systems = allSystems.filter((s) => !isPcSystem(s.id));
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";

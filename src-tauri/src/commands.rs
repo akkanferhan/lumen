@@ -151,12 +151,17 @@ pub async fn set_rom_root(app: AppHandle, path: PathBuf) -> CmdResult<Vec<GameVi
 #[tauri::command]
 pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     let state = app.state::<AppState>();
-    let Some(root) = state.rom_root() else {
-        return Ok(Vec::new());
-    };
-    let games = tauri::async_runtime::spawn_blocking(move || library::scan(&root))
-        .await
-        .map_err(err)?;
+    let root = state.rom_root();
+    // Emulated games from the ROM folder plus installed Steam / Epic games.
+    let games = tauri::async_runtime::spawn_blocking(move || {
+        let mut games = root.map(|r| library::scan(&r)).unwrap_or_default();
+        let mut pc = crate::pc::scan();
+        pc.sort_by_key(|g| g.title.to_lowercase());
+        games.extend(pc);
+        games
+    })
+    .await
+    .map_err(err)?;
     *state.library.lock().unwrap() = games;
     state.save_library().map_err(err)?;
     Ok(library_view(&state))

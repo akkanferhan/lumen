@@ -131,6 +131,17 @@ fn referenced_files(files: &[PathBuf]) -> HashSet<PathBuf> {
     referenced
 }
 
+/// A game that isn't a file on disk (Steam / Epic): `path` holds its launch URI.
+pub fn make_virtual_game(system_id: &str, id_seed: &str, title: &str, uri: String) -> Game {
+    Game {
+        id: format!("{:016x}", fnv1a(id_seed.as_bytes())),
+        system_id: system_id.to_string(),
+        title: title.trim().to_string(),
+        thumb_name: String::new(),
+        path: PathBuf::from(uri),
+    }
+}
+
 fn make_game(system: &System, path: &Path) -> Game {
     // Folder dumps are named by product code (CUSA00552), so prefer the real title.
     let sfo_title = path.is_dir().then(|| folder_title(path)).flatten();
