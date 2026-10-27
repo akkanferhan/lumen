@@ -92,6 +92,16 @@ Every push to `develop` builds Windows installers. Open the latest
 `.exe` installer. The builds are not code-signed yet, so Windows SmartScreen asks for confirmation
 ("More info" → "Run anyway").
 
+## Releasing
+
+1. Bump `version` in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`.
+2. Merge `develop` into `main` and push a tag `vX.Y.Z`.
+3. The workflow creates a **draft** release with the installers and the signed `latest.json`.
+   Publishing the draft rolls the update out: Lumen checks for it on start and offers it in the menu.
+
+Auto-update needs the `TAURI_SIGNING_PRIVATE_KEY` repository secret (the private key of the
+public key in `tauri.conf.json`). Without it, builds still work but ship no update files.
+
 ## Branching
 
 - `main`: releases only
