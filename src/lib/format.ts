@@ -28,3 +28,18 @@ export function formatLastPlayed(unixSeconds: number | null): string {
   if (days < 7) return `${days} gün önce`;
   return then.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
 }
+
+/** Case/diacritic-insensitive form for search and letter grouping ("Pokémon" → "pokemon"). */
+export function fold(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .toLowerCase();
+}
+
+/** Library group letter: A–Z, or "#" for anything else. */
+export function groupLetter(title: string): string {
+  const first = fold(title.replace(/^(the|a|an) /i, "")).charAt(0).toUpperCase();
+  return first >= "A" && first <= "Z" ? first : "#";
+}
