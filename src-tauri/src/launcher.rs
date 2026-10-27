@@ -9,7 +9,7 @@ use crate::{
 use anyhow::{anyhow, bail};
 use serde::Serialize;
 use std::{
-    path::Path,
+    path::{Path, PathBuf},
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Emitter, Manager};
@@ -24,7 +24,8 @@ pub struct Exited {
     pub session_seconds: u64,
 }
 
-pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
+/// `fresh` starts from the beginning instead of the last resume state.
+pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result<()> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
         bail!("Zaten bir oyun çalışıyor");
@@ -70,8 +71,21 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         _ => game.path.clone(),
     };
     let rom = rom_path.to_string_lossy();
-    let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier())
+    let resume = resume_store(&emu.id, exe_dir);
+    let resume_args = match (&resume, fresh) {
+        (Some(_), false) => resume_file(&state, &game.id)
+            .map(|path| {
+                vec![
+                    "-statefile".to_string(),
+                    path.to_string_lossy().into_owned(),
+                ]
+            })
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    };
+    let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier(), fresh)
         .into_iter()
+        .chain(resume_args)
         .chain(
             emu.args
                 .iter()
@@ -87,7 +101,9 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
     *state.running.lock().unwrap() = Some(RunningGame {
         game_id: game.id.clone(),
         stop: Some(stop_tx),
+        pid: child.id(),
     });
+    let session_start = SystemTime::now();
 
     let app = app.clone();
     let game_id = game.id.clone();
@@ -109,13 +125,15 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
                 .duration_since(UNIX_EPOCH)
                 .ok()
                 .map(|d| d.as_secs());
+            if let Some(store) = &resume {
+                if let Some(path) = store.written_since(session_start) {
+                    entry.resume_state = Some(path);
+                }
+            }
         }
         let _ = state.save_user();
 
-        if let Some(window) = app.get_webview_window("main") {
-            let _ = window.unminimize();
-            let _ = window.set_focus();
-        }
+        focus_lumen(&app, false);
         let _ = app.emit(
             EXITED_EVENT,
             Exited {
@@ -201,6 +219,99 @@ async fn ensure_ps3_firmware(
         let message = "PS3 firmware kurulamadı".to_string();
         installer::emit(app, PS3_FIRMWARE_ID, "error", 0.0, Some(message.clone()));
         bail!(message)
+    }
+}
+
+/// Where an emulator writes the state it saves on exit. The file is named by
+/// the game's serial, which Lumen doesn't know up front, so the file written
+/// during a session is remembered for that game.
+struct ResumeStore {
+    dir: PathBuf,
+    suffix: &'static str,
+}
+
+impl ResumeStore {
+    fn written_since(&self, since: SystemTime) -> Option<PathBuf> {
+        std::fs::read_dir(&self.dir)
+            .ok()?
+            .flatten()
+            .filter(|e| e.file_name().to_string_lossy().ends_with(self.suffix))
+            .filter_map(|e| Some((e.metadata().ok()?.modified().ok()?, e.path())))
+            .filter(|(modified, _)| *modified >= since)
+            .max_by_key(|(modified, _)| *modified)
+            .map(|(_, path)| path)
+    }
+}
+
+fn resume_store(emulator: &str, exe_dir: &Path) -> Option<ResumeStore> {
+    match emulator {
+        "duckstation" => Some(ResumeStore {
+            dir: exe_dir.join("savestates"),
+            suffix: "_resume.sav",
+        }),
+        "pcsx2" => Some(ResumeStore {
+            dir: exe_dir.join("sstates"),
+            suffix: ".resume.p2s",
+        }),
+        _ => None,
+    }
+}
+
+fn resume_file(state: &AppState, game_id: &str) -> Option<PathBuf> {
+    let user = state.user.lock().unwrap();
+    user.get(game_id)?
+        .resume_state
+        .clone()
+        .filter(|p| p.exists())
+}
+
+/// Whether launching `game` would continue where the player left off.
+pub fn is_resumable(state: &AppState, game: &Game) -> bool {
+    if resume_file(state, &game.id).is_some() {
+        return true;
+    }
+    // RetroArch auto-saves `<rom>.state.auto` and loads it on start.
+    let system = manifest::system(&game.system_id);
+    let runner = system.map(|s| crate::library::effective(s, state.bios_dir().as_deref()));
+    if runner.as_ref().map(|r| r.emulator) != Some("retroarch") {
+        return false;
+    }
+    let stem = game
+        .path
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let states = state.dirs.emulators.join("retroarch");
+    crate::library::find_file(
+        &states,
+        &format!("**/states/**/{}.state.auto", glob::Pattern::escape(&stem)),
+    )
+    .is_some()
+}
+
+/// Shows Lumen above the emulator. `on_top` keeps it there for the quick menu.
+pub fn focus_lumen(app: &AppHandle, on_top: bool) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+    let _ = window.unminimize();
+    let _ = window.set_always_on_top(on_top);
+    #[cfg(windows)]
+    if let Ok(hwnd) = window.hwnd() {
+        crate::windows::bring_to_front(hwnd.0 as isize);
+    }
+    let _ = window.set_focus();
+}
+
+/// Leaves the quick menu: drops Lumen's always-on-top and refocuses the game.
+pub fn resume_game(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_always_on_top(false);
+    }
+    let state = app.state::<AppState>();
+    let pid = state.running.lock().unwrap().as_ref().and_then(|g| g.pid);
+    if let Some(pid) = pid {
+        crate::windows::focus_process(pid);
     }
 }
 

@@ -246,7 +246,7 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
 }
 
 #[tauri::command]
-pub async fn launch_game(app: AppHandle, game_id: String) -> CmdResult<()> {
+pub async fn launch_game(app: AppHandle, game_id: String, fresh: Option<bool>) -> CmdResult<()> {
     let state = app.state::<AppState>();
     let game = state
         .library
@@ -256,7 +256,9 @@ pub async fn launch_game(app: AppHandle, game_id: String) -> CmdResult<()> {
         .find(|g| g.id == game_id)
         .cloned()
         .ok_or("Oyun bulunamadı")?;
-    launcher::launch(&app, &game).await.map_err(err)
+    launcher::launch(&app, &game, fresh.unwrap_or(false))
+        .await
+        .map_err(err)
 }
 
 #[tauri::command]
@@ -364,4 +366,22 @@ pub async fn update_emulator(app: AppHandle, id: String) -> CmdResult<()> {
         installer::emit(&app, &emu.id, "error", 0.0, Some(e.to_string()));
     }
     result.map_err(err)
+}
+
+/// Quick menu → "back to game".
+#[tauri::command]
+pub fn resume_game(app: AppHandle) {
+    launcher::resume_game(&app);
+}
+
+#[tauri::command]
+pub fn is_resumable(state: State<'_, AppState>, game_id: String) -> bool {
+    let game = state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|g| g.id == game_id)
+        .cloned();
+    game.is_some_and(|g| launcher::is_resumable(&state, &g))
 }

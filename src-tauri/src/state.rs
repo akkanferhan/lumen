@@ -39,6 +39,8 @@ pub struct UserData {
     /// Unix seconds.
     pub last_played: Option<u64>,
     pub play_seconds: u64,
+    /// Emulator resume state written at the end of the last session.
+    pub resume_state: Option<PathBuf>,
 }
 
 pub struct Dirs {
@@ -51,6 +53,8 @@ pub struct RunningGame {
     pub game_id: String,
     /// Sending on this asks the emulator to close (and save) before it is killed.
     pub stop: Option<oneshot::Sender<()>>,
+    /// Emulator process, for handing focus back after the quick menu.
+    pub pid: Option<u32>,
 }
 
 pub type Running = Arc<Mutex<Option<RunningGame>>>;
