@@ -139,7 +139,10 @@ mod tests {
     ];
 
     fn asset_regex(id: &str) -> Regex {
-        match &emulator(id).unwrap_or_else(|| panic!("unknown emulator {id}")).source {
+        match &emulator(id)
+            .unwrap_or_else(|| panic!("unknown emulator {id}"))
+            .source
+        {
             Source::Github { asset, .. } => Regex::new(asset).unwrap(),
             other => panic!("{id} is not a GitHub source: {other:?}"),
         }
@@ -148,7 +151,12 @@ mod tests {
     #[test]
     fn every_system_points_at_a_known_emulator() {
         for system in &manifest().systems {
-            assert!(emulator(&system.emulator).is_some(), "{} → {}", system.id, system.emulator);
+            assert!(
+                emulator(&system.emulator).is_some(),
+                "{} → {}",
+                system.id,
+                system.emulator
+            );
             assert!(!system.folders.is_empty(), "{} has no folders", system.id);
         }
     }
@@ -170,7 +178,10 @@ mod tests {
             assert!(asset_regex(id).is_match(name), "{id} should match {name}");
         }
         for (id, name) in WRONG_ASSETS {
-            assert!(!asset_regex(id).is_match(name), "{id} should not match {name}");
+            assert!(
+                !asset_regex(id).is_match(name),
+                "{id} should not match {name}"
+            );
         }
     }
 
@@ -179,11 +190,20 @@ mod tests {
         let dolphin = r#"{"artifacts":[{"system":"Windows x64","url":"https://dl.dolphin-emu.org/releases/2609a/dolphin-2609a-x64.7z"},{"url":"https://dl.dolphin-emu.org/releases/2609a/dolphin-2609a-ARM64.7z"}]}"#;
         let ppsspp = r#"<a href="/files/1_20_4/ppsspp_win.zip">Download</a>"#;
         for (id, page, expected) in [
-            ("dolphin", dolphin, "https://dl.dolphin-emu.org/releases/2609a/dolphin-2609a-x64.7z"),
+            (
+                "dolphin",
+                dolphin,
+                "https://dl.dolphin-emu.org/releases/2609a/dolphin-2609a-x64.7z",
+            ),
             ("ppsspp", ppsspp, "/files/1_20_4/ppsspp_win.zip"),
         ] {
-            let Source::Page { pattern, .. } = &emulator(id).unwrap().source else { panic!("{id}") };
-            assert_eq!(Regex::new(pattern).unwrap().find(page).map(|m| m.as_str()), Some(expected));
+            let Source::Page { pattern, .. } = &emulator(id).unwrap().source else {
+                panic!("{id}")
+            };
+            assert_eq!(
+                Regex::new(pattern).unwrap().find(page).map(|m| m.as_str()),
+                Some(expected)
+            );
         }
     }
 }

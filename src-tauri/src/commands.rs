@@ -1,9 +1,8 @@
 //! Commands invoked from the UI. Errors are returned as user-facing strings.
 
 use crate::{
-    installer,
+    installer, launcher,
     library::{self, BiosStatus, Game},
-    launcher,
     manifest::{self, manifest, BIOS_SUBDIRS},
     state::{AppState, Settings},
 };
@@ -60,9 +59,11 @@ pub fn get_overview(state: State<'_, AppState>) -> Overview {
             let exe = emu.and_then(|e| installer::find_exe(e, &state.dirs.emulators.join(&e.id)));
             let core_installed = match (&system.core, &exe) {
                 (None, _) => true,
-                (Some(core), Some(exe)) => exe
-                    .parent()
-                    .is_some_and(|d| d.join("cores").join(format!("{core}_libretro.dll")).exists()),
+                (Some(core), Some(exe)) => exe.parent().is_some_and(|d| {
+                    d.join("cores")
+                        .join(format!("{core}_libretro.dll"))
+                        .exists()
+                }),
                 (Some(_), None) => false,
             };
             SystemStatus {
@@ -78,7 +79,12 @@ pub fn get_overview(state: State<'_, AppState>) -> Overview {
     Overview {
         settings: state.settings.lock().unwrap().clone(),
         systems,
-        running_game_id: state.running.lock().unwrap().as_ref().map(|g| g.game_id.clone()),
+        running_game_id: state
+            .running
+            .lock()
+            .unwrap()
+            .as_ref()
+            .map(|g| g.game_id.clone()),
         platform_supported: cfg!(target_os = "windows"),
     }
 }
@@ -129,8 +135,12 @@ pub async fn set_rom_root(app: AppHandle, path: PathBuf) -> CmdResult<Vec<GameVi
 #[tauri::command]
 pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     let state = app.state::<AppState>();
-    let Some(root) = state.rom_root() else { return Ok(Vec::new()) };
-    let games = tauri::async_runtime::spawn_blocking(move || library::scan(&root)).await.map_err(err)?;
+    let Some(root) = state.rom_root() else {
+        return Ok(Vec::new());
+    };
+    let games = tauri::async_runtime::spawn_blocking(move || library::scan(&root))
+        .await
+        .map_err(err)?;
     *state.library.lock().unwrap() = games;
     state.save_library().map_err(err)?;
     Ok(library_view(&state))
@@ -146,14 +156,19 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
     let state = app.state::<AppState>();
     let bios = state.bios_dir();
 
-    let systems: Vec<_> = system_ids.iter().filter_map(|id| manifest::system(id)).collect();
+    let systems: Vec<_> = system_ids
+        .iter()
+        .filter_map(|id| manifest::system(id))
+        .collect();
     let mut emulator_ids: Vec<&str> = systems.iter().map(|s| s.emulator.as_str()).collect();
     emulator_ids.sort();
     emulator_ids.dedup();
 
     let mut failures = Vec::new();
     for emu_id in emulator_ids {
-        let Some(emu) = manifest::emulator(emu_id) else { continue };
+        let Some(emu) = manifest::emulator(emu_id) else {
+            continue;
+        };
         if !state.installing.lock().unwrap().insert(emu.id.clone()) {
             continue;
         }
@@ -162,8 +177,14 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
         let exe = match installer::find_exe(emu, &install_dir) {
             Some(exe) => Ok(exe),
             None => {
-                installer::install_emulator(&app, emu, &state.dirs.emulators, &state.dirs.downloads, bios.as_deref())
-                    .await
+                installer::install_emulator(
+                    &app,
+                    emu,
+                    &state.dirs.emulators,
+                    &state.dirs.downloads,
+                    bios.as_deref(),
+                )
+                .await
             }
         };
 
@@ -181,8 +202,16 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
                     if cores_dir.join(format!("{core}_libretro.dll")).exists() {
                         continue;
                     }
-                    if let Err(e) = installer::install_core(&app, core, &cores_dir, &state.dirs.downloads).await {
-                        installer::emit(&app, &format!("core:{core}"), "error", 0.0, Some(e.to_string()));
+                    if let Err(e) =
+                        installer::install_core(&app, core, &cores_dir, &state.dirs.downloads).await
+                    {
+                        installer::emit(
+                            &app,
+                            &format!("core:{core}"),
+                            "error",
+                            0.0,
+                            Some(e.to_string()),
+                        );
                         failures.push(format!("{core}: {e}"));
                     }
                 }

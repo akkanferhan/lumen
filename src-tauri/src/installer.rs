@@ -28,8 +28,22 @@ pub struct Progress {
     pub message: Option<String>,
 }
 
-pub fn emit(app: &AppHandle, id: &str, stage: &'static str, progress: f32, message: Option<String>) {
-    let _ = app.emit(PROGRESS_EVENT, Progress { id: id.to_string(), stage, progress, message });
+pub fn emit(
+    app: &AppHandle,
+    id: &str,
+    stage: &'static str,
+    progress: f32,
+    message: Option<String>,
+) {
+    let _ = app.emit(
+        PROGRESS_EVENT,
+        Progress {
+            id: id.to_string(),
+            stage,
+            progress,
+            message,
+        },
+    );
 }
 
 fn client() -> &'static reqwest::Client {
@@ -44,7 +58,9 @@ fn client() -> &'static reqwest::Client {
 }
 
 pub fn find_exe(emu: &Emulator, install_dir: &Path) -> Option<PathBuf> {
-    emu.exe.iter().find_map(|pattern| crate::library::find_file(install_dir, pattern))
+    emu.exe
+        .iter()
+        .find_map(|pattern| crate::library::find_file(install_dir, pattern))
 }
 
 pub async fn install_emulator(
@@ -64,7 +80,8 @@ pub async fn install_emulator(
     unpack(archive, target.clone()).await?;
 
     emit(app, &emu.id, "configuring", 1.0, None);
-    let exe = find_exe(emu, &target).ok_or_else(|| anyhow!("{} çalıştırılabilir dosyası bulunamadı", emu.name))?;
+    let exe = find_exe(emu, &target)
+        .ok_or_else(|| anyhow!("{} çalıştırılabilir dosyası bulunamadı", emu.name))?;
     let exe_dir = exe.parent().unwrap_or(&target);
     for marker in &emu.portable_files {
         let path = exe_dir.join(marker);
@@ -78,7 +95,12 @@ pub async fn install_emulator(
     Ok(exe)
 }
 
-pub async fn install_core(app: &AppHandle, core: &str, cores_dir: &Path, downloads_dir: &Path) -> anyhow::Result<()> {
+pub async fn install_core(
+    app: &AppHandle,
+    core: &str,
+    cores_dir: &Path,
+    downloads_dir: &Path,
+) -> anyhow::Result<()> {
     let id = format!("core:{core}");
     emit(app, &id, "downloading", 0.0, None);
     let url = format!("{CORES_URL}/{core}_libretro.dll.zip");
@@ -107,7 +129,9 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
                 Some(t) => format!("https://api.github.com/repos/{repo}/releases/tags/{t}"),
                 None => format!("https://api.github.com/repos/{repo}/releases/latest"),
             };
-            let mut request = client().get(&api).header("Accept", "application/vnd.github+json");
+            let mut request = client()
+                .get(&api)
+                .header("Accept", "application/vnd.github+json");
             // Optional; only lifts the 60 requests/hour anonymous limit (used by CI).
             if let Ok(token) = std::env::var("GITHUB_TOKEN") {
                 request = request.bearer_auth(token);
@@ -128,7 +152,11 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
                 .map(|a| a.browser_download_url)
                 .ok_or_else(|| anyhow!("{repo} sürümünde Windows paketi bulunamadı"))
         }
-        Source::Page { page, pattern, base } => {
+        Source::Page {
+            page,
+            pattern,
+            base,
+        } => {
             let body = client()
                 .get(page)
                 .send()
@@ -149,7 +177,12 @@ async fn resolve_url(source: &Source) -> anyhow::Result<String> {
     }
 }
 
-async fn download(app: &AppHandle, id: &str, url: &str, downloads_dir: &Path) -> anyhow::Result<PathBuf> {
+async fn download(
+    app: &AppHandle,
+    id: &str,
+    url: &str,
+    downloads_dir: &Path,
+) -> anyhow::Result<PathBuf> {
     let response = client()
         .get(url)
         .send()
@@ -158,7 +191,13 @@ async fn download(app: &AppHandle, id: &str, url: &str, downloads_dir: &Path) ->
         .with_context(|| format!("İndirme başarısız: {url}"))?;
     let total = response.content_length();
 
-    let file_name = url.rsplit('/').next().unwrap_or("download").split('?').next().unwrap_or("download");
+    let file_name = url
+        .rsplit('/')
+        .next()
+        .unwrap_or("download")
+        .split('?')
+        .next()
+        .unwrap_or("download");
     let path = downloads_dir.join(format!("{}-{file_name}", id.replace(':', "_")));
     let mut file = tokio::fs::File::create(&path).await?;
 
@@ -184,10 +223,13 @@ async fn unpack(archive: PathBuf, target: PathBuf) -> anyhow::Result<()> {
         std::fs::create_dir_all(&target)?;
         let name = archive.to_string_lossy().to_lowercase();
         let result = if name.ends_with(".7z") {
-            sevenz_rust::decompress_file(&archive, &target).map_err(|e| anyhow!("7z açılamadı: {e}"))
+            sevenz_rust::decompress_file(&archive, &target)
+                .map_err(|e| anyhow!("7z açılamadı: {e}"))
         } else if name.ends_with(".zip") {
             let file = std::fs::File::open(&archive)?;
-            zip::ZipArchive::new(file)?.extract(&target).map_err(|e| anyhow!("zip açılamadı: {e}"))
+            zip::ZipArchive::new(file)?
+                .extract(&target)
+                .map_err(|e| anyhow!("zip açılamadı: {e}"))
         } else {
             Err(anyhow!("Desteklenmeyen arşiv: {name}"))
         };
@@ -213,6 +255,10 @@ mod tests {
                 Err(e) => failures.push(format!("{}: {e:#}", emu.id)),
             }
         }
-        assert!(failures.is_empty(), "unresolved sources:\n{}", failures.join("\n"));
+        assert!(
+            failures.is_empty(),
+            "unresolved sources:\n{}",
+            failures.join("\n")
+        );
     }
 }
