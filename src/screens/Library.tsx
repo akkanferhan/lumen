@@ -9,6 +9,8 @@ import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";
 import type { Game } from "../lib/types";
 import { useColumns } from "../lib/useColumns";
+import { fold, groupLetter } from "../lib/format";
+import { SearchKeyboard } from "../components/SearchKeyboard";
 
 interface Tab {
   id: string;
@@ -57,7 +59,22 @@ export function Library({
   // Focus is remembered per tab, so switching back lands where you left off.
   const focusByTab = useRef(new Map<string, number>());
   const [focus, setFocus] = useState(0);
-  const list = tab?.games ?? [];
+  // Search spans the whole library, whatever tab is selected.
+  const [query, setQuery] = useState("");
+  const [keyboard, setKeyboard] = useState(false);
+  const searching = query.trim().length > 0;
+  const results = useMemo(() => {
+    const needle = fold(query.trim());
+    return needle ? games.filter((g) => fold(g.title).includes(needle)) : [];
+  }, [games, query]);
+  const list = searching ? results : (tab?.games ?? []);
+  // Big letter shown briefly when jumping with LT/RT.
+  const [jumpLetter, setJumpLetter] = useState<string | null>(null);
+  useEffect(() => {
+    if (!jumpLetter) return;
+    const id = setTimeout(() => setJumpLetter(null), 650);
+    return () => clearTimeout(id);
+  }, [jumpLetter]);
   const index = Math.min(focus, Math.max(0, list.length - 1));
   const focused = list[index];
 
@@ -88,8 +105,45 @@ export function Library({
     setFocus(focusByTab.current.get(next.id) ?? 0);
   };
 
+  /** LT/RT: previous/next first letter (A, B, C…) in the current list. */
+  const jumpGroup = (delta: 1 | -1) => {
+    if (!list.length) return;
+    const letterAt = (i: number) => groupLetter(list[i].title);
+    const current = letterAt(index);
+    let i = index;
+    if (delta > 0) {
+      while (i < list.length && letterAt(i) === current) i++;
+      if (i >= list.length) return;
+    } else {
+      // Start of this group first; from there, start of the previous one.
+      while (i > 0 && letterAt(i - 1) === current) i--;
+      if (i === index) {
+        if (i === 0) return;
+        const previous = letterAt(i - 1);
+        i--;
+        while (i > 0 && letterAt(i - 1) === previous) i--;
+      }
+    }
+    sfx.tab();
+    setFocus(i);
+    setJumpLetter(letterAt(i));
+  };
+
   useInput((action) => {
     switch (action) {
+      case "lt":
+        jumpGroup(-1);
+        break;
+      case "rt":
+        jumpGroup(1);
+        break;
+      case "b":
+        if (searching) {
+          sfx.back();
+          setQuery("");
+          setFocus(focusByTab.current.get(tab?.id ?? "") ?? 0);
+        }
+        break;
       case "left":
         if (index % columns !== 0) move(index - 1);
         break;
@@ -124,14 +178,16 @@ export function Library({
         }
         break;
       case "x":
-        actions.rescan();
+        sfx.confirm();
+        if (!searching) focusByTab.current.set(tab?.id ?? "", index);
+        setKeyboard(true);
         break;
       case "start":
         sfx.confirm();
         onMenu();
         break;
     }
-  }, Layer.screen);
+  }, Layer.screen, !keyboard);
 
   const accent = (focused && systemOf(focused.systemId)?.accent) || "var(--brand)";
   const art = focused ? boxArtUrl(focused) : null;
@@ -150,8 +206,13 @@ export function Library({
       </header>
 
       <nav className="tabs">
-        <span className="glyph pill">LB</span>
-        <div className="tab-track" ref={tabTrackRef}>
+        {searching && (
+          <button className="tab active search-chip" onClick={() => setKeyboard(true)}>
+            ⌕ “{query.trim()}”<span className="count">{results.length}</span>
+          </button>
+        )}
+        <span className="glyph pill" hidden={searching}>LB</span>
+        <div className="tab-track" ref={tabTrackRef} hidden={searching}>
           {tabs.map((t, i) => (
             <button
               key={t.id}
@@ -163,18 +224,24 @@ export function Library({
             </button>
           ))}
         </div>
-        <span className="glyph pill">RB</span>
+        <span className="glyph pill" hidden={searching}>RB</span>
       </nav>
 
       {list.length === 0 ? (
         <div className="empty">
           <div className="empty-inner">
-            <h2>{scanning ? "Oyunlar aranıyor…" : "Henüz oyun yok"}</h2>
+            <h2>{searching ? "Sonuç yok" : scanning ? "Oyunlar aranıyor…" : "Henüz oyun yok"}</h2>
+            {searching ? (
+              <p>“{query.trim()}” ile eşleşen oyun bulunamadı.</p>
+            ) : (
+              <>
             <p>
               Oyun dosyalarını sistem klasörlerine koy, örneğin <b>snes</b>, <b>ps2</b> veya <b>gc</b>. Ardından
               kütüphaneyi yenile.
             </p>
             {root && <div className="path-chip">{root}</div>}
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -185,7 +252,7 @@ export function Library({
                 key={game.id}
                 game={game}
                 focused={i === index}
-                showSystem={tab.id === "all" || tab.id === "recent" || tab.id === "fav"}
+                showSystem={searching || tab.id === "all" || tab.id === "recent" || tab.id === "fav"}
                 onClick={() => (i === index ? onOpen(game) : move(i))}
               />
             ))}
@@ -193,13 +260,32 @@ export function Library({
         </div>
       )}
 
-      {!covered && (
+      {jumpLetter && <div className="jump-letter">{jumpLetter}</div>}
+
+      {keyboard && (
+        <SearchKeyboard
+          query={query}
+          results={results.length}
+          onChange={(q) => {
+            setQuery(q);
+            setFocus(0);
+          }}
+          onDone={() => setKeyboard(false)}
+          onCancel={() => {
+            setQuery("");
+            setKeyboard(false);
+          }}
+        />
+      )}
+
+      {!covered && !keyboard && (
         <HintBar
           left={focused ? `${index + 1} / ${list.length}` : null}
           hints={[
             { action: "a", label: "Aç" },
             { action: "y", label: focused?.favorite ? "Favoriden çıkar" : "Favori" },
-            { action: "x", label: scanning ? "Taranıyor…" : "Yenile" },
+            { action: "x", label: "Ara" },
+            ...(searching ? [{ action: "b" as const, label: "Aramayı temizle" }] : []),
             { action: "start", label: "Menü" },
           ]}
         />

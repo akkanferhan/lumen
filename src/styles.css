@@ -36,6 +36,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html,
 body,
 #root {
@@ -861,6 +865,138 @@ button {
   align-items: center;
   gap: 0.4rem;
   vertical-align: middle;
+}
+
+/* ---------- Search ---------- */
+
+.search-chip {
+  flex: none;
+}
+
+.search-panel {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  z-index: 11;
+  width: min(44rem, calc(100vw - 2 * var(--gutter)));
+  transform: translateX(-50%);
+  padding: 1.4rem;
+  border-radius: var(--radius-l);
+  background: rgba(19, 23, 34, 0.96);
+  border: 1px solid var(--line);
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.5);
+  animation: rise 280ms var(--ease-out);
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.1rem;
+}
+
+.search-field .placeholder {
+  color: var(--text-faint);
+}
+
+.search-icon {
+  color: var(--text-faint);
+}
+
+.caret {
+  width: 2px;
+  height: 1.3em;
+  background: var(--brand);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.search-count {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.keys {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.key-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.45rem;
+}
+
+.key-row.special {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.key {
+  padding: 0.7rem 0;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  font-weight: 650;
+  transition: transform 160ms var(--ease-spring), background 120ms;
+  outline: none;
+}
+
+.key.done {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.key.focused {
+  background: var(--text);
+  color: #10121a;
+  transform: scale(1.08);
+}
+
+.search-hints {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.search-hints span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.jump-letter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 9rem;
+  height: 9rem;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-l);
+  background: rgba(19, 23, 34, 0.86);
+  backdrop-filter: blur(16px);
+  font-size: 4.5rem;
+  font-weight: 800;
+  pointer-events: none;
+  animation: pop 260ms var(--ease-spring);
 }
 
 /* ---------- Toasts ---------- */
