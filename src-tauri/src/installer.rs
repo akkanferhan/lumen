@@ -2,6 +2,7 @@
 //! unpacks them into `<app data>/emulators/<id>`.
 
 use crate::config;
+use crate::device::Tier;
 use crate::manifest::{Emulator, Source};
 use anyhow::{anyhow, Context};
 use futures_util::StreamExt;
@@ -69,6 +70,7 @@ pub async fn install_emulator(
     emulators_dir: &Path,
     downloads_dir: &Path,
     bios: Option<&Path>,
+    tier: Tier,
 ) -> anyhow::Result<PathBuf> {
     emit(app, &emu.id, "downloading", 0.0, None);
     let url = resolve_url(&emu.source).await?;
@@ -89,7 +91,7 @@ pub async fn install_emulator(
             std::fs::write(path, "")?;
         }
     }
-    config::configure(emu, exe_dir, bios)?;
+    config::configure(emu, exe_dir, bios, tier)?;
 
     emit(app, &emu.id, "done", 1.0, None);
     Ok(exe)

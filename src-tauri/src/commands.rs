@@ -1,6 +1,7 @@
 //! Commands invoked from the UI. Errors are returned as user-facing strings.
 
 use crate::{
+    device::{self, Device, Tier, TierSetting},
     installer, launcher,
     library::{self, BiosStatus, Game},
     manifest::{self, manifest, BIOS_SUBDIRS},
@@ -22,6 +23,9 @@ pub struct Overview {
     pub settings: Settings,
     pub systems: Vec<SystemStatus>,
     pub running_game_id: Option<String>,
+    pub device: Device,
+    /// Preset level in effect (detected or chosen in settings).
+    pub tier: Tier,
     /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
     pub platform_supported: bool,
 }
@@ -79,6 +83,8 @@ pub fn get_overview(state: State<'_, AppState>) -> Overview {
     Overview {
         settings: state.settings.lock().unwrap().clone(),
         systems,
+        device: device::device().clone(),
+        tier: state.tier(),
         running_game_id: state
             .running
             .lock()
@@ -183,6 +189,7 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
                     &state.dirs.emulators,
                     &state.dirs.downloads,
                     bios.as_deref(),
+                    state.tier(),
                 )
                 .await
             }
@@ -266,5 +273,11 @@ pub fn toggle_favorite(state: State<'_, AppState>, game_id: String) -> CmdResult
 #[tauri::command]
 pub fn set_sounds(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
     state.settings.lock().unwrap().sounds = enabled;
+    state.save_settings().map_err(err)
+}
+
+#[tauri::command]
+pub fn set_graphics(state: State<'_, AppState>, graphics: TierSetting) -> CmdResult<()> {
+    state.settings.lock().unwrap().graphics = graphics;
     state.save_settings().map_err(err)
 }

@@ -1,6 +1,7 @@
 //! Persistent app state: settings, scanned library and per-game user data.
 //! Everything lives as small JSON files in the app data directory.
 
+use crate::device::{self, Tier, TierSetting};
 use crate::library::Game;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
@@ -17,6 +18,8 @@ use tokio::sync::oneshot;
 pub struct Settings {
     pub rom_root: Option<PathBuf>,
     pub sounds: bool,
+    /// Emulator graphics preset level.
+    pub graphics: TierSetting,
 }
 
 impl Default for Settings {
@@ -24,6 +27,7 @@ impl Default for Settings {
         Self {
             rom_root: None,
             sounds: true,
+            graphics: TierSetting::Auto,
         }
     }
 }
@@ -105,6 +109,10 @@ impl AppState {
 
     pub fn rom_root(&self) -> Option<PathBuf> {
         self.settings.lock().unwrap().rom_root.clone()
+    }
+
+    pub fn tier(&self) -> Tier {
+        device::tier(self.settings.lock().unwrap().graphics)
     }
 
     /// BIOS files live next to the ROM folders so users find them in one place.

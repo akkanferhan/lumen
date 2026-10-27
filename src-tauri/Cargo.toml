@@ -28,3 +28,6 @@ walkdir = "2"
 glob = "0.3"
 # XInput backend keeps reading the controller while an emulator has focus.
 gilrs = { version = "0.11", default-features = false, features = ["xinput"] }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.56"

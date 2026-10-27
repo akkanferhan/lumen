@@ -46,7 +46,7 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         bail!("Eksik dosya: {}", missing.label);
     }
 
-    config::configure(emu, exe_dir, bios.as_deref())?;
+    config::configure(emu, exe_dir, bios.as_deref(), state.tier())?;
     if emu.id == "rpcs3" {
         if let Some(bios) = &bios {
             ensure_ps3_firmware(app, &exe, bios).await?;

@@ -2044,6 +2044,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tokio",
  "walkdir",
+ "winreg",
  "zip",
 ]
 

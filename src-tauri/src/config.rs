@@ -3,11 +3,20 @@
 //! so BIOS files added later are picked up without user action.
 //! Only the keys we own are touched; everything else the user changes is kept.
 
+use crate::device::Tier;
 use crate::library::find_file;
 use crate::manifest::Emulator;
+use crate::presets;
 use std::{fs, path::Path};
 
-pub fn configure(emu: &Emulator, exe_dir: &Path, bios: Option<&Path>) -> anyhow::Result<()> {
+pub fn configure(
+    emu: &Emulator,
+    exe_dir: &Path,
+    bios: Option<&Path>,
+    tier: Tier,
+) -> anyhow::Result<()> {
+    presets::apply(emu, exe_dir, tier)?;
+
     // Appends a BIOS folder entry only when the ROM root is known.
     let with_bios = |mut entries: Vec<(&'static str, &'static str, String)>,
                      section: &'static str,
