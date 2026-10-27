@@ -1,0 +1,25 @@
+src-tauri/Cargo.lock
+  s_1b02c1f829b02f::t_e84e58e90d53a3 2041,2047,3392-3404,4249,4384-4389
+src-tauri/Cargo.toml
+  s_1b02c1f829b02f::t_a81f2fe6f35481 28-29
+src-tauri/src/formats.rs
+  s_1b02c1f829b02f::t_9e282067be9aae 1-248
+src-tauri/src/lib.rs
+  s_1b02c1f829b02f::t_3374e957ed8793 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "da5ac601f576dd8fbc530dc84c529a49b7cb77ef",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
