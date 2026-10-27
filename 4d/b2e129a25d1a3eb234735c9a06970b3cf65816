@@ -1,0 +1,22 @@
+src/styles.css
+  s_1b02c1f829b02f::t_846e08d69f3126 1131,1135,1283-1284,1287-1330,1335,1344
+  s_1b02c1f829b02f::t_59b96985301f0a 1130,1132,1134,1137,1341-1343,1345-1346
+src/screens/Onboarding.tsx
+  s_1b02c1f829b02f::t_846e08d69f3126 275-276,286-289,293-301,309,322-331,333
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4db2e129a25d1a3eb234735c9a06970b3cf65816",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
