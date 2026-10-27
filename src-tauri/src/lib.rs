@@ -1,6 +1,7 @@
 mod commands;
 mod config;
 mod device;
+mod formats;
 mod input;
 mod installer;
 mod launcher;
