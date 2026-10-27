@@ -243,7 +243,7 @@ pub async fn launch_game(app: AppHandle, game_id: String) -> CmdResult<()> {
         .find(|g| g.id == game_id)
         .cloned()
         .ok_or("Oyun bulunamadı")?;
-    launcher::launch(&app, &game).map_err(err)
+    launcher::launch(&app, &game).await.map_err(err)
 }
 
 #[tauri::command]

@@ -8,7 +8,10 @@ use crate::{
 };
 use anyhow::{anyhow, bail};
 use serde::Serialize;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::{
+    path::Path,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::oneshot;
 
@@ -21,7 +24,7 @@ pub struct Exited {
     pub session_seconds: u64,
 }
 
-pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
+pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
         bail!("Zaten bir oyun çalışıyor");
@@ -44,6 +47,11 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
     }
 
     config::configure(emu, exe_dir, bios.as_deref())?;
+    if emu.id == "rpcs3" {
+        if let Some(bios) = &bios {
+            ensure_ps3_firmware(app, &exe, bios).await?;
+        }
+    }
 
     let core = match &system.core {
         Some(core) => {
@@ -113,6 +121,69 @@ pub fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
     });
 
     Ok(())
+}
+
+const PS3_FIRMWARE_ID: &str = "firmware:ps3";
+
+/// RPCS3 needs the PS3 system software installed once. Its `--installfw` only
+/// works with the GUI and doesn't exit afterwards, so we watch `dev_flash` and
+/// close RPCS3 once the extracted files stop changing.
+async fn ensure_ps3_firmware(app: &AppHandle, exe: &Path, bios: &Path) -> anyhow::Result<()> {
+    let exe_dir = exe
+        .parent()
+        .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
+    let dev_flash = exe_dir.join("dev_flash");
+    let marker = dev_flash.join("vsh").join("module").join("vsh.self");
+    if marker.exists() {
+        return Ok(());
+    }
+    let pup = crate::library::find_file(bios, "ps3/PS3UPDAT.PUP")
+        .ok_or_else(|| anyhow!("PS3 firmware bulunamadı (bios/ps3/PS3UPDAT.PUP)"))?;
+
+    installer::emit(app, PS3_FIRMWARE_ID, "configuring", 1.0, None);
+    let mut child = tokio::process::Command::new(exe)
+        .arg("--installfw")
+        .arg(&pup)
+        .current_dir(exe_dir)
+        .spawn()?;
+
+    let started = Instant::now();
+    let (mut last_count, mut stable_polls) = (0usize, 0u32);
+    loop {
+        tokio::select! {
+            _ = child.wait() => break,
+            _ = tokio::time::sleep(Duration::from_secs(1)) => {}
+        }
+        if marker.exists() {
+            let count = walkdir::WalkDir::new(&dev_flash)
+                .into_iter()
+                .flatten()
+                .count();
+            stable_polls = if count == last_count {
+                stable_polls + 1
+            } else {
+                0
+            };
+            last_count = count;
+            if stable_polls >= 5 {
+                let _ = child.kill().await;
+                break;
+            }
+        }
+        if started.elapsed() > Duration::from_secs(600) {
+            let _ = child.kill().await;
+            break;
+        }
+    }
+
+    if marker.exists() {
+        installer::emit(app, PS3_FIRMWARE_ID, "done", 1.0, None);
+        Ok(())
+    } else {
+        let message = "PS3 firmware kurulamadı".to_string();
+        installer::emit(app, PS3_FIRMWARE_ID, "error", 0.0, Some(message.clone()));
+        bail!(message)
+    }
 }
 
 /// Ends the running game; used by the home combo and the in-app "close game" button.
