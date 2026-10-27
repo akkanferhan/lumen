@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Tier {
-    /// Z1, Z2 A: ~4–8 RDNA compute units.
+    /// Z1 (4 RDNA3 CUs), Z2 A (8 RDNA2 CUs, Steam Deck class).
     Standard,
     /// Z1 Extreme, Z2 Extreme (Ally, Ally X, Xbox Ally X): 12–16 compute units.
     High,

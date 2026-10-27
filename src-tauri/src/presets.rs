@@ -5,7 +5,7 @@
 //! games look and run. Every key was checked against the emulator's current
 //! source; tier values follow community guidance for Ally/Deck-class APUs.
 
-use crate::config::set_ini;
+use crate::config::{set_cfg, set_ini};
 use crate::device::Tier;
 use crate::formats::{entry, merge_json, merge_toml, merge_yaml, patch_xml};
 use crate::manifest::Emulator;
@@ -17,6 +17,10 @@ pub fn apply(emu: &Emulator, exe_dir: &Path, tier: Tier) -> anyhow::Result<()> {
         "rpcs3" => rpcs3(exe_dir, high),
         "shadps4" => shadps4(exe_dir, high),
         "xemu" => xemu(exe_dir, high),
+        "retroarch" => retroarch(exe_dir, high),
+        "duckstation" => duckstation(exe_dir, high),
+        "pcsx2" => pcsx2(exe_dir, high),
+        "ppsspp" => ppsspp(exe_dir, high),
         "dolphin" => dolphin(exe_dir, high),
         "cemu" => cemu(exe_dir),
         "melonds" => melonds(exe_dir, high),
@@ -28,9 +32,18 @@ pub fn apply(emu: &Emulator, exe_dir: &Path, tier: Tier) -> anyhow::Result<()> {
 }
 
 /// Extra arguments placed before the emulator's own launch arguments.
-pub fn launch_args(emu: &Emulator, tier: Tier) -> Vec<String> {
+pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier) -> Vec<String> {
     let high = tier == Tier::High;
     match emu.id.as_str() {
+        // Our settings live in their own file layered over retroarch.cfg, so
+        // the user's own RetroArch config is never rewritten.
+        "retroarch" => vec![
+            "--appendconfig".into(),
+            exe_dir
+                .join(RETROARCH_OVERRIDES)
+                .to_string_lossy()
+                .into_owned(),
+        ],
         // Every Xenia cvar accepts `--name=value`; command line wins over the
         // config file and is never written back to it.
         "xenia" => {
@@ -345,4 +358,259 @@ fn azahar(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
         &exe_dir.join("user").join("config").join("qt-config.ini"),
         &refs,
     )
+}
+
+const RETROARCH_OVERRIDES: &str = "lumen.cfg";
+
+fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
+    let on = |v: bool| if v { "true" } else { "false" }.to_string();
+    set_cfg(
+        &exe_dir.join(RETROARCH_OVERRIDES),
+        &[
+            // Vulkan also enables ParaLLEl-RDP for N64; GL-only cores may switch.
+            ("video_driver", "vulkan".into()),
+            ("driver_switch_enable", on(true)),
+            ("video_fullscreen", on(true)),
+            ("video_windowed_fullscreen", on(true)),
+            ("video_vsync", on(true)),
+            // Auto: 60 fps content gets swap interval 2 on the 120 Hz panel.
+            ("video_swap_interval", "0".into()),
+            ("video_threaded", on(false)),
+            ("video_frame_delay_auto", on(high)),
+            ("audio_driver", "wasapi".into()),
+            ("audio_latency", "64".into()),
+            ("input_joypad_driver", "xinput".into()),
+            ("input_autodetect_enable", on(true)),
+            ("confirm_quit", on(false)),
+            // L3 + R3 opens RetroArch's menu; quitting is Lumen's Select + Start.
+            ("input_menu_toggle_gamepad_combo", "2".into()),
+            ("input_quit_gamepad_combo", "0".into()),
+            // Resume where you left off.
+            ("savestate_auto_save", on(true)),
+            ("savestate_auto_load", on(true)),
+            // Core options below apply everywhere; stale per-game files can't override them.
+            ("global_core_options", on(true)),
+            ("game_specific_options", on(false)),
+            ("pause_nonactive", on(true)),
+            ("menu_driver", "ozone".into()),
+            ("config_save_on_exit", on(false)),
+        ],
+    )?;
+    set_cfg(
+        &exe_dir.join("retroarch-core-options.cfg"),
+        &[
+            // N64: ParaLLEl RDP/RSP (Vulkan), upscaled on high tier.
+            ("mupen64plus-rdp-plugin", "parallel".into()),
+            ("mupen64plus-rsp-plugin", "parallel".into()),
+            (
+                "mupen64plus-parallel-rdp-upscaling",
+                if high { "2x" } else { "1x" }.into(),
+            ),
+            ("mupen64plus-parallel-rdp-synchronous", "True".into()),
+            ("mupen64plus-cpucore", "dynamic_recompiler".into()),
+            ("mupen64plus-aspect", "4:3".into()),
+            // Dreamcast (Flycast keeps the old `reicast_` prefix).
+            (
+                "reicast_internal_resolution",
+                if high { "1920x1440" } else { "1280x960" }.into(),
+            ),
+            (
+                "reicast_alpha_sorting",
+                if high {
+                    "per-pixel (accurate)"
+                } else {
+                    "per-triangle (normal)"
+                }
+                .into(),
+            ),
+            ("reicast_threaded_rendering", "enabled".into()),
+            ("reicast_widescreen_hack", "disabled".into()),
+            (
+                "reicast_anisotropic_filtering",
+                if high { "16" } else { "4" }.into(),
+            ),
+            // 2D systems: correct aspect and handheld colors.
+            ("snes9x_aspect", "4:3".into()),
+            ("mesen_aspect_ratio", "Auto".into()),
+            ("genesis_plus_gx_aspect_ratio", "auto".into()),
+            ("gambatte_gbc_color_correction", "GBC only".into()),
+            ("mgba_color_correction", "Auto".into()),
+            ("mgba_skip_bios", "ON".into()),
+        ],
+    )
+}
+
+fn duckstation(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
+    set_ini(
+        &exe_dir.join("settings.ini"),
+        &[
+            ("Main", "StartFullscreen", "true".into()),
+            ("Main", "HideCursorInFullscreen", "true".into()),
+            ("Main", "ConfirmPowerOff", "false".into()),
+            ("Main", "SaveStateOnExit", "true".into()),
+            ("Main", "PauseOnFocusLoss", "false".into()),
+            // The panel runs at 120 Hz; don't speed games up to match it.
+            ("Main", "SyncToHostRefreshRate", "false".into()),
+            ("Main", "ApplyCompatibilitySettings", "true".into()),
+            ("AutoUpdater", "CheckAtStartup", "false".into()),
+            ("GPU", "Renderer", "Vulkan".into()),
+            (
+                "GPU",
+                "ResolutionScale",
+                if high { "6" } else { "4" }.into(),
+            ),
+            // PGXP: fixes PS1 polygon wobble.
+            ("GPU", "PGXPEnable", "true".into()),
+            ("GPU", "PGXPCulling", "true".into()),
+            ("GPU", "PGXPTextureCorrection", "true".into()),
+            ("GPU", "PGXPDepthBuffer", "false".into()),
+            ("GPU", "TextureFilter", "Nearest".into()),
+            ("GPU", "WidescreenHack", "false".into()),
+            ("GPU", "UseThread", "true".into()),
+            ("Display", "VSync", "true".into()),
+            ("Display", "OptimalFramePacing", "true".into()),
+            ("BIOS", "PatchFastBoot", "true".into()),
+            ("Cheevos", "Enabled", "false".into()),
+        ],
+    )
+}
+
+fn pcsx2(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
+    set_ini(
+        &exe_dir.join("inis").join("PCSX2.ini"),
+        &[
+            ("UI", "SettingsVersion", "1".into()),
+            ("UI", "StartFullscreen", "true".into()),
+            ("UI", "ConfirmShutdown", "false".into()),
+            ("UI", "HideMouseCursor", "true".into()),
+            ("UI", "PauseOnFocusLoss", "false".into()),
+            ("AutoUpdater", "CheckAtStartup", "false".into()),
+            // 14 = Vulkan (GSRendererType).
+            ("EmuCore/GS", "Renderer", "14".into()),
+            (
+                "EmuCore/GS",
+                "upscale_multiplier",
+                if high { "3" } else { "2" }.into(),
+            ),
+            ("EmuCore/GS", "filter", "2".into()),
+            ("EmuCore/GS", "TriFilter", "-1".into()),
+            // Blending accuracy: 1 Basic, 2 Medium.
+            (
+                "EmuCore/GS",
+                "accurate_blending_unit",
+                if high { "2" } else { "1" }.into(),
+            ),
+            ("EmuCore/GS", "mipmap", "true".into()),
+            ("EmuCore/GS", "hw_mipmap", "true".into()),
+            ("EmuCore/GS", "UserHacks", "false".into()),
+            ("EmuCore/GS", "VsyncEnable", "true".into()),
+            ("EmuCore/GS", "SyncToHostRefreshRate", "false".into()),
+            // Multi-threaded VU1; PCSX2 only auto-detects it when it writes defaults itself.
+            ("EmuCore/Speedhacks", "vuThread", "true".into()),
+            ("EmuCore", "EnableFastBoot", "true".into()),
+            ("EmuCore", "SaveStateOnShutdown", "true".into()),
+            ("Achievements", "Enabled", "false".into()),
+        ],
+    )
+}
+
+fn ppsspp(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
+    // Without installed.txt PPSSPP keeps its memstick next to the exe.
+    set_ini(
+        &exe_dir
+            .join("memstick")
+            .join("PSP")
+            .join("SYSTEM")
+            .join("ppsspp.ini"),
+        &[
+            ("General", "FirstRun", "False".into()),
+            ("General", "CheckForNewVersion", "False".into()),
+            ("General", "AskForExitConfirmationAfterSeconds", "0".into()),
+            ("General", "PauseOnLostFocus", "False".into()),
+            ("CPU", "CPUCore", "1".into()),
+            ("CPU", "FastMemoryAccess", "True".into()),
+            ("Graphics", "GraphicsBackend", "3 (VULKAN)".into()),
+            // Multiples of 480x272: 3x ≈ 1440x816, 4x ≈ 1920x1088.
+            (
+                "Graphics",
+                "InternalResolution",
+                if high { "4" } else { "3" }.into(),
+            ),
+            ("Graphics", "FrameSkip", "0".into()),
+            ("Graphics", "AutoFrameSkip", "False".into()),
+            ("Graphics", "VerticalSync", "True".into()),
+            ("Graphics", "FullScreen", "True".into()),
+            ("Graphics", "TextureFiltering", "1".into()),
+            ("Achievements", "AchievementsEnable", "False".into()),
+        ],
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::manifest::manifest;
+
+    fn temp_dir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("lumen-presets-{}-{name}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn every_preset_applies_twice_on_both_tiers() {
+        for tier in [Tier::Standard, Tier::High] {
+            for emu in &manifest().emulators {
+                let dir = temp_dir(&format!("{}-{tier:?}", emu.id));
+                // Twice: the second run must merge into what the first wrote.
+                apply(emu, &dir, tier).unwrap_or_else(|e| panic!("{}: {e}", emu.id));
+                apply(emu, &dir, tier).unwrap_or_else(|e| panic!("{} again: {e}", emu.id));
+            }
+        }
+    }
+
+    #[test]
+    fn structured_configs_stay_parseable_and_keep_emulator_state() {
+        let dir = temp_dir("state");
+        fs::create_dir_all(dir.join("config")).unwrap();
+        fs::write(
+            dir.join("config/config.yml"),
+            "System:\n  Console PSID: CAFE\n",
+        )
+        .unwrap();
+        rpcs3(&dir, true).unwrap();
+        let yml: serde_yaml_ng::Value =
+            serde_yaml_ng::from_str(&fs::read_to_string(dir.join("config/config.yml")).unwrap())
+                .unwrap();
+        assert_eq!(yml["System"]["Console PSID"].as_str(), Some("CAFE"));
+        assert_eq!(yml["Video"]["Resolution Scale"].as_i64(), Some(150));
+
+        shadps4(&dir, false).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(dir.join("user/config.json")).unwrap())
+                .unwrap();
+        assert_eq!(json["GPU"]["full_screen"], serde_json::Value::Bool(true));
+        assert_eq!(
+            json["GPU"]["internal_screen_width"],
+            serde_json::json!(1280)
+        );
+
+        xemu(&dir, true).unwrap();
+        let toml: toml_edit::DocumentMut = fs::read_to_string(dir.join("xemu.toml"))
+            .unwrap()
+            .parse()
+            .unwrap();
+        assert_eq!(toml["display"]["renderer"].as_str(), Some("VULKAN"));
+    }
+
+    #[test]
+    fn xenia_settings_go_on_the_command_line() {
+        let xenia = crate::manifest::emulator("xenia").unwrap();
+        let standard = launch_args(xenia, Path::new("."), Tier::Standard);
+        let high = launch_args(xenia, Path::new("."), Tier::High);
+        assert!(standard.contains(&"--draw_resolution_scale_x=1".to_string()));
+        assert!(high.contains(&"--draw_resolution_scale_x=2".to_string()));
+        assert!(standard.iter().all(|a| !a.ends_with('=')), "no empty cvars");
+    }
 }

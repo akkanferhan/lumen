@@ -30,29 +30,25 @@ pub fn configure(
     };
 
     match emu.id.as_str() {
-        "retroarch" => {
-            let mut entries = vec![
-                ("video_fullscreen", "true".to_string()),
-                ("pause_nonactive", "false".to_string()),
-                ("quit_press_twice", "false".to_string()),
-                ("menu_driver", "ozone".to_string()),
-            ];
-            if let Some(b) = bios {
-                entries.push(("system_directory", b.to_string_lossy().into_owned()));
-            }
-            set_cfg(&exe_dir.join("retroarch.cfg"), &entries)
-        }
+        "retroarch" => match bios {
+            Some(b) => set_cfg(
+                &exe_dir.join("retroarch.cfg"),
+                &[("system_directory", b.to_string_lossy().into_owned())],
+            ),
+            None => Ok(()),
+        },
         "duckstation" => {
             let ini = exe_dir.join("settings.ini");
-            add_section_if_missing(&ini, "Pad1", &sdl_dualshock("AnalogController"))?;
+            add_section_if_missing(
+                &ini,
+                "Pad1",
+                &sdl_dualshock("AnalogController", DUCKSTATION_FACES),
+            )?;
             set_ini(
                 &ini,
                 &with_bios(
                     vec![
                         ("Main", "SetupWizardIncomplete", "false".into()),
-                        ("Main", "StartFullscreen", "true".into()),
-                        ("Main", "ConfirmPowerOff", "false".into()),
-                        ("AutoUpdater", "CheckAtStartup", "false".into()),
                         ("InputSources", "SDL", "true".into()),
                     ],
                     "BIOS",
@@ -63,15 +59,16 @@ pub fn configure(
         }
         "pcsx2" => {
             let ini = exe_dir.join("inis").join("PCSX2.ini");
-            add_section_if_missing(&ini, "Pad1", &sdl_dualshock("DualShock2"))?;
+            // Lumen writes this file before PCSX2's first run, so PCSX2's own
+            // defaults (pad binds included) never get applied: set them here.
+            add_section_if_missing(&ini, "Pad1", &sdl_dualshock("DualShock2", PCSX2_FACES))?;
             set_ini(
                 &ini,
                 &with_bios(
                     vec![
+                        // Without SettingsVersion PCSX2 wipes every setting on start.
+                        ("UI", "SettingsVersion", "1".into()),
                         ("UI", "SetupWizardIncomplete", "false".into()),
-                        ("UI", "StartFullscreen", "true".into()),
-                        ("UI", "ConfirmShutdown", "false".into()),
-                        ("AutoUpdater", "CheckAtStartup", "false".into()),
                         ("InputSources", "SDL", "true".into()),
                     ],
                     "Folders",
@@ -89,17 +86,6 @@ pub fn configure(
                 &xinput_wiimote(),
             )
         }
-        "ppsspp" => set_ini(
-            &exe_dir
-                .join("memstick")
-                .join("PSP")
-                .join("SYSTEM")
-                .join("ppsspp.ini"),
-            &[
-                ("General", "FirstRun", "False".into()),
-                ("Graphics", "FullScreen", "True".into()),
-            ],
-        ),
         "xemu" => {
             // xemu.toml next to the exe is what turns on portable mode.
             let mut entries = Vec::new();
@@ -222,20 +208,31 @@ pub fn configure(
     }
 }
 
+/// SDL face button names for (Triangle, Circle, Cross, Square). PCSX2 moved to
+/// SDL3 names; its legacy `A`/`B` names trigger a migration dialog.
+const DUCKSTATION_FACES: [&str; 4] = ["Y", "B", "A", "X"];
+const PCSX2_FACES: [&str; 4] = ["FaceNorth", "FaceEast", "FaceSouth", "FaceWest"];
+
 /// First controller, Xbox layout (ROG Ally), as DuckStation/PCSX2 SDL bindings.
-/// Key names match their `[Pad1]` sections; both use the same SDL binding syntax.
-fn sdl_dualshock(controller_type: &str) -> Vec<(&'static str, String)> {
+/// Key names match their `[Pad1]` sections.
+fn sdl_dualshock(controller_type: &str, faces: [&str; 4]) -> Vec<(&'static str, String)> {
     let mut pad = vec![("Type", controller_type.to_string())];
+    let [triangle, circle, cross, square] = faces;
+    pad.extend(
+        [
+            ("Triangle", triangle),
+            ("Circle", circle),
+            ("Cross", cross),
+            ("Square", square),
+        ]
+        .map(|(key, input)| (key, format!("SDL-0/{input}"))),
+    );
     pad.extend(
         [
             ("Up", "DPadUp"),
             ("Right", "DPadRight"),
             ("Down", "DPadDown"),
             ("Left", "DPadLeft"),
-            ("Triangle", "Y"),
-            ("Circle", "B"),
-            ("Cross", "A"),
-            ("Square", "X"),
             ("Select", "Back"),
             ("Start", "Start"),
             ("L1", "LeftShoulder"),
@@ -468,7 +465,7 @@ fn copy_missing(from: &Path, to: &Path, ext: &str) -> anyhow::Result<()> {
 }
 
 /// RetroArch style: `key = "value"` lines, no sections.
-fn set_cfg(path: &Path, entries: &[(&str, String)]) -> anyhow::Result<()> {
+pub(crate) fn set_cfg(path: &Path, entries: &[(&str, String)]) -> anyhow::Result<()> {
     let mut lines = read_lines(path);
     for (key, value) in entries {
         let line = format!("{key} = \"{value}\"");
@@ -572,17 +569,21 @@ mod tests {
     #[test]
     fn controller_section_is_written_once() {
         let path = temp_file("pad");
-        add_section_if_missing(&path, "Pad1", &sdl_dualshock("DualShock2")).unwrap();
+        add_section_if_missing(&path, "Pad1", &sdl_dualshock("DualShock2", PCSX2_FACES)).unwrap();
         let first = fs::read_to_string(&path).unwrap();
-        assert!(first.contains("Cross = SDL-0/A"));
+        assert!(first.contains("Cross = SDL-0/FaceSouth"));
         assert!(first.contains("L2 = SDL-0/+LeftTrigger"));
 
         // A user remap survives the next launch.
-        fs::write(&path, first.replace("Cross = SDL-0/A", "Cross = SDL-0/B")).unwrap();
-        add_section_if_missing(&path, "Pad1", &sdl_dualshock("DualShock2")).unwrap();
+        fs::write(
+            &path,
+            first.replace("Cross = SDL-0/FaceSouth", "Cross = SDL-0/FaceEast"),
+        )
+        .unwrap();
+        add_section_if_missing(&path, "Pad1", &sdl_dualshock("DualShock2", PCSX2_FACES)).unwrap();
         assert!(fs::read_to_string(&path)
             .unwrap()
-            .contains("Cross = SDL-0/B"));
+            .contains("Cross = SDL-0/FaceEast"));
     }
 
     #[test]

@@ -68,7 +68,7 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         _ => game.path.clone(),
     };
     let rom = rom_path.to_string_lossy();
-    let args: Vec<String> = crate::presets::launch_args(emu, state.tier())
+    let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier())
         .into_iter()
         .chain(
             emu.args
