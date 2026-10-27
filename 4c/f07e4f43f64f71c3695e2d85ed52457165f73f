@@ -1,0 +1,21 @@
+app-icon.svg
+  s_1b02c1f829b02f::t_347d07b2c0b308 1-20
+.github/workflows/ci.yml
+  s_1b02c1f829b02f::t_853debc33821cd 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4cf07e4f43f64f71c3695e2d85ed52457165f73f",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
