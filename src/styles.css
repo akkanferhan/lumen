@@ -74,6 +74,32 @@ button {
   inset: 0;
 }
 
+.splash {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.splash-inner {
+  max-width: 34rem;
+  padding: var(--gutter);
+  animation: fade-in 400ms var(--ease-out);
+}
+
+.splash-mark {
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: 1.6rem;
+  animation: breathe 3.2s ease-in-out infinite;
+}
+
+.splash p {
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0 0 1.6rem;
+  word-break: break-word;
+}
+
 /* ---------- Ambient background ---------- */
 
 .ambient {

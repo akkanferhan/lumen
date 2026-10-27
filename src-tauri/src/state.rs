@@ -77,7 +77,11 @@ pub struct AppState {
 
 impl AppState {
     pub fn load(app: &AppHandle) -> anyhow::Result<Self> {
-        let data = app.path().app_data_dir()?;
+        Self::at(app.path().app_data_dir()?)
+    }
+
+    /// State rooted at `data` (the app data dir; a temp dir in tests).
+    pub fn at(data: PathBuf) -> anyhow::Result<Self> {
         let dirs = Dirs {
             emulators: data.join("emulators"),
             downloads: data.join("downloads"),
