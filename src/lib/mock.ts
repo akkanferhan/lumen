@@ -1,0 +1,172 @@
+// Browser-only stand-in for the Rust layer so the UI can be built and tested
+// on any machine with `npm run dev`. Install and play are simulated.
+
+import type { Api } from "./api";
+import { emulatorOf, systemOf, systems } from "./catalog";
+import { cleanTitle } from "./format";
+import type { Game, GameExited, InstallProgress, Overview } from "./types";
+
+const SAMPLE: [string, string][] = [
+  ["snes", "Super Mario World (USA)"],
+  ["snes", "Super Metroid (Japan, USA) (En,Ja)"],
+  ["snes", "Legend of Zelda, The - A Link to the Past (USA)"],
+  ["snes", "Chrono Trigger (USA)"],
+  ["snes", "Donkey Kong Country (USA) (Rev 2)"],
+  ["nes", "Super Mario Bros. 3 (USA)"],
+  ["nes", "Mega Man 2 (USA)"],
+  ["n64", "Super Mario 64 (USA)"],
+  ["n64", "Legend of Zelda, The - Ocarina of Time (USA)"],
+  ["gba", "Metroid Fusion (USA)"],
+  ["gba", "Pokemon - Emerald Version (USA, Europe)"],
+  ["gba", "Advance Wars (USA)"],
+  ["genesis", "Sonic The Hedgehog (USA, Europe)"],
+  ["genesis", "Streets of Rage 2 (USA)"],
+  ["ps1", "Castlevania - Symphony of the Night (USA)"],
+  ["ps1", "Crash Bandicoot (USA)"],
+  ["ps1", "Spyro the Dragon (USA)"],
+  ["ps2", "Shadow of the Colossus (USA)"],
+  ["ps2", "Okami (USA)"],
+  ["gc", "Metroid Prime (USA)"],
+  ["gc", "Legend of Zelda, The - The Wind Waker (USA)"],
+  ["psp", "Patapon (USA)"],
+  ["dreamcast", "Jet Grind Radio (USA)"],
+];
+
+interface MockStore {
+  romRoot: string | null;
+  installed: string[];
+  user: Record<string, { favorite: boolean; lastPlayed: number | null; playSeconds: number }>;
+}
+
+const KEY = "lumen-mock";
+
+function load(): MockStore {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    /* storage unavailable: start fresh */
+  }
+  return { romRoot: null, installed: [], user: {} };
+}
+
+let store = load();
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(store));
+  } catch {
+    /* ignore */
+  }
+}
+
+const progressListeners = new Set<(p: InstallProgress) => void>();
+const exitListeners = new Set<(e: GameExited) => void>();
+let running: { id: string; started: number } | null = null;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function games(): Game[] {
+  if (!store.romRoot) return [];
+  return SAMPLE.map(([systemId, stem], i) => {
+    const id = `mock-${i}`;
+    const user = store.user[id] ?? { favorite: false, lastPlayed: null, playSeconds: 0 };
+    return { id, systemId, title: cleanTitle(stem), thumbName: stem, path: `${store.romRoot}/${systemId}/${stem}`, ...user };
+  }).sort((a, b) => a.title.localeCompare(b.title, "tr"));
+}
+
+function overview(): Overview {
+  const list = games();
+  return {
+    settings: { romRoot: store.romRoot, sounds: true },
+    runningGameId: running?.id ?? null,
+    platformSupported: true,
+    systems: systems.map((s) => ({
+      id: s.id,
+      emulatorInstalled: store.installed.includes(s.emulator),
+      coreInstalled: !s.core || store.installed.includes(`core:${s.core}`),
+      bios: (s.bios ?? []).map((b) => ({ label: b.label, optional: !!b.optional, found: s.id !== "ps2" })),
+      gameCount: list.filter((g) => g.systemId === s.id).length,
+    })),
+  };
+}
+
+async function simulateInstall(id: string) {
+  const emit = (p: Omit<InstallProgress, "id">) => progressListeners.forEach((cb) => cb({ id, ...p }));
+  for (let p = 0; p <= 1; p += 0.08) {
+    emit({ stage: "downloading", progress: p, message: null });
+    await sleep(70);
+  }
+  emit({ stage: "extracting", progress: 1, message: null });
+  await sleep(300);
+  emit({ stage: "configuring", progress: 1, message: null });
+  await sleep(200);
+  emit({ stage: "done", progress: 1, message: null });
+  store.installed.push(id);
+  save();
+}
+
+function touchUser(id: string) {
+  return (store.user[id] ??= { favorite: false, lastPlayed: null, playSeconds: 0 });
+}
+
+export const mockApi: Api = {
+  getOverview: async () => overview(),
+  getLibrary: async () => games(),
+  pickFolder: async () => "C:\\Users\\Oyuncu\\Oyunlar",
+  setRomRoot: async (path) => {
+    store.romRoot = path;
+    save();
+    await sleep(400);
+    return games();
+  },
+  scanLibrary: async () => {
+    await sleep(500);
+    return games();
+  },
+  installSystems: async (systemIds) => {
+    const jobs = new Set<string>();
+    for (const id of systemIds) {
+      const system = systemOf(id);
+      if (!system || !emulatorOf(system.emulator)) continue;
+      if (!store.installed.includes(system.emulator)) jobs.add(system.emulator);
+      if (system.core && !store.installed.includes(`core:${system.core}`)) jobs.add(`core:${system.core}`);
+    }
+    for (const job of jobs) await simulateInstall(job);
+  },
+  launchGame: async (gameId) => {
+    running = { id: gameId, started: Date.now() };
+  },
+  stopGame: async () => {
+    if (!running) return;
+    const sessionSeconds = Math.round((Date.now() - running.started) / 1000);
+    const user = touchUser(running.id);
+    user.playSeconds += sessionSeconds;
+    user.lastPlayed = Math.floor(Date.now() / 1000);
+    save();
+    const event = { gameId: running.id, sessionSeconds };
+    running = null;
+    exitListeners.forEach((cb) => cb(event));
+  },
+  toggleFavorite: async (gameId) => {
+    const user = touchUser(gameId);
+    user.favorite = !user.favorite;
+    save();
+    return user.favorite;
+  },
+  setSounds: async () => {},
+  onInstallProgress: (cb) => {
+    progressListeners.add(cb);
+    return () => progressListeners.delete(cb);
+  },
+  onGameExited: (cb) => {
+    exitListeners.add(cb);
+    return () => exitListeners.delete(cb);
+  },
+};
+
+/** Dev helper: `window.lumenReset()` in the console restarts onboarding. */
+(window as unknown as { lumenReset: () => void }).lumenReset = () => {
+  store = { romRoot: null, installed: [], user: {} };
+  save();
+  location.reload();
+};
