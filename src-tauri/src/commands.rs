@@ -287,3 +287,81 @@ pub fn set_graphics(state: State<'_, AppState>, graphics: TierSetting) -> CmdRes
     state.settings.lock().unwrap().graphics = graphics;
     state.save_settings().map_err(err)
 }
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EmulatorUpdate {
+    pub id: String,
+    pub update_available: bool,
+}
+
+/// Compares every installed emulator with its latest build. Sources that
+/// can't be reached are reported as up to date rather than failing the list.
+#[tauri::command]
+pub async fn check_updates(app: AppHandle) -> Vec<EmulatorUpdate> {
+    let state = app.state::<AppState>();
+    let installed: Vec<_> = manifest()
+        .emulators
+        .iter()
+        .filter(|e| installer::find_exe(e, &state.dirs.emulators.join(&e.id)).is_some())
+        .collect();
+
+    let checks = installed.iter().map(|emu| async {
+        let current = installer::installed_version(&state.dirs.emulators.join(&emu.id));
+        let latest = installer::resolve_release(&emu.source).await.ok();
+        EmulatorUpdate {
+            id: emu.id.clone(),
+            // Installs from before version tracking have no record: offer the update.
+            update_available: latest
+                .is_some_and(|l| current.as_deref() != Some(l.version.as_str())),
+        }
+    });
+    futures_util::future::join_all(checks).await
+}
+
+/// Re-downloads an emulator over its install (saves and settings survive) and,
+/// for RetroArch, refreshes every installed core.
+#[tauri::command]
+pub async fn update_emulator(app: AppHandle, id: String) -> CmdResult<()> {
+    let state = app.state::<AppState>();
+    if state.running.lock().unwrap().is_some() {
+        return Err("Oyun açıkken emülatör güncellenemez".into());
+    }
+    let emu = manifest::emulator(&id).ok_or("Bilinmeyen emülatör")?;
+    if !state.installing.lock().unwrap().insert(emu.id.clone()) {
+        return Ok(());
+    }
+    let result = async {
+        let exe = installer::install_emulator(
+            &app,
+            emu,
+            &state.dirs.emulators,
+            &state.dirs.downloads,
+            state.bios_dir().as_deref(),
+            state.tier(),
+        )
+        .await?;
+        if emu.id == "retroarch" {
+            let cores_dir = exe.parent().map(|d| d.join("cores")).unwrap_or_default();
+            let cores: Vec<String> = std::fs::read_dir(&cores_dir)
+                .into_iter()
+                .flatten()
+                .flatten()
+                .filter_map(|e| {
+                    let name = e.file_name().to_string_lossy().into_owned();
+                    name.strip_suffix("_libretro.dll").map(String::from)
+                })
+                .collect();
+            for core in cores {
+                installer::install_core(&app, &core, &cores_dir, &state.dirs.downloads).await?;
+            }
+        }
+        anyhow::Ok(())
+    }
+    .await;
+    state.installing.lock().unwrap().remove(&emu.id);
+    if let Err(e) = &result {
+        installer::emit(&app, &emu.id, "error", 0.0, Some(e.to_string()));
+    }
+    result.map_err(err)
+}
