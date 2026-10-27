@@ -6,9 +6,17 @@ import { emulators, installLabel, systems } from "../lib/catalog";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
-import type { GraphicsSetting, Tier } from "../lib/types";
+import type { GraphicsSetting, PowerSetting, Tier } from "../lib/types";
 
 const TIER_LABEL: Record<Tier, string> = { standard: "Dengeli", high: "Yüksek" };
+const POWER_LABEL: Record<PowerSetting, string> = {
+  auto: "Sisteme göre",
+  silent: "Sessiz",
+  performance: "Performans",
+  turbo: "Turbo",
+  off: "Lumen değiştirmesin",
+};
+const POWER_ORDER: PowerSetting[] = ["auto", "silent", "performance", "turbo", "off"];
 const GRAPHICS_LABEL: Record<GraphicsSetting, string> = { auto: "Otomatik", ...TIER_LABEL };
 
 interface Item {
@@ -53,6 +61,31 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
         actions.setGraphics(order[(order.indexOf(current) + 1) % order.length]);
       },
     },
+    ...(overview?.powerAvailable
+      ? [
+          {
+            id: "power",
+            title: "Güç modu",
+            sub: "Oyun açılınca ASUS güç modu ayarlanır; çıkınca Performans'a döner",
+            value: POWER_LABEL[overview.settings.power],
+            run: () => {
+              const current = overview.settings.power;
+              actions.setPower(POWER_ORDER[(POWER_ORDER.indexOf(current) + 1) % POWER_ORDER.length]);
+            },
+          },
+        ]
+      : []),
+    ...(overview?.platformSupported
+      ? [
+          {
+            id: "autostart",
+            title: "Konsol modu",
+            sub: "Windows açılınca doğrudan Lumen başlasın",
+            value: overview.autostart ? "Açık" : "Kapalı",
+            run: () => actions.setAutostart(!overview.autostart),
+          },
+        ]
+      : []),
     { id: "sounds", title: "Arayüz sesleri", value: sounds ? "Açık" : "Kapalı", run: () => actions.setSounds(!sounds) },
     {
       id: "root",

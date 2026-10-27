@@ -3,6 +3,7 @@
 
 use crate::device::{self, Tier, TierSetting};
 use crate::library::Game;
+use crate::power::PowerSetting;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -20,6 +21,8 @@ pub struct Settings {
     pub sounds: bool,
     /// Emulator graphics preset level.
     pub graphics: TierSetting,
+    /// ASUS power mode while playing.
+    pub power: PowerSetting,
 }
 
 impl Default for Settings {
@@ -28,6 +31,7 @@ impl Default for Settings {
             rom_root: None,
             sounds: true,
             graphics: TierSetting::Auto,
+            power: PowerSetting::Auto,
         }
     }
 }

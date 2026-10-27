@@ -1,12 +1,12 @@
 {
   "systems": [
     {
-      "id": "nes", "name": "Nintendo Entertainment System", "short": "NES", "maker": "Nintendo", "year": 1983, "accent": "#e4414f",
+      "id": "nes", "power": "silent", "name": "Nintendo Entertainment System", "short": "NES", "maker": "Nintendo", "year": 1983, "accent": "#e4414f",
       "extensions": ["nes", "fds", "unf", "zip", "7z"], "folders": ["nes", "famicom"],
       "emulator": "retroarch", "core": "mesen", "thumbnails": "Nintendo - Nintendo Entertainment System"
     },
     {
-      "id": "snes", "name": "Super Nintendo", "short": "SNES", "maker": "Nintendo", "year": 1990, "accent": "#8f6fd6",
+      "id": "snes", "power": "silent", "name": "Super Nintendo", "short": "SNES", "maker": "Nintendo", "year": 1990, "accent": "#8f6fd6",
       "extensions": ["sfc", "smc", "zip", "7z"], "folders": ["snes", "superfamicom", "sfc"],
       "emulator": "retroarch", "core": "snes9x", "thumbnails": "Nintendo - Super Nintendo Entertainment System"
     },
@@ -16,23 +16,23 @@
       "emulator": "retroarch", "core": "mupen64plus_next", "thumbnails": "Nintendo - Nintendo 64"
     },
     {
-      "id": "gb", "name": "Game Boy", "short": "GB", "maker": "Nintendo", "year": 1989, "accent": "#9bbc0f",
+      "id": "gb", "power": "silent", "name": "Game Boy", "short": "GB", "maker": "Nintendo", "year": 1989, "accent": "#9bbc0f",
       "extensions": ["gb", "zip", "7z"], "folders": ["gb", "gameboy"],
       "emulator": "retroarch", "core": "gambatte", "thumbnails": "Nintendo - Game Boy"
     },
     {
-      "id": "gbc", "name": "Game Boy Color", "short": "GBC", "maker": "Nintendo", "year": 1998, "accent": "#d94f9a",
+      "id": "gbc", "power": "silent", "name": "Game Boy Color", "short": "GBC", "maker": "Nintendo", "year": 1998, "accent": "#d94f9a",
       "extensions": ["gbc", "zip", "7z"], "folders": ["gbc", "gameboycolor"],
       "emulator": "retroarch", "core": "gambatte", "thumbnails": "Nintendo - Game Boy Color"
     },
     {
-      "id": "gba", "name": "Game Boy Advance", "short": "GBA", "maker": "Nintendo", "year": 2001, "accent": "#5a5ee0",
+      "id": "gba", "power": "silent", "name": "Game Boy Advance", "short": "GBA", "maker": "Nintendo", "year": 2001, "accent": "#5a5ee0",
       "extensions": ["gba", "zip", "7z"], "folders": ["gba", "gameboyadvance"],
       "emulator": "retroarch", "core": "mgba", "thumbnails": "Nintendo - Game Boy Advance",
       "bios": [{ "label": "GBA BIOS (gba_bios.bin)", "anyOf": ["gba_bios.bin"], "optional": true }]
     },
     {
-      "id": "nds", "name": "Nintendo DS", "short": "NDS", "maker": "Nintendo", "year": 2004, "accent": "#b8bcc8",
+      "id": "nds", "power": "silent", "name": "Nintendo DS", "short": "NDS", "maker": "Nintendo", "year": 2004, "accent": "#b8bcc8",
       "extensions": ["nds"], "folders": ["nds", "ds"],
       "emulator": "melonds", "thumbnails": "Nintendo - Nintendo DS"
     },
@@ -42,27 +42,27 @@
       "emulator": "azahar", "thumbnails": "Nintendo - Nintendo 3DS"
     },
     {
-      "id": "gc", "name": "GameCube", "short": "GC", "maker": "Nintendo", "year": 2001, "accent": "#7b62d9",
+      "id": "gc", "power": "turbo", "name": "GameCube", "short": "GC", "maker": "Nintendo", "year": 2001, "accent": "#7b62d9",
       "extensions": ["iso", "gcm", "rvz", "ciso", "gcz"], "folders": ["gc", "gamecube", "ngc"],
       "emulator": "dolphin", "thumbnails": "Nintendo - GameCube"
     },
     {
-      "id": "wii", "name": "Wii", "short": "Wii", "maker": "Nintendo", "year": 2006, "accent": "#3fb6e8",
+      "id": "wii", "power": "turbo", "name": "Wii", "short": "Wii", "maker": "Nintendo", "year": 2006, "accent": "#3fb6e8",
       "extensions": ["iso", "wbfs", "rvz", "gcz", "wad"], "folders": ["wii"],
       "emulator": "dolphin", "thumbnails": "Nintendo - Wii"
     },
     {
-      "id": "wiiu", "name": "Wii U", "short": "Wii U", "maker": "Nintendo", "year": 2012, "accent": "#14a9d6",
+      "id": "wiiu", "power": "turbo", "name": "Wii U", "short": "Wii U", "maker": "Nintendo", "year": 2012, "accent": "#14a9d6",
       "extensions": ["wud", "wux", "wua", "rpx"], "folders": ["wiiu"],
       "emulator": "cemu", "thumbnails": "Nintendo - Wii U"
     },
     {
-      "id": "sms", "name": "Master System", "short": "SMS", "maker": "Sega", "year": 1985, "accent": "#e0383e",
+      "id": "sms", "power": "silent", "name": "Master System", "short": "SMS", "maker": "Sega", "year": 1985, "accent": "#e0383e",
       "extensions": ["sms", "zip", "7z"], "folders": ["sms", "mastersystem"],
       "emulator": "retroarch", "core": "genesis_plus_gx", "thumbnails": "Sega - Master System - Mark III"
     },
     {
-      "id": "genesis", "name": "Mega Drive / Genesis", "short": "MD", "maker": "Sega", "year": 1988, "accent": "#3a7bd5",
+      "id": "genesis", "power": "silent", "name": "Mega Drive / Genesis", "short": "MD", "maker": "Sega", "year": 1988, "accent": "#3a7bd5",
       "extensions": ["md", "gen", "smd", "bin", "zip", "7z"], "folders": ["genesis", "megadrive", "md"],
       "emulator": "retroarch", "core": "genesis_plus_gx", "thumbnails": "Sega - Mega Drive - Genesis"
     },
@@ -80,7 +80,7 @@
       "bios": [{ "label": "Dreamcast BIOS (dc/dc_boot.bin)", "anyOf": ["dc/dc_boot.bin"], "optional": true }]
     },
     {
-      "id": "arcade", "name": "Arcade", "short": "Arcade", "maker": "FinalBurn Neo", "year": 1980, "accent": "#f2c230",
+      "id": "arcade", "power": "silent", "name": "Arcade", "short": "Arcade", "maker": "FinalBurn Neo", "year": 1980, "accent": "#f2c230",
       "extensions": ["zip", "7z"], "folders": ["arcade", "fbneo"],
       "emulator": "retroarch", "core": "fbneo", "thumbnails": "FBNeo - Arcade Games"
     },
@@ -92,7 +92,7 @@
       "bios": [{ "label": "PS1 BIOS (bios/ps1 içine, ör. scph5501.bin)", "anyOf": ["ps1/*.bin"] }]
     },
     {
-      "id": "ps2", "name": "PlayStation 2", "short": "PS2", "maker": "Sony", "year": 2000, "accent": "#3c5bd6",
+      "id": "ps2", "power": "turbo", "name": "PlayStation 2", "short": "PS2", "maker": "Sony", "year": 2000, "accent": "#3c5bd6",
       "extensions": ["iso", "chd", "cso", "gz"], "folders": ["ps2", "playstation2"],
       "emulator": "pcsx2", "thumbnails": "Sony - PlayStation 2",
       "bios": [{ "label": "PS2 BIOS (bios/ps2 içine)", "anyOf": ["ps2/*.bin"] }]
@@ -103,12 +103,12 @@
       "emulator": "ppsspp", "thumbnails": "Sony - PlayStation Portable"
     },
     {
-      "id": "ps3", "name": "PlayStation 3", "short": "PS3", "maker": "Sony", "year": 2006, "accent": "#1f6fd1",
+      "id": "ps3", "power": "turbo", "name": "PlayStation 3", "short": "PS3", "maker": "Sony", "year": 2006, "accent": "#1f6fd1",
       "extensions": ["iso"], "folders": ["ps3"], "folderMarker": "PS3_GAME", "launchFile": "PS3_GAME/USRDIR/EBOOT.BIN",
       "emulator": "rpcs3", "thumbnails": "Sony - PlayStation 3"
     },
     {
-      "id": "ps4", "name": "PlayStation 4", "short": "PS4", "maker": "Sony", "year": 2013, "accent": "#2e6be6",
+      "id": "ps4", "power": "turbo", "name": "PlayStation 4", "short": "PS4", "maker": "Sony", "year": 2013, "accent": "#2e6be6",
       "extensions": [], "folders": ["ps4"], "folderMarker": "sce_sys", "launchFile": "eboot.bin",
       "emulator": "shadps4", "thumbnails": "Sony - PlayStation 4",
       "bios": [{ "label": "PS4 sistem modülleri (bios/ps4 içine .sprx dosyaları)", "anyOf": ["ps4/*.sprx"], "optional": true }]
@@ -123,7 +123,7 @@
       ]
     },
     {
-      "id": "x360", "name": "Xbox 360", "short": "360", "maker": "Microsoft", "year": 2005, "accent": "#8cc63f",
+      "id": "x360", "power": "turbo", "name": "Xbox 360", "short": "360", "maker": "Microsoft", "year": 2005, "accent": "#8cc63f",
       "extensions": ["iso", "xex", "zar"], "folders": ["x360", "xbox360"],
       "emulator": "xenia", "thumbnails": "Microsoft - Xbox 360"
     }

@@ -7,6 +7,7 @@ mod installer;
 mod launcher;
 mod library;
 mod manifest;
+mod power;
 mod presets;
 mod state;
 mod windows;
@@ -17,6 +18,10 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .setup(|app| {
             let state = state::AppState::load(app.handle())?;
             input::spawn(app.handle().clone(), state.running.clone());
@@ -38,6 +43,8 @@ pub fn run() {
             commands::update_emulator,
             commands::resume_game,
             commands::is_resumable,
+            commands::set_power,
+            commands::set_autostart,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lumen");

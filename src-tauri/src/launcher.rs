@@ -105,6 +105,11 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     });
     let session_start = SystemTime::now();
 
+    // Match the ASUS power mode to the system; Performance (the default) is
+    // restored when the game ends.
+    let power = state.settings.lock().unwrap().power.resolve(system.power);
+    let power_changed = power.is_some_and(crate::power::set);
+
     let app = app.clone();
     let game_id = game.id.clone();
     tauri::async_runtime::spawn(async move {
@@ -132,6 +137,9 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             }
         }
         let _ = state.save_user();
+        if power_changed {
+            crate::power::set(crate::power::PowerMode::Performance);
+        }
 
         focus_lumen(&app, false);
         let _ = app.emit(

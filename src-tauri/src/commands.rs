@@ -26,6 +26,10 @@ pub struct Overview {
     pub device: Device,
     /// Preset level in effect (detected or chosen in settings).
     pub tier: Tier,
+    /// The ASUS power-mode driver is present (ROG Ally).
+    pub power_available: bool,
+    /// Lumen starts with Windows.
+    pub autostart: bool,
     /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
     pub platform_supported: bool,
 }
@@ -53,7 +57,7 @@ pub struct GameView {
 }
 
 #[tauri::command]
-pub fn get_overview(state: State<'_, AppState>) -> Overview {
+pub fn get_overview(app: AppHandle, state: State<'_, AppState>) -> Overview {
     let library = state.library.lock().unwrap();
     let bios = state.bios_dir();
 
@@ -89,6 +93,8 @@ pub fn get_overview(state: State<'_, AppState>) -> Overview {
         systems,
         device: device::device().clone(),
         tier: state.tier(),
+        power_available: crate::power::available(),
+        autostart: autostart_enabled(&app),
         running_game_id: state
             .running
             .lock()
@@ -384,4 +390,28 @@ pub fn is_resumable(state: State<'_, AppState>, game_id: String) -> bool {
         .find(|g| g.id == game_id)
         .cloned();
     game.is_some_and(|g| launcher::is_resumable(&state, &g))
+}
+
+#[tauri::command]
+pub fn set_power(state: State<'_, AppState>, power: crate::power::PowerSetting) -> CmdResult<()> {
+    state.settings.lock().unwrap().power = power;
+    state.save_settings().map_err(err)
+}
+
+fn autostart_enabled(app: &AppHandle) -> bool {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+/// Console mode: Lumen starts (fullscreen) with Windows.
+#[tauri::command]
+pub fn set_autostart(app: AppHandle, enabled: bool) -> CmdResult<()> {
+    use tauri_plugin_autostart::ManagerExt;
+    let launcher = app.autolaunch();
+    if enabled {
+        launcher.enable()
+    } else {
+        launcher.disable()
+    }
+    .map_err(err)
 }

@@ -14,6 +14,8 @@ export interface SystemDef {
   bios?: { label: string; anyOf: string[]; optional?: boolean }[];
   folderMarker?: string;
   launchFile?: string;
+  /** ASUS power mode for this system (default performance). */
+  power?: "silent" | "performance" | "turbo";
   /** Runs on an open-source HLE BIOS when the user's BIOS is missing. */
   fallback?: { emulator: string; core?: string };
 }
@@ -26,12 +28,14 @@ export interface EmulatorDef {
 }
 
 export type Tier = "standard" | "high";
+export type PowerSetting = "auto" | "off" | "silent" | "performance" | "turbo";
 export type GraphicsSetting = "auto" | Tier;
 
 export interface Settings {
   romRoot: string | null;
   sounds: boolean;
   graphics: GraphicsSetting;
+  power: PowerSetting;
 }
 
 export interface Device {
@@ -63,6 +67,10 @@ export interface Overview {
   device: Device;
   /** Preset level in effect. */
   tier: Tier;
+  /** ASUS power-mode driver present (ROG Ally). */
+  powerAvailable: boolean;
+  /** Lumen starts with Windows. */
+  autostart: boolean;
   platformSupported: boolean;
 }
 
