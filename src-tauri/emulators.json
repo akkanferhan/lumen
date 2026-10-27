@@ -146,12 +146,12 @@
     },
     {
       "id": "dolphin", "name": "Dolphin",
-      "source": { "type": "url", "url": "https://dl.dolphin-emu.org/releases/2509/dolphin-2509-x64.7z" },
+      "source": { "type": "page", "page": "https://dolphin-emu.org/update/latest/beta/", "pattern": "https://dl\\.dolphin-emu\\.org/releases/[^\"]+-x64\\.7z" },
       "exe": ["**/Dolphin.exe"], "args": ["-b", "-e", "{rom}"], "portableFiles": ["portable.txt"]
     },
     {
       "id": "ppsspp", "name": "PPSSPP",
-      "source": { "type": "url", "url": "https://www.ppsspp.org/files/1_19_3/ppsspp_win.zip" },
+      "source": { "type": "page", "page": "https://www.ppsspp.org/download/", "pattern": "/files/[0-9_]+/ppsspp_win\\.zip", "base": "https://www.ppsspp.org" },
       "exe": ["**/PPSSPPWindows64.exe"], "args": ["--fullscreen", "{rom}"]
     },
     {
@@ -186,7 +186,7 @@
     },
     {
       "id": "xenia", "name": "Xenia Canary",
-      "source": { "type": "github", "repo": "xenia-canary/xenia-canary-releases", "asset": "windows\\.zip$" },
+      "source": { "type": "github", "repo": "xenia-canary/xenia-canary-releases", "asset": "windows.*\\.zip$" },
       "exe": ["**/xenia_canary.exe"], "args": ["--fullscreen=true", "{rom}"]
     }
   ]
