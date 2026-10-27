@@ -17,6 +17,7 @@ export function emulatorOf(id: string): EmulatorDef | undefined {
 
 /** Human readable name for an install job id (`dolphin`, `core:snes9x`). */
 export function installLabel(id: string): string {
+  if (id === "firmware:ps3") return "PS3 firmware kurulumu";
   if (id.startsWith("core:")) {
     const core = id.slice(5);
     const users = systems.filter((s) => s.core === core).map((s) => s.short);
