@@ -2,13 +2,13 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { Cover } from "../components/Cover";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
-import { emulatorOf, systemOf } from "../lib/catalog";
+import { emulatorOf, screenshotUrls, systemOf } from "../lib/catalog";
 import { formatLastPlayed, formatPlaytime } from "../lib/format";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
-import type { Game } from "../lib/types";
+import type { Game, GameInfo } from "../lib/types";
 
 export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => void }) {
   // Read live so favorite / playtime updates show immediately.
@@ -19,6 +19,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   const [busy, setBusy] = useState(false);
   // A save from the last session exists: offer "continue" and "start over".
   const [resumable, setResumable] = useState(false);
+  const [info, setInfo] = useState<GameInfo | null>(null);
+  useEffect(() => {
+    let live = true;
+    setInfo(null);
+    api.gameInfo(gameId).then((i) => live && setInfo(i)).catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [gameId]);
   useEffect(() => {
     let live = true;
     api.isResumable(gameId).then((r) => live && setResumable(r)).catch(() => {});
@@ -112,6 +121,16 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             {system.name}
           </span>
           <h1>{game.title}</h1>
+          {info && (
+            <div className="facts" lang="en">
+              {[info.year, info.developer, info.genre, info.players && `${info.players} oyuncu`]
+                .filter(Boolean)
+                .map((fact) => (
+                  <span key={fact}>{fact}</span>
+                ))}
+            </div>
+          )}
+          {info?.description && <p className="description">{info.description}</p>}
 
           <div className="stats">
             <div>
@@ -185,6 +204,8 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
               {game.favorite ? "★ Favorilerde" : "☆ Favorilere ekle"}
             </button>
           </div>
+
+          <Screenshots game={game} />
         </div>
       </section>
 
@@ -201,4 +222,25 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
 function sep(path: string) {
   return path.includes("\\") ? "\\" : "/";
+}
+
+/** Title screen + gameplay shot; each hides itself if the archive lacks it. */
+function Screenshots({ game }: { game: Game }) {
+  const [failed, setFailed] = useState<Set<string>>(new Set());
+  const urls = screenshotUrls(game).filter((u) => !failed.has(u));
+  if (!urls.length) return null;
+  return (
+    <div className="shots">
+      {urls.map((url) => (
+        <img
+          key={url}
+          src={url}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          onError={() => setFailed((f) => new Set(f).add(url))}
+        />
+      ))}
+    </div>
+  );
 }

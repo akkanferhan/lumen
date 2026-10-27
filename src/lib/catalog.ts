@@ -27,8 +27,16 @@ export function installLabel(id: string): string {
   return emulatorOf(id)?.name ?? id;
 }
 
-export function boxArtUrl(game: Pick<Game, "systemId" | "thumbName">): string | null {
+type ThumbKind = "Named_Boxarts" | "Named_Snaps" | "Named_Titles";
+
+function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKind): string | null {
   const system = systemOf(game.systemId);
   if (!system) return null;
-  return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/Named_Boxarts/${encodeURIComponent(game.thumbName)}.png`;
+  return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/${kind}/${encodeURIComponent(game.thumbName)}.png`;
 }
+
+export const boxArtUrl = (game: Pick<Game, "systemId" | "thumbName">) => thumbnailUrl(game, "Named_Boxarts");
+
+/** Title screen and in-game screenshot. */
+export const screenshotUrls = (game: Pick<Game, "systemId" | "thumbName">) =>
+  (["Named_Titles", "Named_Snaps"] as const).map((k) => thumbnailUrl(game, k)).filter((u): u is string => !!u);

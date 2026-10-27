@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { Game, GameExited, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -31,6 +31,26 @@ const SAMPLE: [string, string][] = [
   ["psp", "Patapon (USA)"],
   ["dreamcast", "Jet Grind Radio (USA)"],
 ];
+
+const SAMPLE_INFO: Record<string, GameInfo> = {
+  "Chrono Trigger": {
+    year: "1995",
+    developer: "Square",
+    publisher: "Square",
+    genre: "Role-Playing",
+    players: "1",
+    description: null,
+  },
+  "Shadow of the Colossus": {
+    year: "2005",
+    developer: "Sony Computer Entertainment",
+    publisher: "Sony Computer Entertainment",
+    genre: "Action",
+    players: "1",
+    description:
+      "End-level bosses are standard fare in video games, but the bosses are the levels in this unusual adventure.",
+  },
+};
 
 interface MockStore {
   romRoot: string | null;
@@ -145,6 +165,10 @@ export const mockApi: Api = {
       if (system.core && !store.installed.includes(`core:${system.core}`)) jobs.add(`core:${system.core}`);
     }
     for (const job of jobs) await simulateInstall(job);
+  },
+  gameInfo: async (gameId) => {
+    const game = games().find((g) => g.id === gameId);
+    return game ? (SAMPLE_INFO[game.title] ?? null) : null;
   },
   isResumable: async (gameId) => (store.user[gameId]?.playSeconds ?? 0) > 0,
   resumeGame: async () => {},
