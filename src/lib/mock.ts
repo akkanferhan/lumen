@@ -91,7 +91,9 @@ function overview(): Overview {
       id: s.id,
       emulatorInstalled: store.installed.includes(s.emulator),
       coreInstalled: !s.core || store.installed.includes(`core:${s.core}`),
-      bios: (s.bios ?? []).map((b) => ({ label: b.label, optional: !!b.optional, found: s.id !== "ps2" })),
+      // Demo: PS1 has no BIOS (runs on the fallback), PS2 lacks one (blocked).
+      usingFallback: s.id === "ps1",
+      bios: (s.bios ?? []).map((b) => ({ label: b.label, optional: !!b.optional, found: s.id !== "ps2" && s.id !== "ps1" })),
       gameCount: list.filter((g) => g.systemId === s.id).length,
     })),
   };

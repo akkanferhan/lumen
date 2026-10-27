@@ -142,7 +142,7 @@ export const actions = {
   /** Installs whatever is missing for the game's system, then launches it. */
   async play(game: Game): Promise<void> {
     const status = state.overview?.systems.find((s) => s.id === game.systemId);
-    const missingBios = status?.bios.find((b) => !b.found && !b.optional);
+    const missingBios = status?.usingFallback ? undefined : status?.bios.find((b) => !b.found && !b.optional);
     if (missingBios) {
       sfx.error();
       notify(`Önce gerekli dosyayı ekle: ${missingBios.label}`, "error", 6000);
