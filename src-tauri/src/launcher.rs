@@ -31,6 +31,19 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         bail!("Zaten bir oyun çalışıyor");
     }
 
+    // Store games start through their launcher; Lumen can't follow their process.
+    if crate::pc::is_pc(&game.system_id) {
+        crate::pc::launch(game)?;
+        let mut user = state.user.lock().unwrap();
+        user.entry(game.id.clone()).or_default().last_played = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .ok()
+            .map(|d| d.as_secs());
+        drop(user);
+        let _ = state.save_user();
+        return Ok(());
+    }
+
     let system = manifest::system(&game.system_id).ok_or_else(|| anyhow!("Bilinmeyen sistem"))?;
     let bios = state.bios_dir();
     let runner = crate::library::effective(system, bios.as_deref());

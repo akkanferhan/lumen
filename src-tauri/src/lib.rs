@@ -8,6 +8,7 @@ mod launcher;
 mod library;
 mod manifest;
 mod metadata;
+mod pc;
 mod power;
 mod presets;
 mod state;
