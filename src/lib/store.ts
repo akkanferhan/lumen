@@ -15,6 +15,8 @@ export interface Notice {
 
 interface State {
   ready: boolean;
+  /** Startup failed; shown instead of an empty screen. */
+  bootError: string | null;
   overview: Overview | null;
   games: Game[];
   installs: Record<string, InstallProgress>;
@@ -33,6 +35,7 @@ interface State {
 
 let state: State = {
   ready: false,
+  bootError: null,
   overview: null,
   games: [],
   installs: {},
@@ -107,8 +110,13 @@ export const actions = {
       set({ games: await api.getLibrary() });
     });
 
-    const [, games] = await Promise.all([refreshOverview(), api.getLibrary()]);
-    set({ games, ready: true });
+    try {
+      const [, games] = await Promise.all([refreshOverview(), api.getLibrary()]);
+      set({ games, ready: true });
+    } catch (e) {
+      set({ bootError: errorText(e) });
+      return;
+    }
 
     // Quietly look for a new Lumen release once things have settled.
     api.onAppUpdateProgress((p) => set({ appUpdateProgress: p }));

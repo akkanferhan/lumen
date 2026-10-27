@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BrandMark } from "./components/BrandMark";
 import { Toasts } from "./components/Toasts";
 import { isTauri } from "./lib/api";
 import { actions, useStore } from "./lib/store";
@@ -29,7 +30,7 @@ export function App() {
     if (ready && !romRoot) setOnboarding((o) => o ?? "welcome");
   }, [ready, romRoot]);
 
-  if (!ready) return <div className="app" />;
+  if (!ready) return <Splash />;
 
   return (
     <div className="app">
@@ -59,6 +60,36 @@ export function App() {
       )}
       {runningGameId && <Running gameId={runningGameId} />}
       <Toasts hideInstalls={!!onboarding} />
+    </div>
+  );
+}
+
+/** Startup screen: the mark while loading, and an explanation instead of a
+ *  blank screen if the backend errors or doesn't answer. */
+function Splash() {
+  const bootError = useStore((s) => s.bootError);
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setSlow(true), 10_000);
+    return () => clearTimeout(id);
+  }, []);
+  const problem = bootError ?? (slow ? "Lumen 10 saniyedir yanıt vermiyor." : null);
+
+  return (
+    <div className="app splash">
+      <div className="ambient" />
+      <div className="splash-inner">
+        <BrandMark className="splash-mark" />
+        {problem && (
+          <>
+            <h2>Lumen başlatılamadı</h2>
+            <p>{problem}</p>
+            <button className="btn primary focused" onClick={() => location.reload()}>
+              Tekrar dene
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
