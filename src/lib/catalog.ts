@@ -1,7 +1,15 @@
 import manifestJson from "../../src-tauri/emulators.json";
 import type { EmulatorDef, Game, SystemDef } from "./types";
 
-export const systems = manifestJson.systems as unknown as SystemDef[];
+/** Store launchers shown next to the emulated systems. */
+const PC_SYSTEMS: SystemDef[] = [
+  { id: "steam", name: "Steam", short: "Steam", maker: "Valve", year: 2003, accent: "#66c0f4", extensions: [], folders: [], emulator: "steam", thumbnails: "" },
+  { id: "epic", name: "Epic Games", short: "Epic", maker: "Epic Games", year: 2018, accent: "#c8c8c8", extensions: [], folders: [], emulator: "epic", thumbnails: "" },
+];
+
+export const isPcSystem = (id: string) => id === "steam" || id === "epic";
+
+export const systems = [...PC_SYSTEMS, ...(manifestJson.systems as unknown as SystemDef[])];
 export const emulators = manifestJson.emulators as unknown as EmulatorDef[];
 
 const systemsById = new Map(systems.map((s) => [s.id, s]));
@@ -30,6 +38,13 @@ export function installLabel(id: string): string {
 type ThumbKind = "Named_Boxarts" | "Named_Snaps" | "Named_Titles";
 
 function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKind): string | null {
+  if (game.systemId === "steam") {
+    // thumbName is the Steam app id; Steam's own portrait library art.
+    return kind === "Named_Boxarts"
+      ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.thumbName}/library_600x900_2x.jpg`
+      : null;
+  }
+  if (game.systemId === "epic") return null;
   const system = systemOf(game.systemId);
   if (!system) return null;
   return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/${kind}/${encodeURIComponent(game.thumbName)}.png`;

@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { Cover } from "../components/Cover";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
-import { emulatorOf, screenshotUrls, systemOf } from "../lib/catalog";
+import { emulatorOf, isPcSystem, screenshotUrls, systemOf } from "../lib/catalog";
 import { formatLastPlayed, formatPlaytime } from "../lib/format";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
@@ -43,6 +43,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   // With a fallback the game still runs (HLE BIOS), so nothing blocks it.
   const missing = fallback ? [] : missingAll;
   const emulator = system && emulatorOf(fallback && system.fallback ? system.fallback.emulator : system.emulator);
+  const pc = !!system && isPcSystem(system.id);
   const needsInstall = !!status && (!status.emulatorInstalled || !status.coreInstalled);
   const install = system
     ? installs[system.emulator] ?? (system.core ? installs[`core:${system.core}`] : undefined)
@@ -139,11 +140,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             </div>
             <div>
               <div className="stat-label">Toplam süre</div>
-              <div className="stat-value">{formatPlaytime(game.playSeconds)}</div>
+              <div className="stat-value">{pc ? "Mağazada" : formatPlaytime(game.playSeconds)}</div>
             </div>
             <div>
-              <div className="stat-label">Emülatör</div>
-              <div className="stat-value">{emulator?.name}</div>
+              <div className="stat-label">{pc ? "Mağaza" : "Emülatör"}</div>
+              <div className="stat-value">{pc ? system.name : emulator?.name}</div>
             </div>
           </div>
 

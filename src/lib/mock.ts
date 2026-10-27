@@ -92,13 +92,25 @@ let autostart = false;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const SAMPLE_PC: [string, string, string][] = [
+  ["steam", "1145360", "Hades"],
+  ["steam", "620", "Portal 2"],
+  ["steam", "1245620", "Elden Ring"],
+  ["epic", "Dill", "Alan Wake 2"],
+];
+
 function games(): Game[] {
   if (!store.romRoot) return [];
-  return SAMPLE.map(([systemId, stem], i) => {
+  const user = (id: string) => store.user[id] ?? { favorite: false, lastPlayed: null, playSeconds: 0 };
+  const emulated = SAMPLE.map(([systemId, stem], i) => {
     const id = `mock-${i}`;
-    const user = store.user[id] ?? { favorite: false, lastPlayed: null, playSeconds: 0 };
-    return { id, systemId, title: cleanTitle(stem), thumbName: stem, path: `${store.romRoot}/${systemId}/${stem}`, ...user };
+    return { id, systemId, title: cleanTitle(stem), thumbName: stem, path: `${store.romRoot}/${systemId}/${stem}`, ...user(id) };
   }).sort((a, b) => a.title.localeCompare(b.title, "tr"));
+  const pc = SAMPLE_PC.map(([systemId, appId, title]) => {
+    const id = `mock-${systemId}-${appId}`;
+    return { id, systemId, title, thumbName: appId, path: `${systemId}://${appId}`, ...user(id) };
+  });
+  return [...emulated, ...pc];
 }
 
 function overview(): Overview {
@@ -173,6 +185,11 @@ export const mockApi: Api = {
   isResumable: async (gameId) => (store.user[gameId]?.playSeconds ?? 0) > 0,
   resumeGame: async () => {},
   launchGame: async (gameId) => {
+    if (gameId.startsWith("mock-steam") || gameId.startsWith("mock-epic")) {
+      touchUser(gameId).lastPlayed = Math.floor(Date.now() / 1000);
+      save();
+      return;
+    }
     running = { id: gameId, started: Date.now() };
   },
   stopGame: async () => {
