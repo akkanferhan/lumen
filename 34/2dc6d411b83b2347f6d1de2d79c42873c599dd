@@ -1,0 +1,29 @@
+src/lib/mock.ts
+  s_1b02c1f829b02f::t_5fc00511ac1b4a 95-101,104-105,107,109-113,188-192
+src/lib/store.ts
+  s_1b02c1f829b02f::t_5fc00511ac1b4a 6,182-193
+src/lib/catalog.ts
+  s_1b02c1f829b02f::t_5fc00511ac1b4a 4-12,41-47
+src/screens/GameSheet.tsx
+  s_1b02c1f829b02f::t_5fc00511ac1b4a 5,46,143,146-147
+README.md
+  s_1b02c1f829b02f::t_d4c24201d4dc1c 23-26
+src/screens/Onboarding.tsx
+  s_1b02c1f829b02f::t_849581e2a7d82b 5-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "342dc6d411b83b2347f6d1de2d79c42873c599dd",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
