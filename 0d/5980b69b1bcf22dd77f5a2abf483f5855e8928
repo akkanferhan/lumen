@@ -1,0 +1,21 @@
+.gitignore
+  s_1b02c1f829b02f::t_24aac699706ee6 1-6
+README.md
+  s_1b02c1f829b02f::t_121a907eb337d0 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0d5980b69b1bcf22dd77f5a2abf483f5855e8928",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
