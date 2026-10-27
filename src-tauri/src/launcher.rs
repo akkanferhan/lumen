@@ -83,10 +83,10 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         .args(&args)
         .current_dir(exe_dir)
         .spawn()?;
-    let (kill_tx, kill_rx) = oneshot::channel();
+    let (stop_tx, stop_rx) = oneshot::channel();
     *state.running.lock().unwrap() = Some(RunningGame {
         game_id: game.id.clone(),
-        kill: Some(kill_tx),
+        stop: Some(stop_tx),
     });
 
     let app = app.clone();
@@ -95,7 +95,7 @@ pub async fn launch(app: &AppHandle, game: &Game) -> anyhow::Result<()> {
         let started = Instant::now();
         tokio::select! {
             _ = child.wait() => {}
-            _ = kill_rx => { let _ = child.kill().await; }
+            _ = stop_rx => close_gracefully(&mut child).await,
         }
         let session_seconds = started.elapsed().as_secs();
 
@@ -204,11 +204,29 @@ async fn ensure_ps3_firmware(
     }
 }
 
+/// How long an emulator gets to save state and exit after being asked.
+const CLOSE_GRACE: Duration = Duration::from_secs(10);
+
+/// Closes the emulator like its window's X button so it runs its own
+/// shutdown (save state on exit, flushing memory cards), and only kills it
+/// if it hasn't exited after `CLOSE_GRACE`.
+async fn close_gracefully(child: &mut tokio::process::Child) {
+    let asked = child.id().map(crate::windows::request_close).unwrap_or(0);
+    if asked > 0
+        && tokio::time::timeout(CLOSE_GRACE, child.wait())
+            .await
+            .is_ok()
+    {
+        return;
+    }
+    let _ = child.kill().await;
+}
+
 /// Ends the running game; used by the home combo and the in-app "close game" button.
 pub fn stop(state: &AppState) {
     if let Some(game) = state.running.lock().unwrap().as_mut() {
-        if let Some(kill) = game.kill.take() {
-            let _ = kill.send(());
+        if let Some(stop) = game.stop.take() {
+            let _ = stop.send(());
         }
     }
 }

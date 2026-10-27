@@ -24,8 +24,8 @@ pub fn spawn(running: Running) {
                 let since = *held_since.get_or_insert_with(Instant::now);
                 if since.elapsed() >= HOLD {
                     if let Some(game) = running.lock().unwrap().as_mut() {
-                        if let Some(kill) = game.kill.take() {
-                            let _ = kill.send(());
+                        if let Some(stop) = game.stop.take() {
+                            let _ = stop.send(());
                         }
                     }
                 }
