@@ -1,0 +1,182 @@
+{
+  "systems": [
+    {
+      "id": "nes", "name": "Nintendo Entertainment System", "short": "NES", "maker": "Nintendo", "year": 1983, "accent": "#e4414f",
+      "extensions": ["nes", "fds", "unf", "zip", "7z"], "folders": ["nes", "famicom"],
+      "emulator": "retroarch", "core": "mesen", "thumbnails": "Nintendo - Nintendo Entertainment System"
+    },
+    {
+      "id": "snes", "name": "Super Nintendo", "short": "SNES", "maker": "Nintendo", "year": 1990, "accent": "#8f6fd6",
+      "extensions": ["sfc", "smc", "zip", "7z"], "folders": ["snes", "superfamicom", "sfc"],
+      "emulator": "retroarch", "core": "snes9x", "thumbnails": "Nintendo - Super Nintendo Entertainment System"
+    },
+    {
+      "id": "n64", "name": "Nintendo 64", "short": "N64", "maker": "Nintendo", "year": 1996, "accent": "#2fae5b",
+      "extensions": ["z64", "n64", "v64", "zip", "7z"], "folders": ["n64", "nintendo64"],
+      "emulator": "retroarch", "core": "mupen64plus_next", "thumbnails": "Nintendo - Nintendo 64"
+    },
+    {
+      "id": "gb", "name": "Game Boy", "short": "GB", "maker": "Nintendo", "year": 1989, "accent": "#9bbc0f",
+      "extensions": ["gb", "zip", "7z"], "folders": ["gb", "gameboy"],
+      "emulator": "retroarch", "core": "gambatte", "thumbnails": "Nintendo - Game Boy"
+    },
+    {
+      "id": "gbc", "name": "Game Boy Color", "short": "GBC", "maker": "Nintendo", "year": 1998, "accent": "#d94f9a",
+      "extensions": ["gbc", "zip", "7z"], "folders": ["gbc", "gameboycolor"],
+      "emulator": "retroarch", "core": "gambatte", "thumbnails": "Nintendo - Game Boy Color"
+    },
+    {
+      "id": "gba", "name": "Game Boy Advance", "short": "GBA", "maker": "Nintendo", "year": 2001, "accent": "#5a5ee0",
+      "extensions": ["gba", "zip", "7z"], "folders": ["gba", "gameboyadvance"],
+      "emulator": "retroarch", "core": "mgba", "thumbnails": "Nintendo - Game Boy Advance",
+      "bios": [{ "label": "GBA BIOS (gba_bios.bin)", "anyOf": ["gba_bios.bin"], "optional": true }]
+    },
+    {
+      "id": "nds", "name": "Nintendo DS", "short": "NDS", "maker": "Nintendo", "year": 2004, "accent": "#b8bcc8",
+      "extensions": ["nds"], "folders": ["nds", "ds"],
+      "emulator": "melonds", "thumbnails": "Nintendo - Nintendo DS"
+    },
+    {
+      "id": "3ds", "name": "Nintendo 3DS", "short": "3DS", "maker": "Nintendo", "year": 2011, "accent": "#e2483d",
+      "extensions": ["3ds", "cci", "cxi", "3dsx", "app"], "folders": ["3ds", "n3ds"],
+      "emulator": "azahar", "thumbnails": "Nintendo - Nintendo 3DS"
+    },
+    {
+      "id": "gc", "name": "GameCube", "short": "GC", "maker": "Nintendo", "year": 2001, "accent": "#7b62d9",
+      "extensions": ["iso", "gcm", "rvz", "ciso", "gcz"], "folders": ["gc", "gamecube", "ngc"],
+      "emulator": "dolphin", "thumbnails": "Nintendo - GameCube"
+    },
+    {
+      "id": "wii", "name": "Wii", "short": "Wii", "maker": "Nintendo", "year": 2006, "accent": "#3fb6e8",
+      "extensions": ["iso", "wbfs", "rvz", "gcz", "wad"], "folders": ["wii"],
+      "emulator": "dolphin", "thumbnails": "Nintendo - Wii"
+    },
+    {
+      "id": "wiiu", "name": "Wii U", "short": "Wii U", "maker": "Nintendo", "year": 2012, "accent": "#14a9d6",
+      "extensions": ["wud", "wux", "wua", "rpx"], "folders": ["wiiu"],
+      "emulator": "cemu", "thumbnails": "Nintendo - Wii U"
+    },
+    {
+      "id": "sms", "name": "Master System", "short": "SMS", "maker": "Sega", "year": 1985, "accent": "#e0383e",
+      "extensions": ["sms", "zip", "7z"], "folders": ["sms", "mastersystem"],
+      "emulator": "retroarch", "core": "genesis_plus_gx", "thumbnails": "Sega - Master System - Mark III"
+    },
+    {
+      "id": "genesis", "name": "Mega Drive / Genesis", "short": "MD", "maker": "Sega", "year": 1988, "accent": "#3a7bd5",
+      "extensions": ["md", "gen", "smd", "bin", "zip", "7z"], "folders": ["genesis", "megadrive", "md"],
+      "emulator": "retroarch", "core": "genesis_plus_gx", "thumbnails": "Sega - Mega Drive - Genesis"
+    },
+    {
+      "id": "saturn", "name": "Sega Saturn", "short": "Saturn", "maker": "Sega", "year": 1994, "accent": "#6c7a96",
+      "extensions": ["cue", "chd", "m3u"], "folders": ["saturn"],
+      "emulator": "retroarch", "core": "mednafen_saturn", "thumbnails": "Sega - Saturn",
+      "bios": [{ "label": "Saturn BIOS (sega_101.bin veya mpr-17933.bin)", "anyOf": ["sega_101.bin", "mpr-17933.bin"] }]
+    },
+    {
+      "id": "dreamcast", "name": "Dreamcast", "short": "DC", "maker": "Sega", "year": 1998, "accent": "#f08a24",
+      "extensions": ["gdi", "chd", "cdi", "m3u"], "folders": ["dreamcast", "dc"],
+      "emulator": "retroarch", "core": "flycast", "thumbnails": "Sega - Dreamcast",
+      "bios": [{ "label": "Dreamcast BIOS (dc/dc_boot.bin)", "anyOf": ["dc/dc_boot.bin"], "optional": true }]
+    },
+    {
+      "id": "arcade", "name": "Arcade", "short": "Arcade", "maker": "FinalBurn Neo", "year": 1980, "accent": "#f2c230",
+      "extensions": ["zip", "7z"], "folders": ["arcade", "fbneo"],
+      "emulator": "retroarch", "core": "fbneo", "thumbnails": "FBNeo - Arcade Games"
+    },
+    {
+      "id": "ps1", "name": "PlayStation", "short": "PS1", "maker": "Sony", "year": 1994, "accent": "#a3a9b8",
+      "extensions": ["cue", "chd", "m3u", "pbp", "iso"], "folders": ["ps1", "psx", "playstation"],
+      "emulator": "duckstation", "thumbnails": "Sony - PlayStation",
+      "bios": [{ "label": "PS1 BIOS (bios/ps1 içine, ör. scph5501.bin)", "anyOf": ["ps1/*.bin"] }]
+    },
+    {
+      "id": "ps2", "name": "PlayStation 2", "short": "PS2", "maker": "Sony", "year": 2000, "accent": "#3c5bd6",
+      "extensions": ["iso", "chd", "cso", "gz"], "folders": ["ps2", "playstation2"],
+      "emulator": "pcsx2", "thumbnails": "Sony - PlayStation 2",
+      "bios": [{ "label": "PS2 BIOS (bios/ps2 içine)", "anyOf": ["ps2/*.bin"] }]
+    },
+    {
+      "id": "psp", "name": "PlayStation Portable", "short": "PSP", "maker": "Sony", "year": 2004, "accent": "#5d6ff0",
+      "extensions": ["iso", "cso", "pbp", "chd"], "folders": ["psp"],
+      "emulator": "ppsspp", "thumbnails": "Sony - PlayStation Portable"
+    },
+    {
+      "id": "ps3", "name": "PlayStation 3", "short": "PS3", "maker": "Sony", "year": 2006, "accent": "#1f6fd1",
+      "extensions": ["iso"], "folders": ["ps3"], "folderMarker": "PS3_GAME",
+      "emulator": "rpcs3", "thumbnails": "Sony - PlayStation 3",
+      "bios": [{ "label": "PS3 firmware (bios/ps3/PS3UPDAT.PUP, Sony'nin sitesinden ücretsiz)", "anyOf": ["ps3/PS3UPDAT.PUP"] }]
+    },
+    {
+      "id": "xbox", "name": "Xbox", "short": "Xbox", "maker": "Microsoft", "year": 2001, "accent": "#5fbf3a",
+      "extensions": ["iso", "xiso"], "folders": ["xbox"],
+      "emulator": "xemu", "thumbnails": "Microsoft - Xbox",
+      "bios": [
+        { "label": "MCPX boot ROM (bios/xbox/mcpx_1.0.bin)", "anyOf": ["xbox/mcpx*.bin"] },
+        { "label": "Xbox flash BIOS (bios/xbox içine)", "anyOf": ["xbox/*bios*.bin", "xbox/complex*.bin"] },
+        { "label": "Xbox HDD imajı (bios/xbox/*.qcow2)", "anyOf": ["xbox/*.qcow2"] }
+      ]
+    },
+    {
+      "id": "x360", "name": "Xbox 360", "short": "360", "maker": "Microsoft", "year": 2005, "accent": "#8cc63f",
+      "extensions": ["iso", "xex", "zar"], "folders": ["x360", "xbox360"],
+      "emulator": "xenia", "thumbnails": "Microsoft - Xbox 360"
+    }
+  ],
+  "emulators": [
+    {
+      "id": "retroarch", "name": "RetroArch",
+      "source": { "type": "url", "url": "https://buildbot.libretro.com/nightly/windows/x86_64/RetroArch.7z" },
+      "exe": ["**/retroarch.exe"], "args": ["-f", "-L", "{core}", "{rom}"]
+    },
+    {
+      "id": "duckstation", "name": "DuckStation",
+      "source": { "type": "github", "repo": "stenzek/duckstation", "tag": "latest", "asset": "duckstation-windows-x64-release\\.zip$" },
+      "exe": ["**/duckstation-qt*.exe"], "args": ["-batch", "-fullscreen", "--", "{rom}"], "portableFiles": ["portable.txt"]
+    },
+    {
+      "id": "pcsx2", "name": "PCSX2",
+      "source": { "type": "github", "repo": "PCSX2/pcsx2", "asset": "windows-x64-Qt\\.7z$" },
+      "exe": ["**/pcsx2-qt*.exe"], "args": ["-batch", "-nogui", "-fullscreen", "{rom}"], "portableFiles": ["portable.ini"]
+    },
+    {
+      "id": "dolphin", "name": "Dolphin",
+      "source": { "type": "url", "url": "https://dl.dolphin-emu.org/releases/2509/dolphin-2509-x64.7z" },
+      "exe": ["**/Dolphin.exe"], "args": ["-b", "-e", "{rom}"], "portableFiles": ["portable.txt"]
+    },
+    {
+      "id": "ppsspp", "name": "PPSSPP",
+      "source": { "type": "url", "url": "https://www.ppsspp.org/files/1_19_3/ppsspp_win.zip" },
+      "exe": ["**/PPSSPPWindows64.exe"], "args": ["--fullscreen", "{rom}"]
+    },
+    {
+      "id": "melonds", "name": "melonDS",
+      "source": { "type": "github", "repo": "melonDS-emu/melonDS", "asset": "windows.*x86_64.*\\.zip$" },
+      "exe": ["**/melonDS.exe"], "args": ["-f", "{rom}"]
+    },
+    {
+      "id": "azahar", "name": "Azahar",
+      "source": { "type": "github", "repo": "azahar-emu/azahar", "asset": "windows-msvc.*\\.zip$" },
+      "exe": ["**/azahar.exe", "**/azahar-qt.exe"], "args": ["-f", "{rom}"]
+    },
+    {
+      "id": "cemu", "name": "Cemu",
+      "source": { "type": "github", "repo": "cemu-project/Cemu", "asset": "windows-x64\\.zip$" },
+      "exe": ["**/Cemu.exe"], "args": ["-f", "-g", "{rom}"]
+    },
+    {
+      "id": "rpcs3", "name": "RPCS3",
+      "source": { "type": "github", "repo": "RPCS3/rpcs3-binaries-win", "asset": "\\.7z$" },
+      "exe": ["**/rpcs3.exe"], "args": ["--no-gui", "{rom}"]
+    },
+    {
+      "id": "xemu", "name": "xemu",
+      "source": { "type": "github", "repo": "xemu-project/xemu", "asset": "win.*x86_64.*release.*\\.zip$" },
+      "exe": ["**/xemu.exe"], "args": ["-full-screen", "-dvd_path", "{rom}"]
+    },
+    {
+      "id": "xenia", "name": "Xenia Canary",
+      "source": { "type": "github", "repo": "xenia-canary/xenia-canary-releases", "asset": "windows\\.zip$" },
+      "exe": ["**/xenia_canary.exe"], "args": ["--fullscreen=true", "{rom}"]
+    }
+  ]
+}
