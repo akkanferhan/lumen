@@ -129,6 +129,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
 
     let mut child = tokio::process::Command::new(&exe)
         .args(&args)
+        .envs(crate::presets::launch_env(emu).iter().copied())
         .current_dir(exe_dir)
         .spawn()?;
     let (stop_tx, stop_rx) = oneshot::channel();
@@ -371,7 +372,7 @@ pub fn focus_lumen(app: &AppHandle, on_top: bool) {
 
 /// Emulators without a pause-on-focus-loss option; the quick menu freezes
 /// their process instead (see presets.rs for the ones that pause themselves).
-const FREEZE_FOR_MENU: &[&str] = &["vita3k", "xemu", "xenia", "shadps4", "cemu"];
+const FREEZE_FOR_MENU: &[&str] = &["vita3k", "xemu", "xenia", "shadps4", "sharpemu", "cemu"];
 
 /// Marker for a frozen emulator, so a crashed Lumen can thaw it on next start.
 fn frozen_marker(data_dir: &Path) -> std::path::PathBuf {

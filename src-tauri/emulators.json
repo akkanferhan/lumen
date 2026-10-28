@@ -119,6 +119,11 @@
       "bios": [{ "label": "PS4 sistem modülleri (bios/ps4 içine .sprx dosyaları)", "anyOf": ["ps4/*.sprx"], "optional": true }]
     },
     {
+      "id": "ps5", "power": "turbo", "name": "PlayStation 5", "short": "PS5", "maker": "Sony", "year": 2020, "accent": "#5b8def",
+      "extensions": [], "folders": ["ps5"], "folderMarker": "sce_sys", "launchFile": "eboot.bin",
+      "emulator": "sharpemu", "thumbnails": "Sony - PlayStation 5"
+    },
+    {
       "id": "xbox", "name": "Xbox", "short": "Xbox", "maker": "Microsoft", "year": 2001, "accent": "#5fbf3a",
       "extensions": ["iso", "xiso"], "folders": ["xbox"],
       "emulator": "xemu", "thumbnails": "Microsoft - Xbox",
@@ -188,6 +193,11 @@
       "id": "shadps4", "name": "shadPS4",
       "source": { "type": "github", "repo": "shadps4-emu/shadPS4", "asset": "win64-sdl.*\\.zip$" },
       "exe": ["**/shadPS4.exe"], "args": ["-f", "true", "-g", "{rom}"]
+    },
+    {
+      "id": "sharpemu", "name": "SharpEmu",
+      "source": { "type": "github", "repo": "sharpemu/sharpemu", "asset": "win-x64\\.zip$" },
+      "exe": ["**/SharpEmu.exe"], "args": ["{rom}"]
     },
     {
       "id": "xemu", "name": "xemu",

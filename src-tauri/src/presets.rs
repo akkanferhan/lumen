@@ -7,7 +7,7 @@
 //!
 //! Emulators that support it pause on focus loss: Lumen's quick menu takes
 //! focus, which pauses the game until "back to game" returns it. The rest
-//! (Vita3K, xemu, Xenia, shadPS4, Cemu) are frozen instead; see
+//! (Vita3K, xemu, Xenia, shadPS4, SharpEmu, Cemu) are frozen instead; see
 //! `launcher::FREEZE_FOR_MENU`.
 
 use crate::config::{set_cfg, set_ini};
@@ -88,7 +88,27 @@ pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier, fresh: bool) -> V
             }
             args
         }
+        // SharpEmu's CLI flags override its GUI settings file without touching it.
+        "sharpemu" => [
+            "--window-mode=borderless",
+            "--scaling=fit",
+            "--vsync=on",
+            "--hdr=off",
+            "--overlay=off",
+        ]
+        .map(String::from)
+        .into(),
         _ => Vec::new(),
+    }
+}
+
+/// Environment variables the emulator's own launcher would set.
+pub fn launch_env(emu: &Emulator) -> &'static [(&'static str, &'static str)] {
+    match emu.id.as_str() {
+        // SharpEmu's GUI enables this by default; many PS5 games write to their
+        // own install folder (app0) and fail to boot without it.
+        "sharpemu" => &[("SHARPEMU_WRITABLE_APP0", "1")],
+        _ => &[],
     }
 }
 
@@ -629,5 +649,14 @@ mod tests {
         assert!(standard.contains(&"--draw_resolution_scale_x=1".to_string()));
         assert!(high.contains(&"--draw_resolution_scale_x=2".to_string()));
         assert!(standard.iter().all(|a| !a.ends_with('=')), "no empty cvars");
+    }
+
+    #[test]
+    fn sharpemu_runs_borderless_with_a_writable_app0() {
+        let sharpemu = crate::manifest::emulator("sharpemu").unwrap();
+        let args = launch_args(sharpemu, Path::new("."), Tier::Standard, false);
+        assert!(args.contains(&"--window-mode=borderless".to_string()));
+        assert!(args.contains(&"--overlay=off".to_string()));
+        assert_eq!(launch_env(sharpemu), &[("SHARPEMU_WRITABLE_APP0", "1")]);
     }
 }
