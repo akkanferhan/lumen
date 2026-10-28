@@ -14,6 +14,7 @@ mod pc;
 mod power;
 mod presets;
 mod retroachievements;
+mod sleep;
 mod state;
 mod windows;
 mod xbox;
@@ -33,6 +34,7 @@ pub fn run() {
         .setup(|app| {
             let state = state::AppState::load(app.handle())?;
             input::spawn(app.handle().clone(), state.running.clone());
+            sleep::watch(app.handle().clone());
             app.manage(state);
             Ok(())
         })

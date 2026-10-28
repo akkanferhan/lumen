@@ -304,6 +304,7 @@ export const mockApi: Api = {
     progressListeners.add(cb);
     return () => progressListeners.delete(cb);
   },
+  onSystemResumed: () => () => {},
   onQuickMenu: (cb) => {
     // Browser preview: Select+Start can't reach a real emulator, so `Q`+`E`
     // together stands in for the in-game combo.
