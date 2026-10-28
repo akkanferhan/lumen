@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import { api } from "./api";
 import { installLabel, isPcSystem, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
+import { formatBytes } from "./format";
 import type { AppUpdate, Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 export interface Notice {
@@ -294,6 +295,35 @@ export const actions = {
       .map(([id]) => id);
     for (const id of pending) await actions.updateEmulator(id);
     if (pending.length) notify("Emülatörler güncellendi", "success");
+  },
+
+  async backupNow() {
+    try {
+      const report = await api.backupNow();
+      notify(
+        report.files ? `${report.files} dosya yedeklendi (${formatBytes(report.bytes)})` : "Yedek güncel",
+        "success",
+      );
+    } catch (e) {
+      notify(errorText(e), "error", 6000);
+    }
+    await refreshOverview();
+  },
+
+  async restoreBackup() {
+    try {
+      const report = await api.restoreBackup();
+      notify(report.files ? `${report.files} kayıt geri yüklendi` : "Geri yüklenecek daha yeni kayıt yok", "success");
+    } catch (e) {
+      notify(errorText(e), "error", 6000);
+    }
+  },
+
+  async setBackup(enabled: boolean, chooseFolder = false) {
+    const dir = chooseFolder ? await api.pickFolder() : null;
+    if (chooseFolder && !dir) return;
+    await api.setBackup(enabled, dir);
+    await refreshOverview();
   },
 
   async setPower(power: PowerSetting) {

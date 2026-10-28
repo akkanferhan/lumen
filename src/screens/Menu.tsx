@@ -7,6 +7,7 @@ import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
 import type { GraphicsSetting, PowerSetting, Tier } from "../lib/types";
+import { formatLastPlayed } from "../lib/format";
 
 const TIER_LABEL: Record<Tier, string> = { standard: "Dengeli", high: "Yüksek" };
 const POWER_LABEL: Record<PowerSetting, string> = {
@@ -36,7 +37,9 @@ export function Menu({
   onChangeRoot: () => void;
   onOpenStore: () => void;
 }) {
-  const [page, setPage] = useState<"main" | "emulators">("main");
+  const [page, setPage] = useState<"main" | "emulators" | "backup">("main");
+  // Restore overwrites saves: it needs a second press to confirm.
+  const [confirmRestore, setConfirmRestore] = useState(false);
   const overview = useStore((s) => s.overview);
   const games = useStore((s) => s.games);
   const installs = useStore((s) => s.installs);
@@ -82,6 +85,13 @@ export function Menu({
       sub: "Paylaşıma açık ücretsiz GB, GBA ve NES oyunları",
       value: "›",
       run: onOpenStore,
+    },
+    {
+      id: "backup",
+      title: "Kayıt yedekleme",
+      sub: overview?.settings.backup.enabled ? "Her oyundan sonra otomatik" : "Kapalı",
+      value: "›",
+      run: () => setPage("backup"),
     },
     { id: "emulators", title: "Emülatörler", sub: "Kurulum, durum ve BIOS dosyaları", value: "›", run: () => setPage("emulators") },
     {
@@ -214,12 +224,50 @@ export function Menu({
     };
   })];
 
-  const items = page === "main" ? main : emulatorItems;
+  const backup = overview?.settings.backup;
+  const backupItems: Item[] = [
+    {
+      id: "auto",
+      title: "Otomatik yedekleme",
+      sub: "Her oyun bittiğinde o emülatörün kayıtları kopyalanır",
+      value: backup?.enabled ? "Açık" : "Kapalı",
+      run: () => actions.setBackup(!backup?.enabled),
+    },
+    {
+      id: "folder",
+      title: "Yedek klasörü",
+      sub: overview?.backupDir,
+      value: "Değiştir",
+      run: () => actions.setBackup(!!backup?.enabled, true),
+    },
+    {
+      id: "now",
+      title: "Şimdi yedekle",
+      sub: backup?.lastBackup ? `Son yedek: ${formatLastPlayed(backup.lastBackup).toLowerCase()}` : "Henüz yedek alınmadı",
+      run: () => actions.backupNow(),
+    },
+    {
+      id: "restore",
+      title: confirmRestore ? "Onaylamak için tekrar bas" : "Yedekten geri yükle",
+      sub: "Yedekteki daha yeni kayıtlar cihazdakilerin yerine geçer",
+      run: () => {
+        if (!confirmRestore) {
+          setConfirmRestore(true);
+          return;
+        }
+        setConfirmRestore(false);
+        actions.restoreBackup();
+      },
+    },
+  ];
+
+  const items = page === "main" ? main : page === "backup" ? backupItems : emulatorItems;
   const [focus, setFocus] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const index = Math.min(focus, items.length - 1);
 
   useEffect(() => setFocus(0), [page]);
+  useEffect(() => setConfirmRestore(false), [page, index]);
   useEffect(() => {
     if (page === "emulators" && overview?.platformSupported) actions.checkUpdates();
   }, [page, overview?.platformSupported]);
@@ -262,11 +310,13 @@ export function Menu({
     <>
       <div className="scrim" onClick={onClose} />
       <aside className="menu">
-        <h2>{page === "main" ? "Menü" : "Emülatörler"}</h2>
+        <h2>{page === "main" ? "Menü" : page === "backup" ? "Kayıt yedekleme" : "Emülatörler"}</h2>
         <p className="menu-sub">
           {page === "main"
             ? "Lumen 0.1"
-            : "Emülatörler resmi kaynaklarından indirilir. Oyun ve BIOS dosyaları indirilmez."}
+            : page === "backup"
+              ? "Kayıtlar ve save state'ler seçtiğin klasöre kopyalanır; OneDrive klasörü buluta da taşır."
+              : "Emülatörler resmi kaynaklarından indirilir. Oyun ve BIOS dosyaları indirilmez."}
         </p>
         <div className="menu-list" ref={listRef}>
           {items.map((item, i) => (

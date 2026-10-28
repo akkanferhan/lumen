@@ -47,6 +47,14 @@ Emulators keep their own state in their config files, so Lumen only sets the key
   firmware interface Armoury Crate uses: Silent for 2D systems, Turbo for PS2/PS3/PS4/Xbox 360/
   Wii U/GameCube/Wii, Performance otherwise. Performance is restored when the game ends.
 
+## Save backups
+
+Each emulator's save and save-state folders (and Lumen's play data) are mirrored after every
+session to `OneDrive\Lumen Yedek` when OneDrive is set up, otherwise `Documents\Lumen Yedek`;
+the folder can be changed in Menu → Save backup. Copies are incremental. Restore copies back only
+files that are newer in the backup. xemu (saves inside its HDD image) and melonDS (saves beside the
+ROM) aren't covered yet.
+
 ## Homebrew store
 
 Menu → Homebrew store lists free Game Boy, Game Boy Color, Game Boy Advance and NES homebrew from

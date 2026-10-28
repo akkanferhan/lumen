@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -90,6 +90,7 @@ let graphics: GraphicsSetting = "auto";
 const homebrewInstalled = new Set<string>();
 let power: PowerSetting = "auto";
 let autostart = false;
+let backup: BackupSettings = { enabled: true, dir: null, lastBackup: null };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -127,7 +128,8 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup },
+    backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
     autostart,
     runningGameId: running?.id ?? null,
@@ -245,6 +247,18 @@ export const mockApi: Api = {
   updateEmulator: async (id) => {
     store.installed = store.installed.filter((x) => x !== id);
     await simulateInstall(id);
+  },
+  backupNow: async () => {
+    await sleep(800);
+    backup = { ...backup, lastBackup: Math.floor(Date.now() / 1000) };
+    return { files: 12, bytes: 3_400_000 };
+  },
+  restoreBackup: async () => {
+    await sleep(800);
+    return { files: 3, bytes: 260_000 };
+  },
+  setBackup: async (enabled, dir) => {
+    backup = { ...backup, enabled, dir: dir ?? backup.dir };
   },
   setPower: async (value) => {
     power = value;
