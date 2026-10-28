@@ -249,6 +249,19 @@ export const actions = {
     }
   },
 
+  /** Downloads a homebrew game into its system folder; the library rescans. */
+  async installHomebrew(slug: string): Promise<boolean> {
+    try {
+      const games = await api.installHomebrew(slug);
+      set({ games });
+      await refreshOverview();
+      return true;
+    } catch (e) {
+      notify(errorText(e), "error", 6000);
+      return false;
+    }
+  },
+
   async checkUpdates() {
     if (state.checkingUpdates) return;
     set({ checkingUpdates: true });

@@ -288,6 +288,25 @@ pub async fn resolve_release(source: &Source) -> anyhow::Result<Release> {
     }
 }
 
+pub async fn download_to(
+    app: &AppHandle,
+    id: &str,
+    url: &str,
+    target: &Path,
+    downloads_dir: &Path,
+) -> anyhow::Result<()> {
+    emit(app, id, "downloading", 0.0, None);
+    let temp = download(app, id, url, downloads_dir).await?;
+    if let Some(parent) = target.parent() {
+        tokio::fs::create_dir_all(parent).await?;
+    }
+    // Copy + remove: downloads may sit on a different drive than the ROM folder.
+    tokio::fs::copy(&temp, target).await?;
+    let _ = tokio::fs::remove_file(&temp).await;
+    emit(app, id, "done", 1.0, None);
+    Ok(())
+}
+
 async fn download(
     app: &AppHandle,
     id: &str,

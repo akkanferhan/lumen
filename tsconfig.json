@@ -14,5 +14,5 @@
     "noEmit": true,
     "types": ["vite/client"]
   },
-  "include": ["src", "src-tauri/emulators.json"]
+  "include": ["src", "src-tauri/emulators.json", "src-tauri/homebrew.json"]
 }

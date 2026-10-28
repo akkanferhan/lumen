@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod device;
 mod formats;
+mod homebrew;
 mod input;
 mod installer;
 mod launcher;
@@ -50,6 +51,8 @@ pub fn run() {
             commands::is_resumable,
             commands::set_power,
             commands::game_info,
+            commands::homebrew_installed,
+            commands::install_homebrew,
             commands::check_app_update,
             commands::install_app_update,
             commands::set_autostart,

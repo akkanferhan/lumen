@@ -557,3 +557,33 @@ mod tests {
         assert_eq!(games, 0);
     }
 }
+
+/// Slugs of catalog homebrew already in the ROM folders.
+#[tauri::command]
+pub fn homebrew_installed(state: State<'_, AppState>) -> Vec<String> {
+    let Some(root) = state.rom_root() else {
+        return Vec::new();
+    };
+    crate::homebrew::catalog()
+        .iter()
+        .filter(|g| crate::homebrew::target(g, &root).is_some_and(|p| p.exists()))
+        .map(|g| g.slug.clone())
+        .collect()
+}
+
+/// Downloads a catalog game into its system folder and rescans the library.
+#[tauri::command]
+pub async fn install_homebrew(app: AppHandle, slug: String) -> CmdResult<Vec<GameView>> {
+    let state = app.state::<AppState>();
+    let game = crate::homebrew::find(&slug).ok_or("Katalogda böyle bir oyun yok")?;
+    let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
+    let target = crate::homebrew::target(game, &root).ok_or("Bilinmeyen sistem")?;
+    let id = format!("homebrew:{slug}");
+    if let Err(e) =
+        installer::download_to(&app, &id, &game.url, &target, &state.dirs.downloads).await
+    {
+        installer::emit(&app, &id, "error", 0.0, Some(e.to_string()));
+        return Err(err(e));
+    }
+    scan_library(app.clone()).await
+}

@@ -47,6 +47,15 @@ Emulators keep their own state in their config files, so Lumen only sets the key
   firmware interface Armoury Crate uses: Silent for 2D systems, Turbo for PS2/PS3/PS4/Xbox 360/
   Wii U/GameCube/Wii, Performance otherwise. Performance is restored when the game ends.
 
+## Homebrew store
+
+Menu → Homebrew store lists free Game Boy, Game Boy Color, Game Boy Advance and NES homebrew from
+[Homebrew Hub](https://hh.gbdev.io). Only games whose license explicitly allows redistribution
+(MIT, GPL, BSD, Zlib, CC0, CC-BY family…) are included; entries without a license are left out. Each
+game shows its license and source. Downloads go straight into the right system folder.
+
+The catalog lives in `src-tauri/homebrew.json`; refresh it with `node scripts/homebrew-catalog.mjs`.
+
 ## Games and BIOS files
 
 Lumen never downloads games or copyrighted BIOS files. Use dumps of games and hardware you own.
