@@ -84,7 +84,7 @@ Also **Işık** (the default cover grid), **Raf** (a shelf per system) and **Kâ
 | | GameCube, Wii · Wii U | Dolphin · Cemu |
 | Sega | Master System, Mega Drive, Saturn, Dreamcast | RetroArch |
 | Sony | PlayStation · PS2 · PSP | DuckStation · PCSX2 · PPSSPP |
-| | PS3 · PS4 (experimental) | RPCS3 · shadPS4 |
+| | PS3 · PS4 (experimental) · PS Vita | RPCS3 · shadPS4 · Vita3K |
 | Microsoft | Xbox · Xbox 360 | xemu · Xenia Canary |
 | Arcade | FinalBurn Neo | RetroArch |
 | PC | Steam, Epic Games, Xbox app | their own launchers |
@@ -99,7 +99,7 @@ What it provides on its own:
 | System | Without your BIOS |
 |---|---|
 | PS1, Saturn | Run on open-source HLE BIOS (PCSX ReARMed, Yabause); adding a BIOS switches to DuckStation / Beetle Saturn |
-| PS3 | System software is fetched from Sony's official update server |
+| PS3, PS Vita | System software (and the Vita font package) is fetched from Sony's official update servers |
 | Xbox | xemu's blank HDD image is fetched; the MCPX and flash BIOS are still required |
 | GBA, DS, Dreamcast, 3DS | Built-in BIOS replacements |
 | PS2 | A BIOS dump is required |

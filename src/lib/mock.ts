@@ -29,6 +29,7 @@ const SAMPLE: [string, string][] = [
   ["gc", "Metroid Prime (USA)"],
   ["gc", "Legend of Zelda, The - The Wind Waker (USA)"],
   ["psp", "Patapon (USA)"],
+  ["psvita", "Persona 4 Golden (USA)"],
   ["dreamcast", "Jet Grind Radio (USA)"],
 ];
 
