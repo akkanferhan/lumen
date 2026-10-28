@@ -1,0 +1,44 @@
+src/screens/Menu.tsx
+  s_1b02c1f829b02f::t_27c6a86be37ff6 11,43,109-115,311-318,320-328,387-389,398-399
+src/lib/api.ts
+  s_1b02c1f829b02f::t_390c298d8bf2b2 37,93
+src/lib/types.ts
+  s_1b02c1f829b02f::t_390c298d8bf2b2 52
+package.json
+  s_1b02c1f829b02f::t_390c298d8bf2b2 14,16-17
+src/lib/themes.ts
+  s_1b02c1f829b02f::t_390c298d8bf2b2 1-47
+src/themes.css
+  s_1b02c1f829b02f::t_beb8e0baef9d03 1-494
+  s_1b02c1f829b02f::t_33a5d939e3463b 495-513
+src/lib/store.ts
+  s_1b02c1f829b02f::t_27c6a86be37ff6 9,87,378-380
+  s_1b02c1f829b02f::t_4a2d02dcf47068 381-383
+src/lib/mock.ts
+  s_1b02c1f829b02f::t_390c298d8bf2b2 96-102,140,292-298
+  s_1b02c1f829b02f::t_7813d590815276 299
+README.md
+  s_1b02c1f829b02f::t_e942275967437d 43-53
+package-lock.json
+  s_1b02c1f829b02f::t_cce228e166f984 10,12,14-15,30-38,48-65
+src/main.tsx
+  s_1b02c1f829b02f::t_c2e808e4faefc3 5
+src/screens/Library.tsx
+  s_1b02c1f829b02f::t_a6cfe18257f086 14-16,56,87-89,92-97,257-260,263-281,384-495
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4464324084adaee04f78fa4e019740f6548a7658",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
