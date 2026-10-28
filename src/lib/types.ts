@@ -105,6 +105,20 @@ export interface GameInfo {
   description: string | null;
 }
 
+export interface HomebrewGame {
+  slug: string;
+  title: string;
+  system: string;
+  developer: string;
+  year: string | null;
+  license: string;
+  description: string;
+  url: string;
+  fileName: string;
+  cover: string | null;
+  source: string | null;
+}
+
 export interface AppUpdate {
   version: string;
   notes: string | null;

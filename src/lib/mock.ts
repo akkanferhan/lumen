@@ -87,6 +87,7 @@ const progressListeners = new Set<(p: InstallProgress) => void>();
 const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
+const homebrewInstalled = new Set<string>();
 let power: PowerSetting = "auto";
 let autostart = false;
 
@@ -187,6 +188,17 @@ export const mockApi: Api = {
       if (system.core && !store.installed.includes(`core:${system.core}`)) jobs.add(`core:${system.core}`);
     }
     for (const job of jobs) await simulateInstall(job);
+  },
+  homebrewInstalled: async () => [...homebrewInstalled],
+  installHomebrew: async (slug) => {
+    const id = `homebrew:${slug}`;
+    for (let p = 0; p <= 1; p += 0.2) {
+      progressListeners.forEach((cb) => cb({ id, stage: "downloading", progress: p, message: null }));
+      await sleep(120);
+    }
+    progressListeners.forEach((cb) => cb({ id, stage: "done", progress: 1, message: null }));
+    homebrewInstalled.add(slug);
+    return games();
   },
   gameInfo: async (gameId) => {
     const game = games().find((g) => g.id === gameId);

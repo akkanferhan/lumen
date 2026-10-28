@@ -27,7 +27,15 @@ interface Item {
   run: () => void;
 }
 
-export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeRoot: () => void }) {
+export function Menu({
+  onClose,
+  onChangeRoot,
+  onOpenStore,
+}: {
+  onClose: () => void;
+  onChangeRoot: () => void;
+  onOpenStore: () => void;
+}) {
   const [page, setPage] = useState<"main" | "emulators">("main");
   const overview = useStore((s) => s.overview);
   const games = useStore((s) => s.games);
@@ -67,6 +75,13 @@ export function Menu({ onClose, onChangeRoot }: { onClose: () => void; onChangeR
         actions.rescan();
         onClose();
       },
+    },
+    {
+      id: "store",
+      title: "Homebrew mağazası",
+      sub: "Paylaşıma açık ücretsiz GB, GBA ve NES oyunları",
+      value: "›",
+      run: onOpenStore,
     },
     { id: "emulators", title: "Emülatörler", sub: "Kurulum, durum ve BIOS dosyaları", value: "›", run: () => setPage("emulators") },
     {

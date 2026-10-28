@@ -1,5 +1,6 @@
 import manifestJson from "../../src-tauri/emulators.json";
-import type { EmulatorDef, Game, SystemDef } from "./types";
+import homebrewJson from "../../src-tauri/homebrew.json";
+import type { EmulatorDef, Game, HomebrewGame, SystemDef } from "./types";
 
 /** Store launchers shown next to the emulated systems. */
 const PC_SYSTEMS: SystemDef[] = [
@@ -26,7 +27,10 @@ export function emulatorOf(id: string): EmulatorDef | undefined {
 }
 
 /** Human readable name for an install job id (`dolphin`, `core:snes9x`). */
+export const homebrew = homebrewJson as HomebrewGame[];
+
 export function installLabel(id: string): string {
+  if (id.startsWith("homebrew:")) return homebrew.find((g) => `homebrew:${g.slug}` === id)?.title ?? "Homebrew";
   if (id === "firmware:ps3") return "PS3 firmware (Sony)";
   if (id === "hdd:xbox") return "Xbox HDD imajı";
   if (id.startsWith("core:")) {

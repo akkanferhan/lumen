@@ -25,6 +25,8 @@ export interface Api {
   launchGame(gameId: string, fresh?: boolean): Promise<void>;
   isResumable(gameId: string): Promise<boolean>;
   gameInfo(gameId: string): Promise<GameInfo | null>;
+  homebrewInstalled(): Promise<string[]>;
+  installHomebrew(slug: string): Promise<Game[]>;
   resumeGame(): Promise<void>;
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
@@ -71,6 +73,8 @@ const tauriApi: Api = {
   launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
   isResumable: (gameId) => invoke("is_resumable", { gameId }),
   gameInfo: (gameId) => invoke("game_info", { gameId }),
+  homebrewInstalled: () => invoke("homebrew_installed"),
+  installHomebrew: (slug) => invoke("install_homebrew", { slug }),
   resumeGame: () => invoke("resume_game"),
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),

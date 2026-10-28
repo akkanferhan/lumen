@@ -8,6 +8,7 @@ import { Library } from "./screens/Library";
 import { Menu } from "./screens/Menu";
 import { Onboarding } from "./screens/Onboarding";
 import { Running } from "./screens/Running";
+import { HomebrewStore } from "./screens/HomebrewStore";
 
 export function App() {
   const ready = useStore((s) => s.ready);
@@ -16,6 +17,7 @@ export function App() {
 
   const [openGameId, setOpenGameId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
   // Setup stays on screen until the user leaves it, even after a root is chosen.
   const [onboarding, setOnboarding] = useState<null | "welcome" | "folder">(null);
 
@@ -44,12 +46,17 @@ export function App() {
           <Library
             onOpen={(g) => setOpenGameId(g.id)}
             onMenu={() => setMenuOpen(true)}
-            covered={!!openGameId || menuOpen}
+            covered={!!openGameId || menuOpen || storeOpen}
           />
+          {storeOpen && <HomebrewStore onClose={() => setStoreOpen(false)} />}
           {openGameId && <GameSheet gameId={openGameId} onClose={() => setOpenGameId(null)} />}
           {menuOpen && (
             <Menu
               onClose={() => setMenuOpen(false)}
+              onOpenStore={() => {
+                setMenuOpen(false);
+                setStoreOpen(true);
+              }}
               onChangeRoot={() => {
                 setMenuOpen(false);
                 setOnboarding("folder");
