@@ -32,8 +32,17 @@ pub struct Overview {
     pub autostart: bool,
     /// Resolved save backup folder (the default when none is chosen).
     pub backup_dir: PathBuf,
+    /// Signed-in RetroAchievements user (token never leaves the backend).
+    pub ra_user: Option<RaUser>,
     /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
     pub platform_supported: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RaUser {
+    pub username: String,
+    pub score: Option<u64>,
 }
 
 #[derive(Serialize)]
@@ -72,6 +81,10 @@ pub async fn get_overview(app: AppHandle) -> Overview {
 fn overview(state: &AppState, autostart: bool) -> Overview {
     let settings = state.settings.lock().unwrap().clone();
     let backup_dir = settings.backup.target();
+    let ra_user = state.ra.lock().unwrap().as_ref().map(|a| RaUser {
+        username: a.username.clone(),
+        score: a.score,
+    });
     let tier = state.tier();
     let running_game_id = state
         .running
@@ -117,6 +130,7 @@ fn overview(state: &AppState, autostart: bool) -> Overview {
         power_available: crate::power::available(),
         autostart,
         backup_dir,
+        ra_user,
         running_game_id,
         platform_supported: cfg!(target_os = "windows"),
     }
@@ -667,4 +681,65 @@ pub(crate) fn mark_backed_up(state: &AppState) {
         .map(|d| d.as_secs());
     state.settings.lock().unwrap().backup.last_backup = now;
     let _ = state.save_settings();
+}
+
+/// Logs in to RetroAchievements; only the returned token is kept.
+#[tauri::command]
+pub async fn ra_login(app: AppHandle, username: String, password: String) -> CmdResult<RaUser> {
+    use crate::retroachievements::{login, Secret};
+    let account = login(username.trim(), Secret::Password(&password))
+        .await
+        .map_err(err)?;
+    let user = RaUser {
+        username: account.username.clone(),
+        score: account.score,
+    };
+    let state = app.state::<AppState>();
+    *state.ra.lock().unwrap() = Some(account);
+    state.save_ra().map_err(err)?;
+    Ok(user)
+}
+
+#[tauri::command]
+pub fn ra_logout(state: State<'_, AppState>) -> CmdResult<()> {
+    *state.ra.lock().unwrap() = None;
+    state.save_ra().map_err(err)
+}
+
+#[tauri::command]
+pub fn set_ra_hardcore(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().ra_hardcore = enabled;
+    state.save_settings().map_err(err)
+}
+
+/// Re-checks the stored token (updates the score). An expired token signs
+/// the user out so emulators don't keep failing silently.
+#[tauri::command]
+pub async fn ra_refresh(app: AppHandle) -> CmdResult<Option<RaUser>> {
+    use crate::retroachievements::{login, Secret};
+    let state = app.state::<AppState>();
+    let Some(current) = state.ra.lock().unwrap().clone() else {
+        return Ok(None);
+    };
+    match login(&current.username, Secret::Token(&current.token)).await {
+        Ok(fresh) => {
+            let user = RaUser {
+                username: fresh.username.clone(),
+                score: fresh.score,
+            };
+            *state.ra.lock().unwrap() = Some(fresh);
+            state.save_ra().map_err(err)?;
+            Ok(Some(user))
+        }
+        // Network trouble: keep the login, report it unchanged.
+        Err(e) if e.to_string().contains("ulaşılamadı") => Ok(Some(RaUser {
+            username: current.username,
+            score: current.score,
+        })),
+        Err(_) => {
+            *state.ra.lock().unwrap() = None;
+            state.save_ra().map_err(err)?;
+            Err("RetroAchievements oturumunun süresi doldu, tekrar giriş yap".into())
+        }
+    }
 }

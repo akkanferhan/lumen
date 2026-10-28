@@ -63,6 +63,18 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
 
     config::configure(emu, exe_dir, bios.as_deref(), state.tier())?;
+    {
+        let account = state.ra.lock().unwrap().clone();
+        let hardcore = state.settings.lock().unwrap().ra_hardcore;
+        crate::retroachievements::apply(
+            &emu.id,
+            exe_dir,
+            crate::retroachievements::Cheevos {
+                account: account.as_ref(),
+                hardcore,
+            },
+        )?;
+    }
     match emu.id.as_str() {
         "rpcs3" => ensure_ps3_firmware(app, &exe, bios.as_deref(), &state.dirs.downloads).await?,
         "xemu" => installer::ensure_xbox_hdd(app, exe_dir, &state.dirs.downloads).await?,
