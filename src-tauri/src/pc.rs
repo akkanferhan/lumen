@@ -15,7 +15,7 @@ pub const STEAM: &str = "steam";
 pub const EPIC: &str = "epic";
 
 pub fn is_pc(system_id: &str) -> bool {
-    system_id == STEAM || system_id == EPIC
+    system_id == STEAM || system_id == EPIC || system_id == crate::xbox::XBOX_APP
 }
 
 /// Steam tools that show up as installed apps but aren't games.
@@ -29,6 +29,7 @@ pub fn scan() -> Vec<Game> {
         games.extend(scan_steam(&steam));
     }
     games.extend(scan_epic(&epic_manifests()));
+    games.extend(crate::xbox::scan());
     games
 }
 
