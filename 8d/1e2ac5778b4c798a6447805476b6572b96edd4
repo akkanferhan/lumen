@@ -1,0 +1,29 @@
+src/screens/Library.tsx
+  s_1b02c1f829b02f::t_cc225d4eb82a17 74-78,93-94,97-104,152-166,168-171,288-291,529-642
+src/lib/themes.ts
+  s_1b02c1f829b02f::t_8a6201092edf38 4,38-55
+package.json
+  s_1b02c1f829b02f::t_8a6201092edf38 16-17,19
+README.md
+  s_1b02c1f829b02f::t_e9b3935b6a8596 53-55
+package-lock.json
+  s_1b02c1f829b02f::t_8cf47077a44741 14-15,17,51-68,78-86
+src/themes.css
+  s_1b02c1f829b02f::t_bc618e09dad009 7-9,517-889
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8d1e2ac5778b4c798a6447805476b6572b96edd4",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
