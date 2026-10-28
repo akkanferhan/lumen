@@ -8,7 +8,7 @@ use crate::{
     state::{AppState, Settings},
 };
 use serde::Serialize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 
 type CmdResult<T> = Result<T, String>;
@@ -30,6 +30,8 @@ pub struct Overview {
     pub power_available: bool,
     /// Lumen starts with Windows.
     pub autostart: bool,
+    /// Resolved save backup folder (the default when none is chosen).
+    pub backup_dir: PathBuf,
     /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
     pub platform_supported: bool,
 }
@@ -69,6 +71,7 @@ pub async fn get_overview(app: AppHandle) -> Overview {
 /// self-deadlock freezes the whole app on a black screen.
 fn overview(state: &AppState, autostart: bool) -> Overview {
     let settings = state.settings.lock().unwrap().clone();
+    let backup_dir = settings.backup.target();
     let tier = state.tier();
     let running_game_id = state
         .running
@@ -113,6 +116,7 @@ fn overview(state: &AppState, autostart: bool) -> Overview {
         tier,
         power_available: crate::power::available(),
         autostart,
+        backup_dir,
         running_game_id,
         platform_supported: cfg!(target_os = "windows"),
     }
@@ -586,4 +590,81 @@ pub async fn install_homebrew(app: AppHandle, slug: String) -> CmdResult<Vec<Gam
         return Err(err(e));
     }
     scan_library(app.clone()).await
+}
+
+/// Backs up every installed emulator's saves and Lumen's play data now.
+#[tauri::command]
+pub async fn backup_now(app: AppHandle) -> CmdResult<crate::backup::Report> {
+    let state = app.state::<AppState>();
+    let target = state.settings.lock().unwrap().backup.target();
+    let emulators = state.dirs.emulators.clone();
+    let data = state.dirs.data.clone();
+    let report =
+        tauri::async_runtime::spawn_blocking(move || backup_all(&emulators, &data, &target))
+            .await
+            .map_err(err)?
+            .map_err(err)?;
+    mark_backed_up(&state);
+    Ok(report)
+}
+
+/// Copies saves back from the backup wherever the backup copy is newer.
+#[tauri::command]
+pub async fn restore_backup(app: AppHandle) -> CmdResult<crate::backup::Report> {
+    let state = app.state::<AppState>();
+    if state.running.lock().unwrap().is_some() {
+        return Err("Oyun açıkken geri yükleme yapılamaz".into());
+    }
+    let target = state.settings.lock().unwrap().backup.target();
+    if !target.is_dir() {
+        return Err("Yedek klasörü bulunamadı".into());
+    }
+    let emulators = state.dirs.emulators.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut report = crate::backup::Report::default();
+        for emu in &manifest().emulators {
+            report += crate::backup::restore_emulator(&emu.id, &emulators.join(&emu.id), &target)?;
+        }
+        std::io::Result::Ok(report)
+    })
+    .await
+    .map_err(err)?
+    .map_err(err)
+}
+
+#[tauri::command]
+pub fn set_backup(
+    state: State<'_, AppState>,
+    enabled: bool,
+    dir: Option<PathBuf>,
+) -> CmdResult<()> {
+    {
+        let mut settings = state.settings.lock().unwrap();
+        settings.backup.enabled = enabled;
+        if dir.is_some() {
+            settings.backup.dir = dir;
+        }
+    }
+    state.save_settings().map_err(err)
+}
+
+fn backup_all(
+    emulators: &Path,
+    data: &Path,
+    target: &Path,
+) -> std::io::Result<crate::backup::Report> {
+    let mut report = crate::backup::backup_lumen(data, target)?;
+    for emu in &manifest().emulators {
+        report += crate::backup::backup_emulator(&emu.id, &emulators.join(&emu.id), target)?;
+    }
+    Ok(report)
+}
+
+pub(crate) fn mark_backed_up(state: &AppState) {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|d| d.as_secs());
+    state.settings.lock().unwrap().backup.last_backup = now;
+    let _ = state.save_settings();
 }

@@ -43,3 +43,9 @@ export function groupLetter(title: string): string {
   const first = fold(title.replace(/^(the|a|an) /i, "")).charAt(0).toUpperCase();
   return first >= "A" && first <= "Z" ? first : "#";
 }
+
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+}

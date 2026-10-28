@@ -31,8 +31,20 @@ export type Tier = "standard" | "high";
 export type PowerSetting = "auto" | "off" | "silent" | "performance" | "turbo";
 export type GraphicsSetting = "auto" | Tier;
 
+export interface BackupSettings {
+  enabled: boolean;
+  dir: string | null;
+  lastBackup: number | null;
+}
+
+export interface BackupReport {
+  files: number;
+  bytes: number;
+}
+
 export interface Settings {
   romRoot: string | null;
+  backup: BackupSettings;
   sounds: boolean;
   graphics: GraphicsSetting;
   power: PowerSetting;
@@ -71,6 +83,8 @@ export interface Overview {
   powerAvailable: boolean;
   /** Lumen starts with Windows. */
   autostart: boolean;
+  /** Where backups go (chosen folder or the OneDrive/Documents default). */
+  backupDir: string;
   platformSupported: boolean;
 }
 

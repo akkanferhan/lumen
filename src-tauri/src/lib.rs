@@ -1,3 +1,4 @@
+mod backup;
 mod commands;
 mod config;
 mod device;
@@ -51,6 +52,9 @@ pub fn run() {
             commands::is_resumable,
             commands::set_power,
             commands::game_info,
+            commands::backup_now,
+            commands::restore_backup,
+            commands::set_backup,
             commands::homebrew_installed,
             commands::install_homebrew,
             commands::check_app_update,

@@ -4,6 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { mockApi } from "./mock";
 import type {
   AppUpdate,
+  BackupReport,
   EmulatorUpdate,
   Game,
   GameExited,
@@ -38,6 +39,9 @@ export interface Api {
   onAppUpdateProgress(cb: (progress: number) => void): () => void;
   setPower(power: PowerSetting): Promise<void>;
   setAutostart(enabled: boolean): Promise<void>;
+  backupNow(): Promise<BackupReport>;
+  restoreBackup(): Promise<BackupReport>;
+  setBackup(enabled: boolean, dir?: string | null): Promise<void>;
   updateEmulator(id: string): Promise<void>;
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
@@ -86,6 +90,9 @@ const tauriApi: Api = {
   onAppUpdateProgress: (cb) => subscribe<number>("app-update-progress", cb),
   setPower: (power) => invoke("set_power", { power }),
   setAutostart: (enabled) => invoke("set_autostart", { enabled }),
+  backupNow: () => invoke("backup_now"),
+  restoreBackup: () => invoke("restore_backup"),
+  setBackup: (enabled, dir) => invoke("set_backup", { enabled, dir: dir ?? null }),
   updateEmulator: (id) => invoke("update_emulator", { id }),
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),
