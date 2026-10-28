@@ -20,6 +20,7 @@ import type {
 export interface Api {
   getOverview(): Promise<Overview>;
   getLibrary(): Promise<Game[]>;
+  takeCrashReport(): Promise<string | null>;
   pickFolder(): Promise<string | null>;
   setRomRoot(path: string): Promise<Game[]>;
   scanLibrary(): Promise<Game[]>;
@@ -78,6 +79,7 @@ function subscribe<T>(event: string, cb: (payload: T) => void): () => void {
 const tauriApi: Api = {
   getOverview: () => invoke("get_overview"),
   getLibrary: () => invoke("get_library"),
+  takeCrashReport: () => invoke("take_crash_report"),
   pickFolder: async () => {
     const picked = await open({ directory: true, title: "Oyun klasörünü seç" });
     return typeof picked === "string" ? picked : null;
