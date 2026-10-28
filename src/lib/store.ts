@@ -107,6 +107,7 @@ export const actions = {
       sfx.confirm();
       set({ quickMenu: true });
     });
+    api.onSystemResumed(() => notify("Uykudan döndün · oyun duraklatıldı, hazır olunca devam et", "info", 6000));
     api.onGameExited(async () => {
       set({ runningGameId: null, quickMenu: false });
       sfx.back();

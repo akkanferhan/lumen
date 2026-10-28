@@ -52,6 +52,7 @@ export interface Api {
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
   onQuickMenu(cb: () => void): () => void;
+  onSystemResumed(cb: () => void): () => void;
 }
 
 export const isTauri = "__TAURI_INTERNALS__" in window;
@@ -108,6 +109,7 @@ const tauriApi: Api = {
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),
   onQuickMenu: (cb) => subscribe<null>("quick-menu", () => cb()),
+  onSystemResumed: (cb) => subscribe<null>("system-resumed", () => cb()),
 };
 
 /** In a plain browser (UI development on macOS) everything is simulated. */

@@ -40,6 +40,11 @@ Emulator settings never need to be opened. The tier can be overridden in Menu �
 Emulators keep their own state in their config files, so Lumen only sets the keys it owns
 (read–merge–write for INI, TOML, YAML and JSON); Xenia gets its settings as command-line flags.
 
+### Sleep
+
+If the handheld sleeps during a game, Lumen's quick menu comes up first so the emulator pauses; after
+waking the game waits paused until "back to game", instead of resuming mid-action.
+
 ### Themes
 
 Menu → Theme. Each theme brings its own library layout, type and navigation, not just colors:
