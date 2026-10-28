@@ -10,6 +10,9 @@ import type {
   GameExited,
   GameInfo,
   GraphicsSetting,
+  ImportCandidate,
+  ImportMode,
+  ImportReport,
   InstallProgress,
   Overview,
   PowerSetting,
@@ -21,7 +24,7 @@ export interface Api {
   getOverview(): Promise<Overview>;
   getLibrary(): Promise<Game[]>;
   takeCrashReport(): Promise<string | null>;
-  pickFolder(): Promise<string | null>;
+  pickFolder(title?: string): Promise<string | null>;
   setRomRoot(path: string): Promise<Game[]>;
   scanLibrary(): Promise<Game[]>;
   installSystems(systemIds: string[]): Promise<void>;
@@ -34,6 +37,11 @@ export interface Api {
   uninstallEmulator(id: string): Promise<void>;
   homebrewInstalled(): Promise<string[]>;
   installHomebrew(slug: string): Promise<Game[]>;
+  importScan(path: string): Promise<ImportCandidate[]>;
+  importGames(
+    items: { path: string; systemId: string }[],
+    mode: ImportMode,
+  ): Promise<{ report: ImportReport; games: Game[] }>;
   resumeGame(): Promise<void>;
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
@@ -80,8 +88,8 @@ const tauriApi: Api = {
   getOverview: () => invoke("get_overview"),
   getLibrary: () => invoke("get_library"),
   takeCrashReport: () => invoke("take_crash_report"),
-  pickFolder: async () => {
-    const picked = await open({ directory: true, title: "Oyun klasörünü seç" });
+  pickFolder: async (title = "Oyun klasörünü seç") => {
+    const picked = await open({ directory: true, title });
     return typeof picked === "string" ? picked : null;
   },
   setRomRoot: (path) => invoke("set_rom_root", { path }),
@@ -95,6 +103,8 @@ const tauriApi: Api = {
   uninstallEmulator: (id) => invoke("uninstall_emulator", { id }),
   homebrewInstalled: () => invoke("homebrew_installed"),
   installHomebrew: (slug) => invoke("install_homebrew", { slug }),
+  importScan: (path) => invoke("import_scan", { path }),
+  importGames: (items, mode) => invoke("import_games", { items, mode }),
   resumeGame: () => invoke("resume_game"),
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),

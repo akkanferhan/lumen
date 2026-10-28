@@ -5,6 +5,7 @@ mod crash;
 mod device;
 mod formats;
 mod homebrew;
+mod importer;
 mod input;
 mod installer;
 mod launcher;
@@ -76,6 +77,8 @@ pub fn run() {
             commands::set_backup,
             commands::homebrew_installed,
             commands::install_homebrew,
+            commands::import_scan,
+            commands::import_games,
             commands::check_app_update,
             commands::install_app_update,
             commands::set_autostart,

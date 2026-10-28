@@ -258,6 +258,7 @@ const STAGE_LABEL: Record<InstallProgress["stage"], string> = {
   downloading: "İndiriliyor",
   extracting: "Açılıyor",
   configuring: "Ayarlanıyor",
+  copying: "Kopyalanıyor",
   done: "Hazır",
   error: "Hata",
 };

@@ -35,11 +35,13 @@ export function Menu({
   onClose,
   onChangeRoot,
   onOpenStore,
+  onOpenImport,
   onOpenRaLogin,
 }: {
   onClose: () => void;
   onChangeRoot: () => void;
   onOpenStore: () => void;
+  onOpenImport: () => void;
   onOpenRaLogin: () => void;
 }) {
   const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme">("main");
@@ -92,6 +94,13 @@ export function Menu({
       sub: "Paylaşıma açık ücretsiz GB, GBA ve NES oyunları",
       value: "›",
       run: onOpenStore,
+    },
+    {
+      id: "import",
+      title: "Oyunlarını içe aktar",
+      sub: "USB bellek veya klasördeki dökümlerin doğru sisteme yerleşir",
+      value: "›",
+      run: onOpenImport,
     },
     {
       id: "ra",
