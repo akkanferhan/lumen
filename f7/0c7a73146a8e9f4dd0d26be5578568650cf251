@@ -1,0 +1,39 @@
+src-tauri/src/commands.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 788-796
+src-tauri/src/lib.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 20
+src-tauri/src/manifest.rs
+  s_1b02c1f829b02f::t_544ee69034db27 147,159
+src-tauri/src/vita.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 1-14,17-168
+  s_1b02c1f829b02f::t_544ee69034db27 15-16
+src-tauri/src/launcher.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 81,112-117,121-127
+src-tauri/src/library.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 204
+src-tauri/src/installer.rs
+  s_1b02c1f829b02f::t_544ee69034db27 423-436
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 129-139
+src-tauri/src/backup.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 27
+src-tauri/src/config.rs
+  s_1b02c1f829b02f::t_7b530dbfa5c9ea 116-120
+src-tauri/emulators.json
+  s_1b02c1f829b02f::t_ebfb8d3dcd9281 110-114,182-186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f70c7a73146a8e9f4dd0d26be5578568650cf251",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
