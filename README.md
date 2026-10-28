@@ -47,6 +47,13 @@ Emulators keep their own state in their config files, so Lumen only sets the key
   firmware interface Armoury Crate uses: Silent for 2D systems, Turbo for PS2/PS3/PS4/Xbox 360/
   Wii U/GameCube/Wii, Performance otherwise. Performance is restored when the game ends.
 
+## RetroAchievements
+
+Sign in once (Menu → RetroAchievements) and achievements work in RetroArch, DuckStation, PCSX2,
+PPSSPP and Dolphin. The password is sent to RetroAchievements once and never stored; only the
+session token is kept (in `secrets.json`, excluded from backups) and written to each emulator in its
+own format, including DuckStation's encrypted token. Hardcore mode is a single switch.
+
 ## Save backups
 
 Each emulator's save and save-state folders (and Lumen's play data) are mirrored after every

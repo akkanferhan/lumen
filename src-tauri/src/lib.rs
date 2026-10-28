@@ -13,6 +13,7 @@ mod metadata;
 mod pc;
 mod power;
 mod presets;
+mod retroachievements;
 mod state;
 mod windows;
 mod xbox;
@@ -53,6 +54,10 @@ pub fn run() {
             commands::set_power,
             commands::game_info,
             commands::backup_now,
+            commands::ra_login,
+            commands::ra_logout,
+            commands::ra_refresh,
+            commands::set_ra_hardcore,
             commands::restore_backup,
             commands::set_backup,
             commands::homebrew_installed,

@@ -32,12 +32,14 @@ export function Menu({
   onClose,
   onChangeRoot,
   onOpenStore,
+  onOpenRaLogin,
 }: {
   onClose: () => void;
   onChangeRoot: () => void;
   onOpenStore: () => void;
+  onOpenRaLogin: () => void;
 }) {
-  const [page, setPage] = useState<"main" | "emulators" | "backup">("main");
+  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra">("main");
   // Restore overwrites saves: it needs a second press to confirm.
   const [confirmRestore, setConfirmRestore] = useState(false);
   const overview = useStore((s) => s.overview);
@@ -85,6 +87,15 @@ export function Menu({
       sub: "Paylaşıma açık ücretsiz GB, GBA ve NES oyunları",
       value: "›",
       run: onOpenStore,
+    },
+    {
+      id: "ra",
+      title: "RetroAchievements",
+      sub: overview?.raUser
+        ? `Bağlı: ${overview.raUser.username}${overview.raUser.score != null ? ` · ${overview.raUser.score} puan` : ""}`
+        : "Retro oyunlarda başarımlar · giriş yapılmadı",
+      value: "›",
+      run: () => (overview?.raUser ? setPage("ra") : onOpenRaLogin()),
     },
     {
       id: "backup",
@@ -261,13 +272,45 @@ export function Menu({
     },
   ];
 
-  const items = page === "main" ? main : page === "backup" ? backupItems : emulatorItems;
+  const raItems: Item[] = [
+    {
+      id: "account",
+      title: overview?.raUser?.username ?? "",
+      sub:
+        overview?.raUser?.score != null
+          ? `${overview.raUser.score} puan · RetroArch, DuckStation, PCSX2, PPSSPP ve Dolphin'de açık`
+          : "RetroArch, DuckStation, PCSX2, PPSSPP ve Dolphin'de açık",
+      value: "Yenile",
+      run: () => actions.raRefresh(),
+    },
+    {
+      id: "hardcore",
+      title: "Hardcore modu",
+      sub: "Save state ve hileler kapanır, başarımlar hardcore sayılır",
+      value: overview?.settings.raHardcore ? "Açık" : "Kapalı",
+      run: () => actions.setRaHardcore(!overview?.settings.raHardcore),
+    },
+    {
+      id: "logout",
+      title: "Çıkış yap",
+      run: () => {
+        actions.raLogout();
+        setPage("main");
+      },
+    },
+  ];
+
+  const items =
+    page === "main" ? main : page === "backup" ? backupItems : page === "ra" ? raItems : emulatorItems;
   const [focus, setFocus] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const index = Math.min(focus, items.length - 1);
 
   useEffect(() => setFocus(0), [page]);
   useEffect(() => setConfirmRestore(false), [page, index]);
+  useEffect(() => {
+    if (page === "ra") actions.raRefresh();
+  }, [page]);
   useEffect(() => {
     if (page === "emulators" && overview?.platformSupported) actions.checkUpdates();
   }, [page, overview?.platformSupported]);
@@ -310,12 +353,22 @@ export function Menu({
     <>
       <div className="scrim" onClick={onClose} />
       <aside className="menu">
-        <h2>{page === "main" ? "Menü" : page === "backup" ? "Kayıt yedekleme" : "Emülatörler"}</h2>
+        <h2>
+          {page === "main"
+            ? "Menü"
+            : page === "backup"
+              ? "Kayıt yedekleme"
+              : page === "ra"
+                ? "RetroAchievements"
+                : "Emülatörler"}
+        </h2>
         <p className="menu-sub">
           {page === "main"
             ? "Lumen 0.1"
             : page === "backup"
               ? "Kayıtlar ve save state'ler seçtiğin klasöre kopyalanır; OneDrive klasörü buluta da taşır."
+              : page === "ra"
+                ? "Tek giriş tüm emülatörlere yazılır. Şifren saklanmaz, sadece oturum anahtarı tutulur."
               : "Emülatörler resmi kaynaklarından indirilir. Oyun ve BIOS dosyaları indirilmez."}
         </p>
         <div className="menu-list" ref={listRef}>

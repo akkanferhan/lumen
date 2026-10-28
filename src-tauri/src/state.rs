@@ -25,6 +25,8 @@ pub struct Settings {
     pub power: PowerSetting,
     /// Save backups (on by default).
     pub backup: crate::backup::BackupSettings,
+    /// RetroAchievements hardcore mode (no save states, no cheats).
+    pub ra_hardcore: bool,
 }
 
 impl Default for Settings {
@@ -35,6 +37,7 @@ impl Default for Settings {
             graphics: TierSetting::Auto,
             power: PowerSetting::Auto,
             backup: crate::backup::BackupSettings::enabled_by_default(),
+            ra_hardcore: false,
         }
     }
 }
@@ -76,6 +79,8 @@ pub struct AppState {
     pub installing: Mutex<HashSet<String>>,
     /// Per-system game facts, loaded on first use.
     pub metadata: Mutex<HashMap<String, Arc<crate::metadata::SystemInfo>>>,
+    /// RetroAchievements login. Kept in secrets.json, which isn't backed up.
+    pub ra: Mutex<Option<crate::retroachievements::Account>>,
 }
 
 impl AppState {
@@ -100,6 +105,7 @@ impl AppState {
             running: Arc::new(Mutex::new(None)),
             installing: Mutex::new(HashSet::new()),
             metadata: Mutex::new(HashMap::new()),
+            ra: Mutex::new(read_json(&dirs.data.join("secrets.json"))),
             dirs,
         })
     }
@@ -116,6 +122,17 @@ impl AppState {
             &self.dirs.data.join("library.json"),
             &*self.library.lock().unwrap(),
         )
+    }
+
+    pub fn save_ra(&self) -> anyhow::Result<()> {
+        let path = self.dirs.data.join("secrets.json");
+        match &*self.ra.lock().unwrap() {
+            Some(account) => write_json(&path, account),
+            None => {
+                let _ = fs::remove_file(path);
+                Ok(())
+            }
+        }
     }
 
     pub fn save_user(&self) -> anyhow::Result<()> {

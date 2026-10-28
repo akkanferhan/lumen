@@ -13,6 +13,7 @@ import type {
   InstallProgress,
   Overview,
   PowerSetting,
+  RaUser,
 } from "./types";
 
 export interface Api {
@@ -40,6 +41,10 @@ export interface Api {
   setPower(power: PowerSetting): Promise<void>;
   setAutostart(enabled: boolean): Promise<void>;
   backupNow(): Promise<BackupReport>;
+  raLogin(username: string, password: string): Promise<RaUser>;
+  raLogout(): Promise<void>;
+  raRefresh(): Promise<RaUser | null>;
+  setRaHardcore(enabled: boolean): Promise<void>;
   restoreBackup(): Promise<BackupReport>;
   setBackup(enabled: boolean, dir?: string | null): Promise<void>;
   updateEmulator(id: string): Promise<void>;
@@ -91,6 +96,10 @@ const tauriApi: Api = {
   setPower: (power) => invoke("set_power", { power }),
   setAutostart: (enabled) => invoke("set_autostart", { enabled }),
   backupNow: () => invoke("backup_now"),
+  raLogin: (username, password) => invoke("ra_login", { username, password }),
+  raLogout: () => invoke("ra_logout"),
+  raRefresh: () => invoke("ra_refresh"),
+  setRaHardcore: (enabled) => invoke("set_ra_hardcore", { enabled }),
   restoreBackup: () => invoke("restore_backup"),
   setBackup: (enabled, dir) => invoke("set_backup", { enabled, dir: dir ?? null }),
   updateEmulator: (id) => invoke("update_emulator", { id }),

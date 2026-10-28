@@ -488,7 +488,6 @@ fn duckstation(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("Display", "VSync", "true".into()),
             ("Display", "OptimalFramePacing", "true".into()),
             ("BIOS", "PatchFastBoot", "true".into()),
-            ("Cheevos", "Enabled", "false".into()),
         ],
     )
 }
@@ -527,7 +526,6 @@ fn pcsx2(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("EmuCore/Speedhacks", "vuThread", "true".into()),
             ("EmuCore", "EnableFastBoot", "true".into()),
             ("EmuCore", "SaveStateOnShutdown", "true".into()),
-            ("Achievements", "Enabled", "false".into()),
         ],
     )
 }
@@ -559,7 +557,6 @@ fn ppsspp(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("Graphics", "VerticalSync", "True".into()),
             ("Graphics", "FullScreen", "True".into()),
             ("Graphics", "TextureFiltering", "1".into()),
-            ("Achievements", "AchievementsEnable", "False".into()),
         ],
     )
 }
