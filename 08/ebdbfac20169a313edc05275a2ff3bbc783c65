@@ -1,0 +1,31 @@
+README.md
+  s_947a5ec9b0d04e::t_e6ec8d2badee8a 23-27
+src/lib/catalog.ts
+  s_1b02c1f829b02f::t_243d6bede5c56f 8-9,12,50-53
+src/lib/mock.ts
+  s_1b02c1f829b02f::t_37b9e336ca8c18 100-109,120,198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "08ebdbfac20169a313edc05275a2ff3bbc783c65",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    },
+    "s_947a5ec9b0d04e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae2b73cb-5faa-44a9-b7a6-4d22739dbe7c",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
