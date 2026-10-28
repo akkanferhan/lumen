@@ -318,6 +318,22 @@ pub async fn download_to(
     Ok(())
 }
 
+/// Downloads an archive and unpacks it into `target_dir`.
+pub async fn download_and_unpack(
+    app: &AppHandle,
+    id: &str,
+    url: &str,
+    target_dir: &Path,
+    downloads_dir: &Path,
+) -> anyhow::Result<()> {
+    emit(app, id, "downloading", 0.0, None);
+    let archive = download(app, id, url, downloads_dir).await?;
+    emit(app, id, "extracting", 1.0, None);
+    unpack(archive, target_dir.to_path_buf()).await?;
+    emit(app, id, "done", 1.0, None);
+    Ok(())
+}
+
 async fn download(
     app: &AppHandle,
     id: &str,

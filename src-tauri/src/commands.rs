@@ -597,9 +597,20 @@ pub async fn install_homebrew(app: AppHandle, slug: String) -> CmdResult<Vec<Gam
     let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
     let target = crate::homebrew::target(game, &root).ok_or("Bilinmeyen sistem")?;
     let id = format!("homebrew:{slug}");
-    if let Err(e) =
+    let result = if game.extract {
+        let dir = target.parent().ok_or("Geçersiz hedef")?;
+        installer::download_and_unpack(&app, &id, &game.url, dir, &state.dirs.downloads)
+            .await
+            .and_then(|()| {
+                target
+                    .exists()
+                    .then_some(())
+                    .ok_or_else(|| anyhow::anyhow!("Arşivde {} yok", game.file_name))
+            })
+    } else {
         installer::download_to(&app, &id, &game.url, &target, &state.dirs.downloads).await
-    {
+    };
+    if let Err(e) = result {
         installer::emit(&app, &id, "error", 0.0, Some(e.to_string()));
         return Err(err(e));
     }

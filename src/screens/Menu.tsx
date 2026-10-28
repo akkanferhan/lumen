@@ -90,8 +90,8 @@ export function Menu({
     },
     {
       id: "store",
-      title: "Homebrew mağazası",
-      sub: "Paylaşıma açık ücretsiz GB, GBA ve NES oyunları",
+      title: "Ücretsiz oyunlar",
+      sub: "Homebrew'lar ve hak sahiplerinin ücretsiz yaptığı klasikler",
       value: "›",
       run: onOpenStore,
     },

@@ -1147,6 +1147,8 @@ button {
 
 .store-tabs {
   padding: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .store-body {
@@ -1275,6 +1277,13 @@ button {
   font-size: 0.78rem;
   color: var(--text-faint);
   word-break: break-all;
+}
+
+.store-note {
+  margin: -0.6rem 0 1.2rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-faint);
 }
 
 @media (max-width: 1000px) {

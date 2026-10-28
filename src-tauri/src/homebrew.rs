@@ -1,6 +1,7 @@
-//! Free homebrew games whose licenses allow redistribution, from Homebrew Hub
-//! (see scripts/homebrew-catalog.mjs). Downloads go straight into the
-//! system's ROM folder; only URLs from this embedded catalog are allowed.
+//! Free games: homebrew whose licenses allow redistribution (Homebrew Hub and
+//! authors' own releases) and classics their rights holders made free (see
+//! scripts/homebrew-catalog.mjs). Downloads go straight into the system's ROM
+//! folder; only URLs from this embedded catalog are allowed.
 
 use serde::{Deserialize, Serialize};
 use std::{
@@ -22,6 +23,19 @@ pub struct Homebrew {
     pub file_name: String,
     pub cover: Option<String>,
     pub source: Option<String>,
+    /// "homebrew", or "classic" for commercial-era games made free by their rights holder.
+    #[serde(default = "default_collection")]
+    pub collection: String,
+    /// The download is an archive holding `file_name` (e.g. a cue with its tracks).
+    #[serde(default)]
+    pub extract: bool,
+    /// For `extract`: where `file_name` sits inside the archive, if in a subfolder.
+    #[serde(default)]
+    pub archive_path: Option<String>,
+}
+
+fn default_collection() -> String {
+    "homebrew".into()
 }
 
 pub fn catalog() -> &'static [Homebrew] {
@@ -35,18 +49,33 @@ pub fn find(slug: &str) -> Option<&'static Homebrew> {
     catalog().iter().find(|g| g.slug == slug)
 }
 
-/// Where the game lands: `<rom root>/<system folder>/<file>`.
+/// Where the game lands: `<rom root>/<system folder>/<file>`, or
+/// `<system folder>/<slug>/<file>` for games unpacked from an archive.
 pub fn target(game: &Homebrew, rom_root: &Path) -> Option<PathBuf> {
     let system = crate::manifest::system(&game.system)?;
     // Never trust a catalog file name with path parts.
     let name = Path::new(&game.file_name).file_name()?;
+    let inner = match &game.archive_path {
+        // Relative paths inside the unpacked folder only.
+        Some(p) => {
+            let p = Path::new(p);
+            p.components()
+                .all(|c| matches!(c, std::path::Component::Normal(_)))
+                .then(|| p.to_path_buf())?
+        }
+        None => PathBuf::from(name),
+    };
     let folder = system
         .folders
         .iter()
         .map(|f| rom_root.join(f))
         .find(|p| p.is_dir())
         .unwrap_or_else(|| rom_root.join(&system.folders[0]));
-    Some(folder.join(name))
+    Some(if game.extract {
+        folder.join(&game.slug).join(inner)
+    } else {
+        folder.join(name)
+    })
 }
 
 #[cfg(test)]
@@ -67,9 +96,22 @@ mod tests {
                 "{}",
                 game.slug
             );
+            assert!(game.url.starts_with("https://"), "{}", game.slug);
             assert!(
-                game.url.starts_with("https://hh3.gbdev.io/static/"),
+                game.collection == "homebrew" || game.collection == "classic",
                 "{}",
+                game.slug
+            );
+            assert!(
+                game.archive_path.is_none() || game.extract,
+                "{}: archivePath without extract",
+                game.slug
+            );
+            let rom_root = Path::new("roms");
+            let target = target(game, rom_root).unwrap_or_else(|| panic!("{}", game.slug));
+            assert!(
+                target.starts_with(rom_root),
+                "{} escapes the ROM folder",
                 game.slug
             );
             assert!(!game.license.is_empty(), "{} has no license", game.slug);
@@ -95,5 +137,12 @@ mod tests {
         let path = target(&game, Path::new("/roms")).unwrap();
         assert_eq!(path.file_name().unwrap(), "evil.gb");
         assert!(path.starts_with("/roms"));
+
+        game.extract = true;
+        game.archive_path = Some("Game (v1)/game.sfc".into());
+        let path = target(&game, Path::new("/roms")).unwrap();
+        assert!(path.ends_with(format!("{}/Game (v1)/game.sfc", game.slug)));
+        game.archive_path = Some("../../evil.sfc".into());
+        assert_eq!(target(&game, Path::new("/roms")), None);
     }
 }
