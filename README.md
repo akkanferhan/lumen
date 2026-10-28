@@ -20,9 +20,11 @@ game folders and launches games fullscreen — no separate emulator windows.
 NES, SNES, N64, Game Boy / Color / Advance, Nintendo DS, 3DS, GameCube, Wii, Wii U,
 Master System, Mega Drive, Saturn, Dreamcast, Arcade (FBNeo), PlayStation 1/2/3/4, PSP, Xbox, Xbox 360.
 
-Installed **Steam** and **Epic Games** titles appear in the same library (read from the launchers'
-own files and started through them, so DRM, overlays and cloud saves keep working). Game Pass titles
-are not listed yet.
+Installed **Steam**, **Epic Games** and **Xbox app** (Game Pass / Microsoft Store) titles appear in
+the same library, read from the launchers' own files and started through them, so DRM, overlays and
+cloud saves keep working. Xbox app games are found through each drive's `.GamingRoot` folder and
+`MicrosoftGame.config`, with posters from the Microsoft Store catalog. Older UWP-only titles without
+a `MicrosoftGame.config` aren't listed.
 
 PS3 and PS4 games are folder dumps (`PS3_GAME` / `sce_sys`); their titles are read from `PARAM.SFO`.
 PS4 support uses [shadPS4](https://github.com/shadps4-emu/shadPS4) and is experimental. There is no usable PS5 emulator,
