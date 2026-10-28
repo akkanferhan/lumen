@@ -1,0 +1,30 @@
+src-tauri/Cargo.toml
+  s_1b02c1f829b02f::t_611cc429cf64b4 32
+src-tauri/src/commands.rs
+  s_1b02c1f829b02f::t_611cc429cf64b4 178-194
+src-tauri/src/xbox.rs
+  s_1b02c1f829b02f::t_c784e976af4712 79-82
+  s_1b02c1f829b02f::t_611cc429cf64b4 1-78,83-263
+src-tauri/src/pc.rs
+  s_1b02c1f829b02f::t_611cc429cf64b4 18,32
+src-tauri/src/lib.rs
+  s_1b02c1f829b02f::t_611cc429cf64b4 16
+src-tauri/Cargo.lock
+  s_1b02c1f829b02f::t_e5de5417d49765 191-199,433,447-452,586-594,753-754,758-768,1494,1546-1554,2158,2733,3685,3697,3708-3719,4152,5558
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "560f2ed4459427715d32418c016a849ce9492800",
+  "prompts": {},
+  "sessions": {
+    "s_1b02c1f829b02f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d7d5e3b-2a8f-4305-80ad-39ed1060b777",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
