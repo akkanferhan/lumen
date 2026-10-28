@@ -8,6 +8,7 @@ mod homebrew;
 mod importer;
 mod input;
 mod installer;
+mod launch_check;
 mod launcher;
 mod library;
 mod manifest;

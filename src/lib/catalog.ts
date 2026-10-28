@@ -46,6 +46,16 @@ export function installLabel(id: string): string {
 
 type ThumbKind = "Named_Boxarts" | "Named_Snaps" | "Named_Titles";
 
+/** Same file-stem cleanup the library scan applies to `thumbName`. */
+const thumbOf = (fileName: string) => fileName.replace(/\.[^.]+$/, "").replace(/[&*/:`<>?\\|"]/g, "_");
+
+/** Free-store games by `<system>/<thumbName>`: libretro has no art for them. */
+const storeCovers = new Map(
+  homebrewJson
+    .filter((g) => g.cover)
+    .map((g) => [`${g.system}/${thumbOf(g.fileName)}`, g.cover as string]),
+);
+
 function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKind): string | null {
   if (game.systemId === "steam") {
     // thumbName is the Steam app id; Steam's own portrait library art.
@@ -60,6 +70,9 @@ function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKin
   }
   const system = systemOf(game.systemId);
   if (!system) return null;
+  // The store's art is a screenshot: it stands in for every kind.
+  const storeCover = storeCovers.get(`${game.systemId}/${game.thumbName}`);
+  if (storeCover) return kind === "Named_Titles" ? null : storeCover;
   return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/${kind}/${encodeURIComponent(game.thumbName)}.png`;
 }
 

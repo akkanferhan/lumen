@@ -480,6 +480,15 @@ pub async fn game_info(app: AppHandle, game_id: String) -> Option<crate::metadat
         .iter()
         .find(|g| g.id == game_id)
         .cloned()?;
+    // Free-store games aren't in libretro's databases; the catalog knows them.
+    if let Some(entry) = crate::homebrew::for_game(&game.system_id, &game.path) {
+        return Some(crate::metadata::GameInfo {
+            year: entry.year.clone(),
+            developer: Some(entry.developer.clone()).filter(|d| !d.is_empty()),
+            description: Some(entry.description.clone()).filter(|d| !d.is_empty()),
+            ..Default::default()
+        });
+    }
     let system = manifest::system(&game.system_id)?;
     let cached = state.metadata.lock().unwrap().get(&system.id).cloned();
     let info = match cached {

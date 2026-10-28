@@ -182,4 +182,6 @@ export interface EmulatorUpdate {
 export interface GameExited {
   gameId: string;
   sessionSeconds: number;
+  /** Why the emulator closed right after starting, if it did. */
+  error: string | null;
 }

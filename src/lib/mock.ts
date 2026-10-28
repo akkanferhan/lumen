@@ -271,7 +271,7 @@ export const mockApi: Api = {
     user.playSeconds += sessionSeconds;
     user.lastPlayed = Math.floor(Date.now() / 1000);
     save();
-    const event = { gameId: running.id, sessionSeconds };
+    const event = { gameId: running.id, sessionSeconds, error: null };
     running = null;
     exitListeners.forEach((cb) => cb(event));
   },

@@ -49,6 +49,14 @@ pub fn find(slug: &str) -> Option<&'static Homebrew> {
     catalog().iter().find(|g| g.slug == slug)
 }
 
+/// The catalog entry a library game was installed from, matched by system and file name.
+pub fn for_game(system_id: &str, path: &Path) -> Option<&'static Homebrew> {
+    let name = path.file_name()?;
+    catalog()
+        .iter()
+        .find(|g| g.system == system_id && Path::new(&g.file_name).file_name() == Some(name))
+}
+
 /// Where the game lands: `<rom root>/<system folder>/<file>`, or
 /// `<system folder>/<slug>/<file>` for games unpacked from an archive.
 pub fn target(game: &Homebrew, rom_root: &Path) -> Option<PathBuf> {

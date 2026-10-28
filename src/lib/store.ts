@@ -118,9 +118,12 @@ export const actions = {
       set({ quickMenu: true });
     });
     api.onSystemResumed(() => notify("Uykudan döndün · oyun duraklatıldı, hazır olunca devam et", "info", 6000));
-    api.onGameExited(async () => {
+    api.onGameExited(async (exited) => {
       set({ runningGameId: null, quickMenu: false });
-      sfx.back();
+      if (exited.error) {
+        sfx.error();
+        notify(exited.error, "error", 15000);
+      } else sfx.back();
       set({ games: await api.getLibrary() });
     });
 
