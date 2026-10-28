@@ -1,0 +1,49 @@
+src/lib/types.ts
+  s_c69bab437f7e12::t_5a00ead495c435 160-162
+  s_c69bab437f7e12::t_f758542188e4e5 163
+src/screens/Menu.tsx
+  s_c69bab437f7e12::t_5a00ead495c435 93-94
+src/screens/HomebrewStore.tsx
+  s_c69bab437f7e12::t_74a09ee2f535b3 38,50-52,129-136,183
+  s_c69bab437f7e12::t_5a00ead495c435 1,5,12-23,26-28,45,122,124
+  s_c69bab437f7e12::t_6180b2c1a96023 35-36,63-68,182,184-187,193-199
+  s_c69bab437f7e12::t_8416ebdb691479 49
+src/styles.css
+  s_c69bab437f7e12::t_74a09ee2f535b3 1150-1151,1282-1286
+  s_c69bab437f7e12::t_c5ecf91902f77d 1287-1288
+README.md
+  s_c69bab437f7e12::t_a51449d8c88b3c 37-38,99-100,145-146
+scripts/homebrew-catalog.mjs
+  s_c69bab437f7e12::t_5a00ead495c435 1-6,8,77-78,84-86
+  s_c69bab437f7e12::t_13aaf5d22c362f 76,87-89,92
+  s_c69bab437f7e12::t_1d80345529553e 79-83
+src-tauri/src/installer.rs
+  s_c69bab437f7e12::t_5a00ead495c435 321-336
+src-tauri/src/homebrew.rs
+  s_c69bab437f7e12::t_5a00ead495c435 1-4,26-31,33,37-38,52-53,58-67,74,76-78
+  s_c69bab437f7e12::t_13aaf5d22c362f 105,108-109,112-116
+  s_c69bab437f7e12::t_876382cb96d88b 140-146
+  s_c69bab437f7e12::t_b377cfff7feebf 32,34-36,75,99,101,106-107,110-111
+src-tauri/src/commands.rs
+  s_c69bab437f7e12::t_5a00ead495c435 600-610,612-613
+scripts/homebrew-extra.json
+  s_c69bab437f7e12::t_16a194c7119cac 1-755
+src-tauri/homebrew.json
+  s_c69bab437f7e12::t_7457025d6d2e99 67-80,133-148,175-190,243-258,272-329,343-370,462-489,516-543,570-585,612-655,747-760,774-801,815-828,842-883,910-923,963-978,1005-1018,1032-1045,1059-1072,1125-1138,1217-1232,1272-1369,1422-1449,1463-1476,1490-1503,1517-1544,1610-1623,1637-1650,1729-1744
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8357bb1d18895bdbbf73df4ba64ecfa2e7e924b5",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
