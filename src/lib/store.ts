@@ -130,6 +130,16 @@ export const actions = {
       return;
     }
 
+    // The previous run crashed: say so instead of failing silently again.
+    api
+      .takeCrashReport()
+      .then((report) => {
+        if (!report) return;
+        const reason = report.split("\n")[0].replace(/^\[\d+\]\s*/, "");
+        notify(`Lumen geçen sefer beklenmedik şekilde kapandı: ${reason}`, "error", 12000);
+      })
+      .catch(() => {});
+
     // Quietly look for a new Lumen release once things have settled.
     api.onAppUpdateProgress((p) => set({ appUpdateProgress: p }));
     setTimeout(async () => {

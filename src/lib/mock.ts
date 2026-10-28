@@ -182,6 +182,7 @@ function touchUser(id: string) {
 export const mockApi: Api = {
   getOverview: async () => overview(),
   getLibrary: async () => games(),
+  takeCrashReport: async () => null,
   pickFolder: async () => "C:\\Users\\Oyuncu\\Oyunlar",
   setRomRoot: async (path) => {
     store.romRoot = path;

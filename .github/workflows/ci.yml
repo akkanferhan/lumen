@@ -44,3 +44,33 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
+
+  # Builds the real app and starts it: catches crashes at startup (e.g. a
+  # panic in setup) that unit tests and compiling don't.
+  smoke:
+    name: Launch smoke test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npx tauri build --no-bundle --config src-tauri/tauri.no-updater.json
+      - name: App starts and stays up
+        shell: pwsh
+        run: |
+          $app = Start-Process -FilePath src-tauri/target/release/lumen.exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($app.HasExited) {
+            $log = Get-Content "$env:APPDATA/dev.ferhanakkan.lumen/crash.log" -Raw -ErrorAction SilentlyContinue
+            Write-Error "Lumen exited at startup (code $($app.ExitCode)).`n$log"
+            exit 1
+          }
+          Stop-Process -Id $app.Id -Force
+          Write-Host "Lumen ran for 20 seconds without crashing."
