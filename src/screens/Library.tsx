@@ -11,6 +11,9 @@ import type { Game } from "../lib/types";
 import { useColumns } from "../lib/useColumns";
 import { fold, groupLetter } from "../lib/format";
 import { SearchKeyboard } from "../components/SearchKeyboard";
+import { themeOf } from "../lib/themes";
+import { formatLastPlayed, formatPlaytime } from "../lib/format";
+import { screenshotUrls } from "../lib/catalog";
 
 interface Tab {
   id: string;
@@ -50,6 +53,7 @@ export function Library({
 }) {
   const games = useStore((s) => s.games);
   const overview = useStore((s) => s.overview);
+  const layout = themeOf(overview?.settings.theme).layout;
   const scanning = useStore((s) => s.scanning);
   const tabs = useTabs(games);
 
@@ -80,11 +84,17 @@ export function Library({
 
   const gridRef = useRef<HTMLDivElement>(null);
   const tabTrackRef = useRef<HTMLDivElement>(null);
-  const columns = useColumns(gridRef);
+  const measured = useColumns(gridRef);
+  // Navigation follows the layout: a rail is one row, a list one column.
+  const columns = layout === "rail" ? Math.max(1, list.length) : layout === "list" ? 1 : measured;
 
   useEffect(() => {
-    gridRef.current?.children[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [index, tabId]);
+    gridRef.current?.children[index]?.scrollIntoView({
+      block: "nearest",
+      inline: layout === "rail" ? "center" : "nearest",
+      behavior: "smooth",
+    });
+  }, [index, tabId, layout]);
 
   useEffect(() => {
     tabTrackRef.current?.children[tabIndex]?.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
@@ -244,18 +254,31 @@ export function Library({
             )}
           </div>
         </div>
+      ) : layout === "rail" ? (
+        <GalleryView list={list} index={index} railRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
+      ) : layout === "list" ? (
+        <PlainView list={list} index={index} listRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
       ) : (
         <div className="grid-scroll">
-          <div className="grid" ref={gridRef}>
-            {list.map((game, i) => (
-              <GameCard
-                key={game.id}
-                game={game}
-                focused={i === index}
-                showSystem={searching || tab.id === "all" || tab.id === "recent" || tab.id === "fav"}
-                onClick={() => (i === index ? onOpen(game) : move(i))}
-              />
-            ))}
+          <div className={`grid${layout === "cartridge" ? " cartridge-grid" : ""}`} ref={gridRef}>
+            {list.map((game, i) =>
+              layout === "cartridge" ? (
+                <CartridgeCard
+                  key={game.id}
+                  game={game}
+                  focused={i === index}
+                  onClick={() => (i === index ? onOpen(game) : move(i))}
+                />
+              ) : (
+                <GameCard
+                  key={game.id}
+                  game={game}
+                  focused={i === index}
+                  showSystem={searching || tab.id === "all" || tab.id === "recent" || tab.id === "fav"}
+                  onClick={() => (i === index ? onOpen(game) : move(i))}
+                />
+              ),
+            )}
           </div>
         </div>
       )}
@@ -356,5 +379,117 @@ function AmbientLayer({ url, visible }: { url: string; visible: boolean }) {
   }, []);
   return (
     <div className={`ambient-art${shown && visible ? " visible" : ""}`} style={{ backgroundImage: `url("${url}")` }} />
+  );
+}
+
+/** Galeri: the focused game fills the screen; covers ride along the bottom. */
+function GalleryView({
+  list,
+  index,
+  railRef,
+  onPick,
+}: {
+  list: Game[];
+  index: number;
+  railRef: React.RefObject<HTMLDivElement | null>;
+  onPick: (i: number) => void;
+}) {
+  const game = list[index];
+  const system = game && systemOf(game.systemId);
+  // Gameplay shot reads best full screen; fall back to the box art.
+  const hero = game ? (screenshotUrls(game)[1] ?? boxArtUrl(game)) : null;
+
+  return (
+    <div className="gallery">
+      {hero && <img key={hero} className="gallery-hero" src={hero} alt="" draggable={false} />}
+      {game && (
+        <div className="gallery-copy" key={game.id}>
+          <span className="gallery-system" lang="en">
+            {system?.name}
+            {system?.year ? ` · ${system.year}` : ""}
+          </span>
+          <h1>{game.title}</h1>
+          <p>
+            {game.lastPlayed
+              ? `Son oynanma ${formatLastPlayed(game.lastPlayed).toLowerCase()} · ${formatPlaytime(game.playSeconds)}`
+              : "Henüz oynanmadı"}
+            {game.favorite ? " · ★ Favori" : ""}
+          </p>
+        </div>
+      )}
+      <div className="gallery-rail" ref={railRef}>
+        {list.map((g, i) => (
+          <button key={g.id} className={`rail-card${i === index ? " focused" : ""}`} onClick={() => onPick(i)} tabIndex={-1}>
+            <Cover game={g} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Sade: a fast text list with a large preview of the focused game. */
+function PlainView({
+  list,
+  index,
+  listRef,
+  onPick,
+}: {
+  list: Game[];
+  index: number;
+  listRef: React.RefObject<HTMLDivElement | null>;
+  onPick: (i: number) => void;
+}) {
+  const game = list[index];
+  const system = game && systemOf(game.systemId);
+  return (
+    <div className="plain">
+      <div className="plain-list" ref={listRef}>
+        {list.map((g, i) => (
+          <button key={g.id} className={`plain-row${i === index ? " focused" : ""}`} onClick={() => onPick(i)} tabIndex={-1}>
+            <span className="plain-title">{g.title}</span>
+            {g.favorite && <span className="plain-fav">★</span>}
+            <span className="plain-system">{systemOf(g.systemId)?.short}</span>
+          </button>
+        ))}
+      </div>
+      {game && (
+        <aside className="plain-preview" key={game.id}>
+          <div className="plain-art">
+            <Cover game={game} />
+          </div>
+          <h2>{game.title}</h2>
+          <dl>
+            <dt>Sistem</dt>
+            <dd lang="en">{system?.name}</dd>
+            <dt>Son oynanma</dt>
+            <dd>{formatLastPlayed(game.lastPlayed)}</dd>
+            <dt>Toplam süre</dt>
+            <dd>{formatPlaytime(game.playSeconds)}</dd>
+          </dl>
+        </aside>
+      )}
+    </div>
+  );
+}
+
+/** Kartuş: each game is a cartridge with its art on the label. */
+function CartridgeCard({ game, focused, onClick }: { game: Game; focused: boolean; onClick: () => void }) {
+  const system = systemOf(game.systemId);
+  return (
+    <button
+      className={`cartridge${focused ? " focused" : ""}`}
+      style={{ "--card-accent": system?.accent } as CSSProperties}
+      onClick={onClick}
+      tabIndex={-1}
+    >
+      <div className="cartridge-shell">
+        <div className="cartridge-label">
+          <Cover game={game} />
+        </div>
+        <div className="cartridge-name">{game.title}</div>
+        <div className="cartridge-system">{system?.short}</div>
+      </div>
+    </button>
   );
 }

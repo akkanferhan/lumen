@@ -743,3 +743,9 @@ pub async fn ra_refresh(app: AppHandle) -> CmdResult<Option<RaUser>> {
         }
     }
 }
+
+#[tauri::command]
+pub fn set_theme(state: State<'_, AppState>, theme: String) -> CmdResult<()> {
+    state.settings.lock().unwrap().theme = theme;
+    state.save_settings().map_err(err)
+}

@@ -40,6 +40,17 @@ Emulator settings never need to be opened. The tier can be overridden in Menu �
 Emulators keep their own state in their config files, so Lumen only sets the keys it owns
 (read–merge–write for INI, TOML, YAML and JSON); Xenia gets its settings as command-line flags.
 
+### Themes
+
+Menu → Theme. Each theme brings its own library layout, type and navigation, not just colors:
+
+| Theme | Layout |
+|---|---|
+| Işık | Cover grid (default) |
+| Galeri | Full-screen game art, serif headlines, a cover rail along the bottom |
+| Sade | Light theme: text list with a large preview, fastest for big libraries |
+| Kartuş | Cartridge cards, pixel fonts and CRT scanlines |
+
 ### Console mode and power
 
 - **Console mode** (Menu): Lumen starts with Windows, fullscreen.

@@ -14,6 +14,13 @@
   --danger: #ff6b6b;
   --success: #5fd68a;
   --accent: var(--brand);
+  /* Surfaces that sit over content; themes override these. */
+  --on-text: #10121a; /* text on var(--text)-colored fills (active tab, primary button) */
+  --chrome: rgba(10, 12, 17, 0.72); /* hint bar */
+  --panel: rgba(19, 23, 34, 0.95); /* menus, toasts, keyboards */
+  --scrim: rgba(6, 8, 12, 0.6);
+  --scrim-strong: rgba(6, 8, 12, 0.9);
+  --font-display: "Inter Variable", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
 
   --radius-s: 0.5rem;
   --radius-m: 0.85rem;
@@ -132,7 +139,12 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 12, 17, 0.2) 0%, rgba(10, 12, 17, 0.85) 70%, var(--bg) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg) 20%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 85%, transparent) 70%,
+    var(--bg) 100%
+  );
 }
 
 /* ---------- Top bar ---------- */
@@ -249,12 +261,12 @@ button {
 }
 
 .tab.active {
-  color: #12141b;
+  color: var(--on-text);
   background: var(--text);
 }
 
 .tab.active .count {
-  color: rgba(18, 20, 27, 0.55);
+  color: color-mix(in srgb, var(--on-text) 55%, transparent);
 }
 
 /* ---------- Game grid ---------- */
@@ -431,7 +443,7 @@ button {
   gap: 1.6rem;
   padding: 0 var(--gutter);
   border-top: 1px solid var(--line);
-  background: rgba(10, 12, 17, 0.72);
+  background: var(--chrome);
   backdrop-filter: blur(20px);
   /* Above sheet/menu scrims so overlays can show their own hints. */
   z-index: 25;
@@ -465,7 +477,7 @@ button {
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 800;
-  color: #0b0d12;
+  color: var(--on-text);
   background: var(--text);
 }
 
@@ -521,7 +533,7 @@ button {
 .scrim {
   position: absolute;
   inset: 0;
-  background: rgba(6, 8, 12, 0.6);
+  background: var(--scrim);
   backdrop-filter: blur(24px) saturate(1.2);
   animation: fade-in 220ms var(--ease-out);
   z-index: 10;
@@ -698,7 +710,7 @@ button {
 
 .btn.primary {
   background: var(--text);
-  color: #10121a;
+  color: var(--on-text);
   border-color: transparent;
 }
 
@@ -758,7 +770,7 @@ button {
   display: flex;
   flex-direction: column;
   padding: 2rem 1.6rem 5.4rem;
-  background: rgba(19, 23, 34, 0.94);
+  background: var(--panel);
   backdrop-filter: blur(30px);
   border-left: 1px solid var(--line);
   box-shadow: -2rem 0 4rem rgba(0, 0, 0, 0.45);
@@ -870,7 +882,7 @@ button {
   display: grid;
   place-items: center;
   text-align: center;
-  background: rgba(6, 8, 12, 0.88);
+  background: var(--scrim-strong);
   backdrop-filter: blur(30px);
   animation: fade-in 300ms var(--ease-out);
 }
@@ -912,7 +924,7 @@ button {
 }
 
 .running.quick {
-  background: rgba(6, 8, 12, 0.94);
+  background: var(--scrim-strong);
 }
 
 .quick-list {
@@ -950,7 +962,7 @@ button {
   transform: translateX(-50%);
   padding: 1.4rem;
   border-radius: var(--radius-l);
-  background: rgba(19, 23, 34, 0.96);
+  background: var(--panel);
   border: 1px solid var(--line);
   box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.5);
   animation: rise 280ms var(--ease-out);
@@ -1029,7 +1041,7 @@ button {
 
 .kb-key.focused {
   background: var(--text);
-  color: #10121a;
+  color: var(--on-text);
   transform: scale(1.08);
 }
 
@@ -1074,7 +1086,7 @@ button {
   height: 9rem;
   transform: translate(-50%, -50%);
   border-radius: var(--radius-l);
-  background: rgba(19, 23, 34, 0.86);
+  background: var(--panel);
   backdrop-filter: blur(16px);
   font-size: 4.5rem;
   font-weight: 800;
@@ -1276,7 +1288,7 @@ button {
   width: min(24rem, calc(100vw - 2 * var(--gutter)));
   padding: 0.85rem 1rem;
   border-radius: var(--radius-m);
-  background: rgba(24, 29, 42, 0.96);
+  background: var(--panel);
   backdrop-filter: blur(20px);
   border: 1px solid var(--line);
   box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
@@ -1441,7 +1453,7 @@ button {
   place-items: center;
   font-size: 0.75rem;
   font-weight: 900;
-  color: #10121a;
+  color: var(--on-text);
   transition: background 160ms, border-color 160ms;
 }
 
