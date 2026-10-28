@@ -1,3 +1,4 @@
+mod autofix;
 mod backup;
 mod commands;
 mod config;
@@ -80,6 +81,7 @@ pub fn run() {
             commands::install_homebrew,
             commands::import_scan,
             commands::import_games,
+            commands::auto_fix,
             commands::check_app_update,
             commands::install_app_update,
             commands::set_autostart,

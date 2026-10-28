@@ -232,6 +232,7 @@ export const mockApi: Api = {
     homebrewInstalled.add(slug);
     return games();
   },
+  autoFix: async () => null,
   importScan: async () => {
     await sleep(500);
     return [

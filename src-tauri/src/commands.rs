@@ -680,6 +680,40 @@ pub async fn import_games(
     Ok(ImportResult { report, games })
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixResult {
+    fix: crate::launch_check::Fix,
+    outcome: crate::autofix::Outcome,
+}
+
+/// Applies the fix found when this game last failed to launch, once per fix
+/// until the game runs again. None when there's nothing (left) to try.
+#[tauri::command]
+pub async fn auto_fix(app: AppHandle, game_id: String) -> CmdResult<Option<FixResult>> {
+    let state = app.state::<AppState>();
+    let fix = {
+        let mut pending = state.launch_fix.lock().unwrap();
+        match pending.take() {
+            Some((game, fix)) if game == game_id => fix,
+            other => {
+                *pending = other;
+                return Ok(None);
+            }
+        }
+    };
+    if !state
+        .fixes_tried
+        .lock()
+        .unwrap()
+        .insert((game_id, fix.clone()))
+    {
+        return Ok(None);
+    }
+    let outcome = crate::autofix::apply(&app, &fix).await.map_err(err)?;
+    Ok(Some(FixResult { fix, outcome }))
+}
+
 /// Backs up every installed emulator's saves and Lumen's play data now.
 #[tauri::command]
 pub async fn backup_now(app: AppHandle) -> CmdResult<crate::backup::Report> {

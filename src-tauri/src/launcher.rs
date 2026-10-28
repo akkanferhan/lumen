@@ -149,7 +149,16 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         .envs(crate::presets::launch_env(emu).iter().copied())
         .current_dir(exe_dir)
         .spawn()
-        .map_err(|e| anyhow!(crate::launch_check::spawn_error(&emu.name, &e)))?;
+        .map_err(|e| {
+            let launch = crate::launch_check::Launch {
+                emulator_id: &emu.id,
+                emulator: &emu.name,
+                core: runner.core,
+            };
+            let diagnosis = crate::launch_check::spawn_error(&launch, &e);
+            *state.launch_fix.lock().unwrap() = diagnosis.fix.map(|f| (game.id.clone(), f));
+            anyhow!(diagnosis.message)
+        })?;
     if let Some(pid) = child.id() {
         bring_up_when_shown(pid);
     }
@@ -173,6 +182,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     let emu_id = emu.id.clone();
     let emu_dir = exe_dir.to_path_buf();
     let emu_name = emu.name.clone();
+    let core = runner.core.map(String::from);
     tauri::async_runtime::spawn(async move {
         let started = Instant::now();
         // None when Lumen closed it (quick menu, home combo).
@@ -184,11 +194,28 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             }
         };
         let ran = started.elapsed();
-        let error = exit
-            .and_then(|code| crate::launch_check::early_exit(&emu_name, code, ran, log.as_deref()));
+        let launch = crate::launch_check::Launch {
+            emulator_id: &emu_id,
+            emulator: &emu_name,
+            core: core.as_deref(),
+        };
+        let diagnosis = exit
+            .and_then(|code| crate::launch_check::early_exit(&launch, code, ran, log.as_deref()));
         let session_seconds = ran.as_secs();
 
         let state = app.state::<AppState>();
+        match &diagnosis {
+            Some(d) => {
+                *state.launch_fix.lock().unwrap() = d.fix.clone().map(|f| (game_id.clone(), f));
+            }
+            // A good session: problems later may be fixed again.
+            None => state
+                .fixes_tried
+                .lock()
+                .unwrap()
+                .retain(|(g, _)| g != &game_id),
+        }
+        let error = diagnosis.map(|d| d.message);
         *state.running.lock().unwrap() = None;
         // A launch that failed isn't a session: no play time, no "last played".
         if error.is_none() {

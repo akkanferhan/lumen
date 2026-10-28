@@ -1,8 +1,10 @@
-//! Explains why an emulator didn't start: Windows refusing to run it (Smart
-//! App Control, Defender, policies) or the emulator closing right away (a
-//! missing runtime, a core that failed to load). Without this the user only
-//! saw Lumen come back with nothing on screen.
+//! Explains why an emulator didn't start, and what fixes it: Windows refusing
+//! to run it (Smart App Control, Defender, policies) or the emulator closing
+//! right away (a missing runtime, damaged files, a core that failed to load).
+//! Without this the user only saw Lumen come back with nothing on screen.
+//! `autofix` applies the fix.
 
+use serde::Serialize;
 use std::{
     io,
     path::{Path, PathBuf},
@@ -14,93 +16,145 @@ const EARLY: Duration = Duration::from_secs(8);
 /// Even with exit code 0: nobody plays for under this long.
 const INSTANT: Duration = Duration::from_secs(3);
 
-const SMART_APP_CONTROL: &str = "Windows Akıllı Uygulama Denetimi imzasız emülatörleri engelliyor. \
-Kapatmak için: Windows Güvenliği → Uygulama ve tarayıcı denetimi → Akıllı Uygulama Denetimi → Kapalı \
-(kapatınca Windows sıfırlanmadan yeniden açılamaz).";
-
-/// Message for an emulator Windows refused to start.
-pub fn spawn_error(emulator: &str, error: &io::Error) -> String {
-    let reason = match error.raw_os_error() {
-        Some(2 | 3) => format!("{emulator} dosyası bulunamadı; Emülatörler menüsünden yeniden kur."),
-        Some(5) => format!(
-            "Windows {emulator} için erişimi reddetti. Antivirüs ya da Denetimli klasör erişimi engelliyor olabilir."
-        ),
-        Some(193 | 216) => {
-            format!("{emulator} dosyası bozuk ya da bu cihazla uyumsuz; Emülatörler menüsünden yeniden kur.")
-        }
-        Some(225 | 226) => format!(
-            "Windows Defender {emulator} dosyasını tehdit sanıp engelledi. Emülatör resmi kaynağından indirildi; \
-             Windows Güvenliği → Virüs ve tehdit koruması → Koruma geçmişi'nden izin verebilirsin."
-        ),
-        Some(740) => format!("{emulator} yönetici izni istedi; Lumen bunu vermiyor."),
-        Some(1260) => format!("{emulator} bu bilgisayarda bir ilkeyle (sistem yöneticisi) engellenmiş."),
-        // ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION and friends.
-        Some(4551 | 4553 | 4556) => format!("{emulator} açılamadı. {SMART_APP_CONTROL}"),
-        _ => format!("{emulator} başlatılamadı: {error}"),
-    };
-    with_smart_app_control_hint(reason, error.raw_os_error() == Some(5))
+/// What gets a failed launch going again.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(tag = "kind", content = "id", rename_all = "camelCase")]
+pub enum Fix {
+    /// Download the emulator again over the install (saves stay).
+    ReinstallEmulator(String),
+    /// Download a RetroArch core again.
+    ReinstallCore(String),
+    /// Install Microsoft's Visual C++ runtime.
+    VcRedist,
+    /// Security features stay the user's call: open their Windows page.
+    SmartAppControl,
+    Defender,
 }
 
-/// Message for an emulator that closed right after starting, or None for a
-/// normal session.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Diagnosis {
+    pub message: String,
+    pub fix: Option<Fix>,
+}
+
+/// What the launch was: names for messages, ids for fixes.
+pub struct Launch<'a> {
+    pub emulator_id: &'a str,
+    pub emulator: &'a str,
+    pub core: Option<&'a str>,
+}
+
+impl Launch<'_> {
+    fn reinstall(&self) -> Option<Fix> {
+        Some(Fix::ReinstallEmulator(self.emulator_id.to_string()))
+    }
+}
+
+/// An emulator Windows refused to start.
+pub fn spawn_error(launch: &Launch, error: &io::Error) -> Diagnosis {
+    let emulator = launch.emulator;
+    let (message, fix) = match error.raw_os_error() {
+        Some(2 | 3) => (format!("{emulator} dosyası eksik."), launch.reinstall()),
+        Some(193 | 216) => (format!("{emulator} dosyası bozuk."), launch.reinstall()),
+        Some(5) => (
+            format!("Windows {emulator} için erişimi reddetti; bir güvenlik özelliği engelliyor olabilir."),
+            None,
+        ),
+        Some(225 | 226) => (
+            format!(
+                "Windows Defender {emulator} dosyasını tehdit sanıp engelledi. Emülatör resmi kaynağından \
+                 indirildi; izin vermek istersen Koruma geçmişi'nden verebilirsin."
+            ),
+            Some(Fix::Defender),
+        ),
+        Some(740) => (format!("{emulator} yönetici izni istedi; Lumen bunu vermiyor."), None),
+        Some(1260) => (
+            format!("{emulator} bu bilgisayarda bir ilkeyle (sistem yöneticisi) engellenmiş."),
+            None,
+        ),
+        // ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION and friends.
+        Some(4551 | 4553 | 4556) => (
+            format!("Windows {emulator} uygulamasını engelledi."),
+            Some(Fix::SmartAppControl),
+        ),
+        _ => (format!("{emulator} başlatılamadı: {error}"), None),
+    };
+    blocked_by_smart_app_control(Diagnosis { message, fix }, error.raw_os_error() == Some(5))
+}
+
+/// An emulator that closed right after starting, or None for a normal session.
 pub fn early_exit(
-    emulator: &str,
+    launch: &Launch,
     code: Option<i32>,
     ran: Duration,
     log: Option<&Path>,
-) -> Option<String> {
+) -> Option<Diagnosis> {
     let failed = ran < EARLY && code != Some(0) || ran < INSTANT;
     if !failed {
         return None;
     }
+    let emulator = launch.emulator;
     // Windows exit codes are NTSTATUS values, negative as i32.
     let status = code.map(|c| c as u32);
-    let (mut reason, blocked) = match status {
+    let (mut message, mut fix, blocked) = match status {
         Some(0xC000_0135) => (
-            format!(
-                "{emulator} açılamadı: Microsoft Visual C++ Redistributable (x64) eksik. \
-                 aka.ms/vs/17/release/vc_redist.x64.exe adresinden kurabilirsin."
-            ),
+            format!("{emulator} açılamadı: Microsoft Visual C++ çalışma zamanı eksik."),
+            Some(Fix::VcRedist),
             false,
         ),
         Some(0xC000_007B) => (
-            format!(
-                "{emulator} dosyaları bozuk ya da uyumsuz; Emülatörler menüsünden yeniden kur."
-            ),
+            format!("{emulator} dosyaları bozuk."),
+            launch.reinstall(),
             false,
         ),
         Some(0xC000_0022 | 0xC000_0428 | 0xC000_0142) => (
             format!("{emulator} açılırken Windows bir dosyasının yüklenmesine izin vermedi."),
+            None,
             true,
         ),
         Some(0xC000_0005 | 0xC000_0409 | 0xC000_001D) => {
-            (format!("{emulator} açılır açılmaz çöktü."), false)
+            (format!("{emulator} açılır açılmaz çöktü."), None, false)
         }
         Some(c) if c != 0 => (
             format!("{emulator} açılır açılmaz kapandı (kod {c:#x})."),
+            None,
             false,
         ),
-        _ => (format!("{emulator} açılır açılmaz kapandı."), false),
+        _ => (format!("{emulator} açılır açılmaz kapandı."), None, false),
     };
     let errors = log.map(log_errors).unwrap_or_default();
     if !errors.is_empty() {
-        reason = format!("{reason} {}", errors.join(" · "));
+        message = format!("{message} {}", errors.join(" · "));
+    }
+    let core_failed = errors
+        .iter()
+        .any(|e| e.contains("libretro core") || e.contains("Failed to load symbol"));
+    if let (true, Some(core)) = (core_failed, launch.core) {
+        fix = Some(Fix::ReinstallCore(core.to_string()));
     }
     // No better explanation: a block is the likeliest cause when it's on.
-    Some(with_smart_app_control_hint(
-        reason,
-        blocked || errors.is_empty(),
+    Some(blocked_by_smart_app_control(
+        Diagnosis { message, fix },
+        blocked || core_failed || errors.is_empty(),
     ))
 }
 
-fn with_smart_app_control_hint(reason: String, relevant: bool) -> String {
-    if relevant
-        && !reason.contains(SMART_APP_CONTROL)
-        && crate::windows::smart_app_control_enforced()
+/// When Smart App Control is enforcing and fits the failure, it is the cause:
+/// re-downloading the same unsigned files would only be blocked again.
+fn blocked_by_smart_app_control(diagnosis: Diagnosis, relevant: bool) -> Diagnosis {
+    if diagnosis.fix == Some(Fix::SmartAppControl)
+        || relevant && crate::windows::smart_app_control_enforced()
     {
-        format!("{reason} {SMART_APP_CONTROL}")
+        Diagnosis {
+            message: format!(
+                "{} Windows Akıllı Uygulama Denetimi imzasız emülatörleri engelliyor; kapatmak senin kararın \
+                 (kapatınca Windows sıfırlanmadan yeniden açılamaz).",
+                diagnosis.message
+            ),
+            fix: Some(Fix::SmartAppControl),
+        }
     } else {
-        reason
+        diagnosis
     }
 }
 
@@ -129,39 +183,69 @@ fn log_errors(path: &Path) -> Vec<String> {
 mod tests {
     use super::*;
 
+    const RETROARCH: Launch = Launch {
+        emulator_id: "retroarch",
+        emulator: "RetroArch",
+        core: Some("mgba"),
+    };
+
     #[test]
     fn sessions_are_not_failures() {
         assert_eq!(
-            early_exit("RetroArch", Some(0), Duration::from_secs(600), None),
+            early_exit(&RETROARCH, Some(0), Duration::from_secs(600), None),
             None
         );
         // Quitting a game after a few seconds with a clean exit is fine too.
         assert_eq!(
-            early_exit("RetroArch", Some(0), Duration::from_secs(5), None),
+            early_exit(&RETROARCH, Some(0), Duration::from_secs(5), None),
             None
         );
         assert_eq!(
-            early_exit("RetroArch", Some(1), Duration::from_secs(60), None),
+            early_exit(&RETROARCH, Some(1), Duration::from_secs(60), None),
             None
         );
     }
 
     #[test]
-    fn explains_early_exits() {
+    fn explains_early_exits_with_a_fix() {
+        let dolphin = Launch {
+            emulator_id: "dolphin",
+            emulator: "Dolphin",
+            core: None,
+        };
         let missing = early_exit(
-            "Dolphin",
+            &dolphin,
             Some(0xC000_0135u32 as i32),
             Duration::from_secs(1),
             None,
         )
         .unwrap();
-        assert!(missing.contains("Visual C++"), "{missing}");
-        let quick = early_exit("RetroArch", Some(1), Duration::from_secs(2), None).unwrap();
-        assert!(quick.contains("kod 0x1"), "{quick}");
+        assert!(
+            missing.message.contains("Visual C++"),
+            "{}",
+            missing.message
+        );
+        assert_eq!(missing.fix, Some(Fix::VcRedist));
+        let damaged = early_exit(
+            &dolphin,
+            Some(0xC000_007Bu32 as i32),
+            Duration::from_secs(1),
+            None,
+        )
+        .unwrap();
+        assert_eq!(damaged.fix, Some(Fix::ReinstallEmulator("dolphin".into())));
+        let crash = early_exit(
+            &dolphin,
+            Some(0xC000_0005u32 as i32),
+            Duration::from_secs(1),
+            None,
+        )
+        .unwrap();
+        assert_eq!(crash.fix, None);
     }
 
     #[test]
-    fn reads_retroarch_errors() {
+    fn a_core_that_failed_to_load_is_downloaded_again() {
         let dir = std::env::temp_dir().join(format!("lumen-log-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let log = dir.join("retroarch.log");
@@ -171,20 +255,34 @@ mod tests {
              [ERROR] [Content]: Failed to load content.\n",
         )
         .unwrap();
-        let message = early_exit("RetroArch", Some(1), Duration::from_secs(1), Some(&log)).unwrap();
+        let found = early_exit(&RETROARCH, Some(1), Duration::from_secs(1), Some(&log)).unwrap();
         assert!(
-            message.contains("Failed to open libretro core"),
-            "{message}"
+            found.message.contains("Failed to open libretro core"),
+            "{}",
+            found.message
         );
-        assert!(message.contains("Failed to load content"), "{message}");
+        assert!(
+            found.message.contains("Failed to load content"),
+            "{}",
+            found.message
+        );
+        assert_eq!(found.fix, Some(Fix::ReinstallCore("mgba".into())));
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn explains_blocked_starts() {
-        let virus = spawn_error("xemu", &io::Error::from_raw_os_error(225));
-        assert!(virus.contains("Defender"), "{virus}");
-        let policy = spawn_error("xemu", &io::Error::from_raw_os_error(4551));
-        assert!(policy.contains("Akıllı Uygulama Denetimi"), "{policy}");
+        let xemu = Launch {
+            emulator_id: "xemu",
+            emulator: "xemu",
+            core: None,
+        };
+        let virus = spawn_error(&xemu, &io::Error::from_raw_os_error(225));
+        assert!(virus.message.contains("Defender"), "{}", virus.message);
+        assert_eq!(virus.fix, Some(Fix::Defender));
+        let policy = spawn_error(&xemu, &io::Error::from_raw_os_error(4551));
+        assert_eq!(policy.fix, Some(Fix::SmartAppControl));
+        let missing = spawn_error(&xemu, &io::Error::from_raw_os_error(2));
+        assert_eq!(missing.fix, Some(Fix::ReinstallEmulator("xemu".into())));
     }
 }
