@@ -27,6 +27,8 @@ pub struct Settings {
     pub backup: crate::backup::BackupSettings,
     /// RetroAchievements hardcore mode (no save states, no cheats).
     pub ra_hardcore: bool,
+    /// UI theme id (see src/lib/themes.ts).
+    pub theme: String,
 }
 
 impl Default for Settings {
@@ -38,6 +40,7 @@ impl Default for Settings {
             power: PowerSetting::Auto,
             backup: crate::backup::BackupSettings::enabled_by_default(),
             ra_hardcore: false,
+            theme: "lumen".into(),
         }
     }
 }
