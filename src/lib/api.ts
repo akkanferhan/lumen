@@ -14,6 +14,7 @@ import type {
   Overview,
   PowerSetting,
   RaUser,
+  UninstallPlan,
 } from "./types";
 
 export interface Api {
@@ -27,6 +28,9 @@ export interface Api {
   launchGame(gameId: string, fresh?: boolean): Promise<void>;
   isResumable(gameId: string): Promise<boolean>;
   gameInfo(gameId: string): Promise<GameInfo | null>;
+  uninstallPlan(gameId: string): Promise<UninstallPlan>;
+  uninstallGame(gameId: string): Promise<Game[]>;
+  uninstallEmulator(id: string): Promise<void>;
   homebrewInstalled(): Promise<string[]>;
   installHomebrew(slug: string): Promise<Game[]>;
   resumeGame(): Promise<void>;
@@ -84,6 +88,9 @@ const tauriApi: Api = {
   launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
   isResumable: (gameId) => invoke("is_resumable", { gameId }),
   gameInfo: (gameId) => invoke("game_info", { gameId }),
+  uninstallPlan: (gameId) => invoke("uninstall_plan", { gameId }),
+  uninstallGame: (gameId) => invoke("uninstall_game", { gameId }),
+  uninstallEmulator: (id) => invoke("uninstall_emulator", { id }),
   homebrewInstalled: () => invoke("homebrew_installed"),
   installHomebrew: (slug) => invoke("install_homebrew", { slug }),
   resumeGame: () => invoke("resume_game"),

@@ -88,6 +88,7 @@ const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
 const homebrewInstalled = new Set<string>();
+const removed = new Set<string>();
 let power: PowerSetting = "auto";
 let autostart = false;
 let backup: BackupSettings = { enabled: true, dir: null, lastBackup: null };
@@ -131,7 +132,7 @@ function games(): Game[] {
     const id = `mock-${systemId}-${title.replace(/\W/g, "")}`;
     return { id, systemId, title, thumbName: appId, path: `${systemId}://${appId}`, ...user(id) };
   });
-  return [...emulated, ...pc];
+  return [...emulated, ...pc].filter((g) => !removed.has(g.id));
 }
 
 function overview(): Overview {
@@ -200,6 +201,23 @@ export const mockApi: Api = {
       if (system.core && !store.installed.includes(`core:${system.core}`)) jobs.add(`core:${system.core}`);
     }
     for (const job of jobs) await simulateInstall(job);
+  },
+  uninstallPlan: async (gameId) => {
+    const pc = /^mock-(steam|epic|xboxapp)-/.exec(gameId)?.[1];
+    if (pc === "steam") return { method: "storeDialog", bytes: null, files: 0 };
+    if (pc === "epic") return { method: "openStore", bytes: null, files: 0 };
+    if (pc === "xboxapp") return { method: "windowsPackage", bytes: null, files: 0 };
+    return { method: "recycleBin", bytes: 734_003_200, files: 2 };
+  },
+  uninstallGame: async (gameId) => {
+    await sleep(500);
+    if (!/^mock-(steam|epic)-/.test(gameId)) removed.add(gameId);
+    return games();
+  },
+  uninstallEmulator: async (id) => {
+    await sleep(500);
+    store.installed = store.installed.filter((x) => x !== id && !(id === "retroarch" && x.startsWith("core:")));
+    save();
   },
   homebrewInstalled: async () => [...homebrewInstalled],
   installHomebrew: async (slug) => {

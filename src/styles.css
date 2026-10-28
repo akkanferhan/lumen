@@ -719,6 +719,22 @@ button {
   box-shadow: 0 0 0 3px var(--bg), 0 0 0 5.5px var(--accent);
 }
 
+.btn.danger {
+  color: var(--danger);
+}
+
+.btn.danger.armed {
+  background: var(--danger);
+  color: #fff;
+  border-color: transparent;
+}
+
+.remove-note {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
 .btn:disabled {
   opacity: 0.45;
   cursor: default;

@@ -37,6 +37,7 @@ so you never open an emulator window.
 | **Homebrew store** | Free GB, GBC, GBA and NES homebrew whose licenses allow redistribution, one press to install. |
 | **Power modes** | Switches the ASUS Silent / Performance / Turbo mode per system, restored afterwards. |
 | **Console mode** | Starts with Windows, fullscreen, controller only. |
+| **Uninstall from the couch** | Remove any game from its details screen: emulated games go to the Recycle Bin (saves stay), Steam opens its uninstall dialog, Xbox app games are removed by Windows. |
 
 <table>
   <tr>

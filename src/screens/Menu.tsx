@@ -22,6 +22,8 @@ const POWER_ORDER: PowerSetting[] = ["auto", "silent", "performance", "turbo", "
 const GRAPHICS_LABEL: Record<GraphicsSetting, string> = { auto: "Otomatik", ...TIER_LABEL };
 
 interface Item {
+  /** X button action (e.g. uninstall), with its hint label. */
+  secondary?: { label: string; run: () => void };
   id: string;
   title: string;
   sub?: string;
@@ -43,6 +45,8 @@ export function Menu({
   const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme">("main");
   // Restore overwrites saves: it needs a second press to confirm.
   const [confirmRestore, setConfirmRestore] = useState(false);
+  // Same for removing an emulator (holds the emulator id being confirmed).
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const overview = useStore((s) => s.overview);
   const games = useStore((s) => s.games);
   const installs = useStore((s) => s.installs);
@@ -205,8 +209,21 @@ export function Menu({
     const withGames = served.filter((s) => statuses.find((x) => x.id === s.id)?.gameCount);
 
     return {
+      secondary: installed
+        ? {
+            label: confirmRemove === emu.id ? "Onayla" : "Kaldır",
+            run: () => {
+              if (confirmRemove !== emu.id) {
+                setConfirmRemove(emu.id);
+                return;
+              }
+              setConfirmRemove(null);
+              actions.uninstallEmulator(emu.id, emu.name);
+            },
+          }
+        : undefined,
       id: emu.id,
-      title: emu.name,
+      title: confirmRemove === emu.id ? `${emu.name} kaldırılsın mı? X ile onayla` : emu.name,
       sub: missingBios.length
         ? `Eksik: ${missingBios.map((b) => b.label).join(", ")}`
         : served.map((s) => s.short).join(" · "),
@@ -331,7 +348,10 @@ export function Menu({
   const index = Math.min(focus, items.length - 1);
 
   useEffect(() => setFocus(0), [page]);
-  useEffect(() => setConfirmRestore(false), [page, index]);
+  useEffect(() => {
+    setConfirmRestore(false);
+    setConfirmRemove(null);
+  }, [page, index]);
   useEffect(() => {
     if (page === "ra") actions.raRefresh();
   }, [page]);
@@ -363,6 +383,14 @@ export function Menu({
         sfx.confirm();
         items[index]?.run();
         break;
+      case "x": {
+        const secondary = items[index]?.secondary;
+        if (secondary) {
+          sfx.confirm();
+          secondary.run();
+        }
+        break;
+      }
       case "b":
         back();
         break;
@@ -422,6 +450,7 @@ export function Menu({
       <HintBar
         hints={[
           { action: "a", label: "Seç" },
+          ...(items[index]?.secondary ? [{ action: "x" as const, label: items[index].secondary!.label }] : []),
           { action: "b", label: page === "main" ? "Kapat" : "Geri" },
         ]}
       />

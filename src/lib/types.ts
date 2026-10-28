@@ -141,6 +141,12 @@ export interface HomebrewGame {
   source: string | null;
 }
 
+export interface UninstallPlan {
+  method: "recycleBin" | "storeDialog" | "windowsPackage" | "openStore";
+  bytes: number | null;
+  files: number;
+}
+
 export interface AppUpdate {
   version: string;
   notes: string | null;
