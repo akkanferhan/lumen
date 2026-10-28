@@ -106,29 +106,50 @@ fn is_addon_dir(path: &Path) -> bool {
 }
 
 fn referenced_files(files: &[PathBuf]) -> HashSet<PathBuf> {
-    let mut referenced = HashSet::new();
-    for file in files {
-        let ext = extension(file);
-        if !matches!(ext.as_deref(), Some("cue" | "m3u" | "gdi")) {
-            continue;
-        }
-        let (Ok(text), Some(dir)) = (fs::read_to_string(file), file.parent()) else {
-            continue;
-        };
-        for line in text.lines().map(str::trim) {
-            let name = match ext.as_deref() {
-                Some("cue") => line
-                    .strip_prefix("FILE ")
-                    .and_then(|rest| rest.split('"').nth(1)),
-                Some("m3u") if !line.is_empty() && !line.starts_with('#') => Some(line),
-                _ => None,
-            };
-            if let Some(name) = name {
-                referenced.insert(dir.join(name));
+    files.iter().flat_map(|f| references(f)).collect()
+}
+
+/// Files a disc descriptor points at: `.cue` tracks, `.m3u` discs, `.gdi` tracks.
+pub fn references(file: &Path) -> Vec<PathBuf> {
+    let ext = extension(file);
+    if !matches!(ext.as_deref(), Some("cue" | "m3u" | "gdi")) {
+        return Vec::new();
+    }
+    let (Ok(text), Some(dir)) = (fs::read_to_string(file), file.parent()) else {
+        return Vec::new();
+    };
+    text.lines()
+        .map(str::trim)
+        .filter_map(|line| match ext.as_deref() {
+            Some("cue") => line
+                .strip_prefix("FILE ")
+                .and_then(|rest| rest.split('"').nth(1)),
+            Some("m3u") if !line.is_empty() && !line.starts_with('#') => Some(line),
+            // "<track> <lba> <type> <sector size> <file> <offset>"; the name may be quoted.
+            Some("gdi") => line
+                .split('"')
+                .nth(1)
+                .or_else(|| line.split_whitespace().nth(4)),
+            _ => None,
+        })
+        .map(|name| dir.join(name))
+        .collect()
+}
+
+/// Every file that makes up a game on disk: the file itself plus whatever it
+/// references, followed through `.m3u` → `.cue` → tracks.
+pub fn game_files(path: &Path) -> Vec<PathBuf> {
+    let mut files = vec![path.to_path_buf()];
+    let mut i = 0;
+    while i < files.len() {
+        for referenced in references(&files[i]) {
+            if referenced.exists() && !files.contains(&referenced) {
+                files.push(referenced);
             }
         }
+        i += 1;
     }
-    referenced
+    files
 }
 
 /// A game that isn't a file on disk (Steam / Epic): `path` holds its launch URI.
@@ -292,7 +313,7 @@ fn fnv1a(bytes: &[u8]) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::clean_title;
+    use super::*;
 
     #[test]
     fn reads_sfo_title() {
@@ -321,6 +342,32 @@ mod tests {
         );
         assert_eq!(super::sfo_string(&sfo, "TITLE_ID"), None);
         assert_eq!(super::sfo_string(b"garbage", "TITLE"), None);
+    }
+
+    #[test]
+    fn game_files_follow_playlists_and_tracks() {
+        let dir = std::env::temp_dir().join(format!("lumen-files-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        for f in ["d1.bin", "d2.bin", "t1.bin", "t2.raw"] {
+            fs::write(dir.join(f), b"x").unwrap();
+        }
+        fs::write(dir.join("d1.cue"), "FILE \"d1.bin\" BINARY\n").unwrap();
+        fs::write(dir.join("d2.cue"), "FILE \"d2.bin\" BINARY\n").unwrap();
+        fs::write(dir.join("game.m3u"), "d1.cue\nd2.cue\n").unwrap();
+        fs::write(
+            dir.join("dc.gdi"),
+            "2\n1 0 4 2352 t1.bin 0\n2 600 0 2352 \"t2.raw\" 0\n",
+        )
+        .unwrap();
+
+        let mut m3u: Vec<_> = game_files(&dir.join("game.m3u"))
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        m3u.sort();
+        assert_eq!(m3u, ["d1.bin", "d1.cue", "d2.bin", "d2.cue", "game.m3u"]);
+        assert_eq!(game_files(&dir.join("dc.gdi")).len(), 3);
     }
 
     #[test]

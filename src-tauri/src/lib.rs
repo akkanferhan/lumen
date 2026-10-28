@@ -16,6 +16,7 @@ mod presets;
 mod retroachievements;
 mod sleep;
 mod state;
+mod uninstall;
 mod windows;
 mod xbox;
 
@@ -56,6 +57,9 @@ pub fn run() {
             commands::is_resumable,
             commands::set_power,
             commands::game_info,
+            commands::uninstall_plan,
+            commands::uninstall_game,
+            commands::uninstall_emulator,
             commands::backup_now,
             commands::ra_login,
             commands::ra_logout,
