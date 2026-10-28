@@ -34,7 +34,8 @@ so you never open an emulator window.
 | **PC games too** | Installed Steam, Epic Games and Xbox app (Game Pass) titles sit in the same library. |
 | **RetroAchievements** | Sign in once; achievements work in RetroArch, DuckStation, PCSX2, PPSSPP and Dolphin. |
 | **Save backups** | Saves and save states are mirrored after every session, to OneDrive by default. |
-| **Homebrew store** | Free GB, GBC, GBA and NES homebrew whose licenses allow redistribution, one press to install. |
+| **Free games** | 130+ homebrew games for NES, SNES, N64, Game Boy, GBA, DS, Master System, Mega Drive and Dreamcast whose licenses allow it, plus arcade classics their rights holders made free (non-commercial, via mamedev.org). One press to install. |
+| **Import your dumps** | Pick a folder (USB stick, Downloads): each game's system is detected from its file header and it is copied or moved into the right folder, cue tracks and multi-disc sets included. A built-in guide shows how to dump your own cartridges and discs. |
 | **Power modes** | Switches the ASUS Silent / Performance / Turbo mode per system, restored afterwards. |
 | **Console mode** | Starts with Windows, fullscreen, controller only. |
 | **Uninstall from the couch** | Remove any game from its details screen: emulated games go to the Recycle Bin (saves stay), Steam opens its uninstall dialog, Xbox app games are removed by Windows. |
@@ -95,7 +96,8 @@ PS4 and PS5 games are installed folders (the one that holds `sce_sys/` and `eboo
 
 ## Games and BIOS files
 
-Lumen never downloads games or copyrighted BIOS files; use dumps of games and hardware you own.
+Lumen never downloads commercial games or copyrighted BIOS files; use dumps of games and hardware you own.
+The only games it fetches are the free ones above, straight from their authors or rights holders.
 What it provides on its own:
 
 | System | Without your BIOS |
@@ -140,7 +142,8 @@ npm run tauri dev    # the real app (emulators install and launch on Windows onl
 ```
 
 - `src/`: interface · `src-tauri/src/`: Rust core · `src-tauri/emulators.json`: systems and emulators
-- `scripts/homebrew-catalog.mjs` regenerates the homebrew catalog
+- `scripts/homebrew-catalog.mjs` regenerates the free games catalog (Homebrew Hub plus the
+  hand-checked `scripts/homebrew-extra.json`, where every entry cites its permission)
 - Branches: `main` for releases, `develop` for integration, `feature/*` for each piece of work
 
 ### Releasing

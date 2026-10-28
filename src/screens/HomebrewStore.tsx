@@ -1,44 +1,54 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
 import { api } from "../lib/api";
-import { homebrew, systemOf } from "../lib/catalog";
+import { homebrew, systemOf, systems } from "../lib/catalog";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
 import type { HomebrewGame } from "../lib/types";
 import { useColumns } from "../lib/useColumns";
 
-const TABS = [
-  { id: "all", label: "Tümü" },
-  { id: "gb", label: "GB" },
-  { id: "gbc", label: "GBC" },
-  { id: "gba", label: "GBA" },
-  { id: "nes", label: "NES" },
-];
+interface Tab {
+  id: string;
+  label: string;
+  games: HomebrewGame[];
+}
+
+/** All, the rights-holder-freed classics, then one tab per system in catalog order. */
+const TABS: Tab[] = [
+  { id: "all", label: "Tümü", games: homebrew },
+  { id: "classic", label: "Klasikler", games: homebrew.filter((g) => g.collection === "classic") },
+  ...systems.map((s) => ({ id: s.id, label: s.short, games: homebrew.filter((g) => g.system === s.id) })),
+].filter((t) => t.games.length > 0);
 
 /**
- * Free homebrew whose licenses allow sharing, from Homebrew Hub. Downloads go
- * straight into the right system folder and show up in the library.
+ * Free games: homebrew whose licenses allow sharing and classics their rights
+ * holders made free. Downloads go straight into the right system folder and
+ * show up in the library.
  */
 export function HomebrewStore({ onClose }: { onClose: () => void }) {
   const installs = useStore((s) => s.installs);
   const [installed, setInstalled] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState(0);
   const [focus, setFocus] = useState(0);
+  // Classics are free for non-commercial use only: the first press asks, the second downloads.
+  const [acknowledged, setAcknowledged] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const tabTrackRef = useRef<HTMLDivElement>(null);
   const columns = useColumns(gridRef, 4);
 
   useEffect(() => {
     api.homebrewInstalled().then((slugs) => setInstalled(new Set(slugs))).catch(() => {});
   }, []);
 
-  const list = useMemo(
-    () => (TABS[tab].id === "all" ? homebrew : homebrew.filter((g) => g.system === TABS[tab].id)),
-    [tab],
-  );
+  const list = TABS[tab].games;
   const index = Math.min(focus, Math.max(0, list.length - 1));
   const game = list[index];
+
+  useEffect(() => {
+    tabTrackRef.current?.children[tab]?.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
+  }, [tab]);
 
   useEffect(() => {
     gridRef.current?.children[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -50,6 +60,12 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
       return;
     }
     if (installs[`homebrew:${g.slug}`]) return;
+    if (g.collection === "classic" && acknowledged !== g.slug) {
+      sfx.confirm();
+      setAcknowledged(g.slug);
+      notify(`${g.title}: yalnızca ticari olmayan kişisel kullanım için ücretsiz. Onaylıyorsan tekrar İndir'e bas.`, "info", 6000);
+      return;
+    }
     sfx.confirm();
     rumble();
     if (await actions.installHomebrew(g.slug)) {
@@ -103,21 +119,21 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
     <div className="store" style={{ "--accent": system?.accent } as CSSProperties}>
       <header className="store-head">
         <div>
-          <h2>Homebrew mağazası</h2>
+          <h2>Ücretsiz oyunlar</h2>
           <p>
-            Geliştiricilerinin paylaşıma izin verdiği ücretsiz oyunlar · kaynak: Homebrew Hub (gbdev.io)
+            Geliştiricilerinin paylaşıma izin verdiği homebrew'lar ve hak sahiplerinin ücretsiz yaptığı klasikler
           </p>
         </div>
         <nav className="tabs store-tabs">
           <span className="glyph pill">LB</span>
-          {TABS.map((t, i) => (
-            <button key={t.id} className={`tab${i === tab ? " active" : ""}`} onClick={() => setTab(i)}>
-              {t.label}
-              <span className="count">
-                {t.id === "all" ? homebrew.length : homebrew.filter((g) => g.system === t.id).length}
-              </span>
-            </button>
-          ))}
+          <div className="tab-track" ref={tabTrackRef}>
+            {TABS.map((t, i) => (
+              <button key={t.id} className={`tab${i === tab ? " active" : ""}`} onClick={() => setTab(i)}>
+                {t.label}
+                <span className="count">{t.games.length}</span>
+              </button>
+            ))}
+          </div>
           <span className="glyph pill">RB</span>
         </nav>
       </header>
@@ -163,12 +179,24 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
             </div>
             {game.description && <p className="description">{game.description}</p>}
             {game.source && <p className="store-source">{game.source.replace(/^https?:\/\//, "")}</p>}
+            {game.collection === "classic" && (
+              <p className="store-note">
+                Hak sahibi bu oyunu mamedev.org üzerinden yalnızca ticari olmayan kullanım için ücretsiz yaptı;
+                dosya doğrudan oradan indirilir.
+              </p>
+            )}
             <button
               className={`btn primary focused`}
               onClick={() => download(game)}
               disabled={!!job && job.stage !== "error"}
             >
-              {installed.has(game.slug) ? "✓ Kütüphanede" : job ? "İndiriliyor…" : "İndir"}
+              {installed.has(game.slug)
+                ? "✓ Kütüphanede"
+                : job
+                  ? "İndiriliyor…"
+                  : acknowledged === game.slug
+                    ? "Onayla ve indir"
+                    : "İndir"}
             </button>
           </aside>
         )}

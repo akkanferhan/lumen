@@ -157,6 +157,10 @@ export interface HomebrewGame {
   fileName: string;
   cover: string | null;
   source: string | null;
+  /** "classic": a commercial-era game its rights holder made free. */
+  collection?: "homebrew" | "classic";
+  extract?: boolean;
+  archivePath?: string;
 }
 
 export interface UninstallPlan {

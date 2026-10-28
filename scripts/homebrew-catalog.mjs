@@ -1,8 +1,11 @@
-// Builds src-tauri/homebrew.json from Homebrew Hub (hh.gbdev.io).
-// Only games whose license explicitly allows redistribution are included;
-// entries without a license are left out. Run: node scripts/homebrew-catalog.mjs
+// Builds src-tauri/homebrew.json from Homebrew Hub (hh.gbdev.io) plus the
+// hand-checked entries in scripts/homebrew-extra.json (authors' own releases
+// and classics their rights holders made free; each records where that
+// permission is stated). Only games whose license explicitly allows
+// redistribution are taken from Homebrew Hub; entries without a license are
+// left out. Run: node scripts/homebrew-catalog.mjs
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const API = "https://hh3.gbdev.io/api/search";
 const STATIC = "https://hh3.gbdev.io/static";
@@ -70,6 +73,20 @@ for (const e of entries) {
   });
 }
 
+let added = 0;
+const extra = JSON.parse(readFileSync(new URL("./homebrew-extra.json", import.meta.url), "utf8"));
+for (const e of extra) {
+  // A Homebrew Hub entry that passed the license filter wins over ours.
+  if (catalog.some((g) => g.slug === e.slug)) {
+    console.warn(`homebrew-extra.json: ${e.slug} already comes from Homebrew Hub`);
+    continue;
+  }
+  const { permission, ...game } = e;
+  if (!permission) throw new Error(`homebrew-extra.json: ${e.slug} has no permission source`);
+  catalog.push(game);
+  added++;
+}
+
 catalog.sort((a, b) => a.title.localeCompare(b.title, "en"));
 writeFileSync(new URL("../src-tauri/homebrew.json", import.meta.url), JSON.stringify(catalog, null, 2) + "\n");
-console.log(`${catalog.length} redistributable games from ${entries.length} entries`);
+console.log(`${catalog.length} games: ${catalog.length - added} from ${entries.length} Homebrew Hub entries, ${added} hand-checked`);

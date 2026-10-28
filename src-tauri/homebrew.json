@@ -65,6 +65,20 @@
     "source": "https://github.com/godai78/5-more-mazes"
   },
   {
+    "slug": "8bit-table-tennis",
+    "title": "8-Bit Table Tennis",
+    "system": "nes",
+    "developer": "Michael Billington",
+    "year": "2020",
+    "license": "MIT",
+    "description": "A two-player table tennis game for the NES.",
+    "url": "https://github.com/mike42/8bit-table-tennis/releases/download/v1.0/table_tennis_v1.0.nes",
+    "fileName": "table_tennis_v1.0.nes",
+    "cover": "https://raw.githubusercontent.com/mike42/8bit-table-tennis/main/screenshot/table_tennis_gameplay_00.png",
+    "source": "https://github.com/mike42/8bit-table-tennis",
+    "collection": "homebrew"
+  },
+  {
     "slug": "a-slime-travel",
     "title": "A Slime Travel",
     "system": "gbc",
@@ -117,6 +131,22 @@
     "source": "https://github.com/NotImplementedLife/AIRPLANZ"
   },
   {
+    "slug": "alex-vs-bus-md",
+    "title": "Alex vs Bus: The Race",
+    "system": "genesis",
+    "developer": "M374LX",
+    "year": "2026",
+    "license": "GPL-3.0 / CC-BY-SA-4.0",
+    "description": "Platform runner: help Alex dodge obstacles and catch the bus in time (Mega Drive port, pre-release 3).",
+    "url": "https://github.com/M374LX/alexvsbus-md/releases/download/pre3/alexvsbus-md-pre3.zip",
+    "fileName": "alexvsbus-pre3.md",
+    "extract": true,
+    "archivePath": "alexvsbus-md-pre3/alexvsbus-pre3.md",
+    "cover": "https://raw.githubusercontent.com/M374LX/alexvsbus-md/main/docs/img/screenshot1.png",
+    "source": "https://github.com/M374LX/alexvsbus-md",
+    "collection": "homebrew"
+  },
+  {
     "slug": "alien-invasion",
     "title": "Alien Invasion",
     "system": "gb",
@@ -141,6 +171,22 @@
     "fileName": "Apotris.gba",
     "cover": "https://hh3.gbdev.io/static/database-gba/entries/apotris/cover.gif",
     "source": "https://gitea.com/akouzoukos/apotris"
+  },
+  {
+    "slug": "snes-asteroids",
+    "title": "Asteroids (SNES homebrew)",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2016",
+    "license": "MIT",
+    "description": "A homebrew SNES take on the classic rock-blasting space shooter.",
+    "url": "https://github.com/undisbeliever/asteroids/releases/download/v1.03/Asteroids.v1.03.zip",
+    "fileName": "Asteroids (v1.03).sfc",
+    "extract": true,
+    "archivePath": "Asteroids (v1.03)/Asteroids (v1.03).sfc",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/asteroids/master/screenshot.png",
+    "source": "https://github.com/undisbeliever/asteroids",
+    "collection": "homebrew"
   },
   {
     "slug": "attack-on-voxelburg",
@@ -195,6 +241,22 @@
     "source": "https://github.com/NotImplementedLife/brekstascat"
   },
   {
+    "slug": "snes-cannons",
+    "title": "Cannons",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2016",
+    "license": "MIT",
+    "description": "A simple artillery duel: aim and fire your cannon to knock out the opponent.",
+    "url": "https://github.com/undisbeliever/cannons/releases/download/v1.02/Cannons.v1.02.zip",
+    "fileName": "Cannons (v1.02).sfc",
+    "extract": true,
+    "archivePath": "Cannons (v1.02)/Cannons (v1.02).sfc",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/cannons/master/screenshot.png",
+    "source": "https://github.com/undisbeliever/cannons",
+    "collection": "homebrew"
+  },
+  {
     "slug": "carazu",
     "title": "Carazu",
     "system": "gb",
@@ -208,6 +270,64 @@
     "source": "https://github.com/mholtkamp/carazu"
   },
   {
+    "slug": "cascade7",
+    "title": "CASCADE7",
+    "system": "gba",
+    "developer": "Mick Schroeder",
+    "year": "2026",
+    "license": "MIT",
+    "description": "Drop numbered discs into seven columns and trigger cascading clears in this Drop7-inspired puzzle game.",
+    "url": "https://github.com/mick-schroeder/gba-cascade7/releases/download/v1.0.0/CASCADE7.gba",
+    "fileName": "CASCADE7.gba",
+    "cover": "https://raw.githubusercontent.com/mick-schroeder/gba-cascade7/main/CASCADE7-SCREENSHOT.png",
+    "source": "https://github.com/mick-schroeder/gba-cascade7",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "castle-platformer",
+    "title": "Castle Platformer",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2016",
+    "license": "MIT",
+    "description": "A simple single-screen castle platformer for the SNES, built for the One Game A Month challenge.",
+    "url": "https://github.com/undisbeliever/castle_platformer/releases/download/v1.04/Castle.Platformer.v1.04.zip",
+    "fileName": "Castle Platformer (v1.04).sfc",
+    "extract": true,
+    "archivePath": "Castle Platformer (v1.04)/Castle Platformer (v1.04).sfc",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/castle_platformer/master/screenshot.png",
+    "source": "https://github.com/undisbeliever/castle_platformer",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "arcade-circus",
+    "title": "Circus",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1977",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "Bounce acrobats off a seesaw to pop rows of balloons in one of Exidy's first CPU-driven games.",
+    "url": "https://www.mamedev.org/roms/circus/circus.zip",
+    "fileName": "circus.zip",
+    "cover": "https://www.mamedev.org/roms/circus/0000.png",
+    "source": "https://www.mamedev.org/roms/circus/",
+    "collection": "classic"
+  },
+  {
+    "slug": "coco-battle-royale-2",
+    "title": "Coco Battle Royale II",
+    "system": "nes",
+    "developer": "Psywave Games",
+    "year": "2022",
+    "license": "GPL-3.0",
+    "description": "A tiny battle-royale game for the NES, distributed as free software.",
+    "url": "https://github.com/psywave-games/coco-battle-royale-2/releases/download/0.4.0/cocobattleroyale221106.nes",
+    "fileName": "cocobattleroyale221106.nes",
+    "cover": null,
+    "source": "https://github.com/psywave-games/coco-battle-royale-2",
+    "collection": "homebrew"
+  },
+  {
     "slug": "croom",
     "title": "Concentration Room",
     "system": "nes",
@@ -219,6 +339,34 @@
     "fileName": "croom.nes",
     "cover": "https://hh3.gbdev.io/static/database-nes/entries/croom/croom-title.png",
     "source": "https://github.com/pinobatch/croom-nes"
+  },
+  {
+    "slug": "concentration-room",
+    "title": "Concentration Room",
+    "system": "nes",
+    "developer": "Damian Yerrick (Pin Eight)",
+    "year": "2018",
+    "license": "GPL-3.0",
+    "description": "A card-matching memory game for one or two players on the NES.",
+    "url": "https://github.com/pinobatch/croom-nes/releases/download/v0.02a/croom.nes",
+    "fileName": "croom.nes",
+    "cover": "https://raw.githubusercontent.com/pinobatch/croom-nes/master/docs/croom_screenshot01.png",
+    "source": "https://github.com/pinobatch/croom-nes",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "arcade-crash",
+    "title": "Crash",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1979",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "Drive a brakeless car through a dot-filled maze while computer cars try to ram you head-on.",
+    "url": "https://www.mamedev.org/roms/crash/crash.zip",
+    "fileName": "crash.zip",
+    "cover": "https://www.mamedev.org/roms/crash/0000.png",
+    "source": "https://www.mamedev.org/roms/crash/",
+    "collection": "classic"
   },
   {
     "slug": "crossconnect",
@@ -312,6 +460,34 @@
     "source": "https://gitlab.com/teamknox/gbcdeepscan"
   },
   {
+    "slug": "delve-nds",
+    "title": "Delve",
+    "system": "nds",
+    "developer": "pandymic",
+    "year": "2026",
+    "license": "MIT",
+    "description": "An endless room-to-room isometric action roguelike: pick boons, choose doors and descend as deep as you can.",
+    "url": "https://github.com/pandymic/delve-nds/releases/download/v2.5.1/delve-v2.5.1.nds",
+    "fileName": "delve-v2.5.1.nds",
+    "cover": "https://raw.githubusercontent.com/pandymic/delve-nds/main/screenshots/caverns-fight.png",
+    "source": "https://github.com/pandymic/delve-nds",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "demon-bazooka",
+    "title": "Demon Bazooka",
+    "system": "dreamcast",
+    "developer": "Rich Stokes",
+    "year": "2026",
+    "license": "MIT",
+    "description": "Compact 3D arena shooter with rockets, dashes, screen-clearing barrages and escalating demon waves.",
+    "url": "https://github.com/richstokes/dreamcast-homebrew/releases/download/continuous/demon-bazooka.cdi",
+    "fileName": "demon-bazooka.cdi",
+    "cover": "https://raw.githubusercontent.com/richstokes/dreamcast-homebrew/main/docs/screenshots/demon-bazooka.png",
+    "source": "https://github.com/richstokes/dreamcast-homebrew/tree/main/projects/games/demon-bazooka",
+    "collection": "homebrew"
+  },
+  {
     "slug": "domination",
     "title": "Domination",
     "system": "gb",
@@ -336,6 +512,34 @@
     "fileName": "pasquiindustry_dorotea_en_v_1_1_0.gb",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/dorotea/pasquiindustry_dorotea_screenshot_2.png",
     "source": "https://www.pasquiindustry.com/dorotea"
+  },
+  {
+    "slug": "double-action-blaster-guys",
+    "title": "Double Action Blaster Guys",
+    "system": "nes",
+    "developer": "NovaSquirrel",
+    "year": "2016",
+    "license": "Zlib",
+    "description": "Arcade-style two-player platformer with 52 levels, 25+ enemy types and a built-in level editor.",
+    "url": "https://github.com/NovaSquirrel/DABG/releases/download/v2/dabg.nes",
+    "fileName": "dabg.nes",
+    "cover": null,
+    "source": "https://github.com/NovaSquirrel/DABG",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "duckslayer-adventures",
+    "title": "Duckslayer Adventures",
+    "system": "sms",
+    "developer": "Haroldo O. Pinheiro",
+    "year": "2018",
+    "license": "Apache-2.0",
+    "description": "A tribute to Atari's Adventure: guide Sir Jelly past the Duck Dragons to recover the Holy Chalice.",
+    "url": "https://github.com/haroldo-ok/duckslayer-adventures/releases/download/v0.6.0/Duckslayer.Adventures.0.6.0.zip",
+    "fileName": "Duckslayer.Adventures.0.6.0.zip",
+    "cover": null,
+    "source": "https://github.com/haroldo-ok/duckslayer-adventures",
+    "collection": "homebrew"
   },
   {
     "slug": "el-dueloroso",
@@ -364,6 +568,22 @@
     "source": "https://github.com/mateusdigital/el_jamon_volador"
   },
   {
+    "slug": "elevator-madness-dx",
+    "title": "Elevator Madness DX",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2016",
+    "license": "MIT",
+    "description": "Run an elevator under pressure: deliver passengers to their floors before they lose patience.",
+    "url": "https://github.com/undisbeliever/elevator-madness-dx/releases/download/v1.03/Elevator.Madness.DX.v1.03.zip",
+    "fileName": "Elevator Madness DX (v1.03).sfc",
+    "extract": true,
+    "archivePath": "Elevator Madness DX (v1.03)/Elevator Madness DX (v1.03).sfc",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/elevator-madness-dx/master/screenshot.png",
+    "source": "https://github.com/undisbeliever/elevator-madness-dx",
+    "collection": "homebrew"
+  },
+  {
     "slug": "escape-obliterizer-dx",
     "title": "Escape Obliterizer Deluxe",
     "system": "gb",
@@ -388,6 +608,50 @@
     "fileName": "Europa Rescue.gbc",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/europa-rescue/spaceship.jpg",
     "source": "https://github.com/godai78/europa"
+  },
+  {
+    "slug": "arcade-fax",
+    "title": "FAX",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1983",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "A trivia game with questions on general knowledge, sports, history and entertainment.",
+    "url": "https://www.mamedev.org/roms/fax/fax.zip",
+    "fileName": "fax.zip",
+    "cover": "https://www.mamedev.org/roms/fax/fax0000.png",
+    "source": "https://www.mamedev.org/roms/fax/",
+    "collection": "classic"
+  },
+  {
+    "slug": "first-person-tetromones",
+    "title": "First Person Tetromones",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2016",
+    "license": "MIT",
+    "description": "A falling-block puzzle seen from an unusual first-person perspective on the SNES.",
+    "url": "https://github.com/undisbeliever/first-person-tetromones/releases/download/v1.02/First.Person.Tetromones.v1.02.zip",
+    "fileName": "First Person Tetromones (v1.02).sfc",
+    "extract": true,
+    "archivePath": "First Person Tetromones (v1.02)/First Person Tetromones (v1.02).sfc",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/first-person-tetromones/master/screenshot.png",
+    "source": "https://github.com/undisbeliever/first-person-tetromones",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "fission-failure-64",
+    "title": "Fission Failure 64",
+    "system": "n64",
+    "developer": "vrgl117 games",
+    "year": "2021",
+    "license": "MIT",
+    "description": "Keep the GreenGlo power plant from melting down in this N64brew Jam #2 game.",
+    "url": "https://github.com/vrgl117-games/FissionFailure64/releases/download/n64brew-jam-2/FissionFailure64.z64",
+    "fileName": "FissionFailure64.z64",
+    "cover": "https://raw.githubusercontent.com/vrgl117-games/FissionFailure64/main/resources/screenshots/station1.png",
+    "source": "https://github.com/vrgl117-games/FissionFailure64",
+    "collection": "homebrew"
   },
   {
     "slug": "flooder",
@@ -481,6 +745,20 @@
     "source": "https://github.com/statico/gbhack"
   },
   {
+    "slug": "gematrix",
+    "title": "Gematrix",
+    "system": "gba",
+    "developer": "Issung",
+    "year": "2024",
+    "license": "GPL-3.0",
+    "description": "A gem-matching puzzle game for the GBA, made with Butano for GBA Jam 2024.",
+    "url": "https://github.com/Issung/Gematrix/releases/download/v1/GematrixV1.gba",
+    "fileName": "GematrixV1.gba",
+    "cover": "https://raw.githubusercontent.com/Issung/Gematrix/develop/itch/title.gif",
+    "source": "https://github.com/Issung/Gematrix",
+    "collection": "homebrew"
+  },
+  {
     "slug": "geometrix",
     "title": "Geometrix",
     "system": "gbc",
@@ -492,6 +770,34 @@
     "fileName": "geometrix.gbc",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/geometrix/screenshot01.bmp",
     "source": "https://github.com/AntonioND/geometrix"
+  },
+  {
+    "slug": "gravity-wave",
+    "title": "Gravity Wave",
+    "system": "dreamcast",
+    "developer": "Rich Stokes",
+    "year": "2026",
+    "license": "MIT",
+    "description": "Infinite 3D arcade flight game with four biomes, procedural terrain, enemy formations, guardians and a synthwave soundtrack.",
+    "url": "https://github.com/richstokes/dreamcast-homebrew/releases/download/continuous/gravity-wave.cdi",
+    "fileName": "gravity-wave.cdi",
+    "cover": "https://raw.githubusercontent.com/richstokes/dreamcast-homebrew/main/docs/screenshots/gravity-wave.png",
+    "source": "https://github.com/richstokes/dreamcast-homebrew/tree/main/projects/games/gravity-wave",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "arcade-gridlee",
+    "title": "Gridlee",
+    "system": "arcade",
+    "developer": "Videa",
+    "year": "1982",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "An unreleased 1982 arcade prototype by Videa, the team that later formed Bally Sente.",
+    "url": "https://www.mamedev.org/roms/gridlee/gridlee.zip",
+    "fileName": "gridlee.zip",
+    "cover": "https://www.mamedev.org/roms/gridlee/gridlee1.png",
+    "source": "https://www.mamedev.org/roms/gridlee/",
+    "collection": "classic"
   },
   {
     "slug": "grub-glide",
@@ -507,6 +813,20 @@
     "source": "https://github.com/Exetric/GrubGlide"
   },
   {
+    "slug": "arcade-hardhat",
+    "title": "Hard Hat",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1982",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "Billed as the first educational coin-op: a carpenter fills a grid while dodging hammers and whirlwinds.",
+    "url": "https://www.mamedev.org/roms/hardhat/hardhat.zip",
+    "fileName": "hardhat.zip",
+    "cover": "https://www.mamedev.org/roms/hardhat/hardhat0000.png",
+    "source": "https://www.mamedev.org/roms/hardhat/",
+    "collection": "classic"
+  },
+  {
     "slug": "jp",
     "title": "JP",
     "system": "gb",
@@ -518,6 +838,48 @@
     "fileName": "jp.gb",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/jp/jp-screenshot-1.bmp",
     "source": "https://github.com/gcoulby/JP"
+  },
+  {
+    "slug": "kaiju-response-team",
+    "title": "Kaiju Response Team",
+    "system": "n64",
+    "developer": "Justin Workman & William Edstrom",
+    "year": "2026",
+    "license": "MIT (code); some audio CC-BY-NC-SA-4.0",
+    "description": "Race around a city in a tiny k-car repairing the damage left behind by a rampaging kaiju.",
+    "url": "https://github.com/xtagon/kaiju-response-team/releases/download/v1.0.0/KaijuResponseTeam.z64",
+    "fileName": "KaijuResponseTeam.z64",
+    "cover": null,
+    "source": "https://github.com/xtagon/kaiju-response-team",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "kleleatoms-md",
+    "title": "KłełeAtoms MD",
+    "system": "genesis",
+    "developer": "Nightwolf-47",
+    "year": "2025",
+    "license": "MIT",
+    "description": "Chain-reaction strategy game for up to four players: overload tiles to blow up atoms and capture the board.",
+    "url": "https://github.com/Nightwolf-47/KleleAtoms-MD/releases/download/v1.2.1/kleleatoms-md-121.bin",
+    "fileName": "kleleatoms-md-121.bin",
+    "cover": "https://raw.githubusercontent.com/Nightwolf-47/KleleAtoms-MD/master/res/graphics/title/titlescreen.png",
+    "source": "https://github.com/Nightwolf-47/KleleAtoms-MD",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "kumi-daiko-beatoff-64",
+    "title": "Kumi-Daiko Beatoff 64",
+    "system": "n64",
+    "developer": "ptimonen / Zhamul",
+    "year": "2020",
+    "license": "CC0-1.0",
+    "description": "Physics-based four-player drum-whipping battle game for the N64.",
+    "url": "https://github.com/ptimonen/n64-riistahillo/releases/download/1.0/Kumi-Daiko-Beatoff-64.n64",
+    "fileName": "Kumi-Daiko-Beatoff-64.n64",
+    "cover": "https://raw.githubusercontent.com/ptimonen/n64-riistahillo/master/media/cover-art.png",
+    "source": "https://github.com/ptimonen/n64-riistahillo",
+    "collection": "homebrew"
   },
   {
     "slug": "labirinth",
@@ -544,6 +906,20 @@
     "fileName": "libbet.gb",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/libbet/libbet6x4.png",
     "source": "https://github.com/pinobatch/libbet"
+  },
+  {
+    "slug": "lunch-break",
+    "title": "Lunch Break",
+    "system": "genesis",
+    "developer": "Good Praxis",
+    "year": "2019",
+    "license": "GPL-3.0",
+    "description": "Talk your coworkers into organising while dodging the boss in this Mega Drive game about workers' rights.",
+    "url": "https://github.com/GoodPraxis/lunch-break/releases/download/v1.0/lunchbreak.zip",
+    "fileName": "lunchbreak.zip",
+    "cover": "https://raw.githubusercontent.com/GoodPraxis/lunch-break/master/res/gfx/startscreen.png",
+    "source": "https://github.com/GoodPraxis/lunch-break",
+    "collection": "homebrew"
   },
   {
     "slug": "madpews-battlegrounds",
@@ -585,6 +961,22 @@
     "source": "https://github.com/MWehrstedt/MaxPirateExtra"
   },
   {
+    "slug": "snes-memory-game",
+    "title": "Memory Game",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2016",
+    "license": "MIT",
+    "description": "A card-matching memory game for the SNES.",
+    "url": "https://github.com/undisbeliever/memory-game/releases/download/v1.02/Memory.Game.v1.02.zip",
+    "fileName": "Memory Game (v1.02).sfc",
+    "extract": true,
+    "archivePath": "Memory Game (v1.02)/Memory Game (v1.02).sfc",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/memory-game/master/screenshot.png",
+    "source": "https://github.com/undisbeliever/memory-game",
+    "collection": "homebrew"
+  },
+  {
     "slug": "meteorain-gba-jam-2021",
     "title": "MeteoRain (GBA Jam 2021)",
     "system": "gba",
@@ -611,6 +1003,20 @@
     "source": "https://github.com/Vulcalien/minicraft-gba"
   },
   {
+    "slug": "n64brew-gamejam-2024",
+    "title": "N64brew Game Jam 2024",
+    "system": "n64",
+    "developer": "N64brew community",
+    "year": "2025",
+    "license": "MIT",
+    "description": "A collection of community-made four-player minigames from the N64brew 2024 game jam, in one ROM.",
+    "url": "https://github.com/n64brew/N64brew-GameJam2024/releases/download/1.2.1/gamejam2024.z64",
+    "fileName": "gamejam2024.z64",
+    "cover": null,
+    "source": "https://github.com/n64brew/N64brew-GameJam2024",
+    "collection": "homebrew"
+  },
+  {
     "slug": "gunpey",
     "title": "Namihey",
     "system": "gb",
@@ -624,6 +1030,20 @@
     "source": "https://gitlab.com/teamknox/gbcnamihey"
   },
   {
+    "slug": "notebook-adventure",
+    "title": "Notebook Adventure",
+    "system": "gba",
+    "developer": "NotImplementedLife",
+    "year": "2022",
+    "license": "GPL-3.0",
+    "description": "A doodle-styled GBA platformer made for Retro Platform Jam #4.",
+    "url": "https://github.com/NotImplementedLife/NotebookAdventure/releases/download/v1.3/NotebookAdventure-1-3.gba",
+    "fileName": "NotebookAdventure-1-3.gba",
+    "cover": "https://raw.githubusercontent.com/NotImplementedLife/NotebookAdventure/master/README_Resources/ss-01.png",
+    "source": "https://github.com/NotImplementedLife/NotebookAdventure",
+    "collection": "homebrew"
+  },
+  {
     "slug": "novathesquirrel",
     "title": "Nova the Squirrel",
     "system": "nes",
@@ -635,6 +1055,20 @@
     "fileName": "nova.nes",
     "cover": "https://hh3.gbdev.io/static/database-nes/entries/novathesquirrel/1.png",
     "source": "https://github.com/NovaSquirrel/NovaTheSquirrel"
+  },
+  {
+    "slug": "nova-the-squirrel",
+    "title": "Nova the Squirrel",
+    "system": "nes",
+    "developer": "NovaSquirrel",
+    "year": "2019",
+    "license": "GPL-3.0",
+    "description": "Open-source NES platformer starring Nova, a squirrel who can copy enemy abilities across a big multi-world adventure.",
+    "url": "https://github.com/NovaSquirrel/NovaTheSquirrel/releases/download/v1.0.6a/nova.nes",
+    "fileName": "nova.nes",
+    "cover": "https://raw.githubusercontent.com/NovaSquirrel/NovaTheSquirrel/master/tools/title/title.png",
+    "source": "https://github.com/NovaSquirrel/NovaTheSquirrel",
+    "collection": "homebrew"
   },
   {
     "slug": "petris",
@@ -687,6 +1121,20 @@
     "fileName": "PlantBoy.gb",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/plantboy/screenshot01.bmp",
     "source": "https://github.com/exezin/PlantBoy"
+  },
+  {
+    "slug": "platform64",
+    "title": "Platform64",
+    "system": "n64",
+    "developer": "Buu342",
+    "year": "2025",
+    "license": "WTFPL",
+    "description": "A free and open-source 2.5D side-scrolling adventure for the Nintendo 64 (work-in-progress build).",
+    "url": "https://github.com/buu342/N64-Platform64/releases/download/009/platform.n64",
+    "fileName": "platform.n64",
+    "cover": null,
+    "source": "https://github.com/buu342/N64-Platform64",
+    "collection": "homebrew"
   },
   {
     "slug": "plutos-corner",
@@ -767,6 +1215,22 @@
     "source": "https://github.com/QuinnPainter/Renegade-Rush"
   },
   {
+    "slug": "retail-clerk-89",
+    "title": "Retail Clerk '89",
+    "system": "genesis",
+    "developer": "Hugues Johnson",
+    "year": "2020",
+    "license": "MIT / CC-BY-SA-4.0",
+    "description": "A short casual adventure set in a late-80s shopping mall, written in 68000 assembly.",
+    "url": "https://github.com/huguesjohnson/RetailClerk89/releases/download/v1.0.1/RetailClerk89_2020-09-01.zip",
+    "fileName": "RetailClerk89_2020-09-01.bin",
+    "extract": true,
+    "archivePath": "RetailClerk89_2020-09-01.bin",
+    "cover": null,
+    "source": "https://github.com/huguesjohnson/RetailClerk89",
+    "collection": "homebrew"
+  },
+  {
     "slug": "rex-run-v1-0",
     "title": "Rex Run",
     "system": "gb",
@@ -804,6 +1268,104 @@
     "fileName": "rhde.nes",
     "cover": "https://hh3.gbdev.io/static/database-nes/entries/rhde/rhde-title.png",
     "source": "https://github.com/pinobatch/rhde-nes"
+  },
+  {
+    "slug": "rhde-furniture-fight",
+    "title": "RHDE: Furniture Fight",
+    "system": "nes",
+    "developer": "Damian Yerrick (Pin Eight)",
+    "year": "2019",
+    "license": "FSFAP",
+    "description": "A home-decorating real-time strategy game for the NES: build, furnish and defend your house against rivals.",
+    "url": "https://github.com/pinobatch/rhde-nes/releases/download/v0.07/rhde.nes",
+    "fileName": "rhde.nes",
+    "cover": "https://raw.githubusercontent.com/pinobatch/rhde-nes/master/docs/combat_phase.png",
+    "source": "https://github.com/pinobatch/rhde-nes",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "arcade-ripcord",
+    "title": "Rip Cord",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1979",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "Jump from the plane and parachute onto targets while dodging enemy helicopters.",
+    "url": "https://www.mamedev.org/roms/ripcord/ripcord.zip",
+    "fileName": "ripcord.zip",
+    "cover": "https://www.mamedev.org/roms/ripcord/0001.png",
+    "source": "https://www.mamedev.org/roms/ripcord/",
+    "collection": "classic"
+  },
+  {
+    "slug": "arcade-robby",
+    "title": "Robby Roto",
+    "system": "arcade",
+    "developer": "Bally/Midway",
+    "year": "1981",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "Dig tunnels to rescue hostages and grab treasure while avoiding monsters, from creator Jamie Fenton.",
+    "url": "https://www.mamedev.org/roms/robby/robby.zip",
+    "fileName": "robby.zip",
+    "cover": "https://www.mamedev.org/roms/robby/robb0000.png",
+    "source": "https://www.mamedev.org/roms/robby/",
+    "collection": "classic"
+  },
+  {
+    "slug": "roborun-nes",
+    "title": "RoboRun",
+    "system": "nes",
+    "developer": "heaven-hm",
+    "year": "2021",
+    "license": "GPL-3.0",
+    "description": "An open-source 2D platformer for the NES with multiple levels, enemies and power-ups.",
+    "url": "https://github.com/heaven-hm/roborun-nes/releases/download/1.1/RoboRun-NES_1.1.nes",
+    "fileName": "RoboRun-NES_1.1.nes",
+    "cover": "https://raw.githubusercontent.com/heaven-hm/roborun-nes/main/res/game_title.png",
+    "source": "https://github.com/heaven-hm/roborun-nes",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "arcade-robotbwl",
+    "title": "Robot Bowl",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1977",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "A black-and-white bowling game with robot bowlers and hook shots.",
+    "url": "https://www.mamedev.org/roms/robotbwl/robotbwl.zip",
+    "fileName": "robotbwl.zip",
+    "cover": "https://www.mamedev.org/roms/robotbwl/0002.png",
+    "source": "https://www.mamedev.org/roms/robotbwl/",
+    "collection": "classic"
+  },
+  {
+    "slug": "robotfindskitten-nes",
+    "title": "robotfindskitten",
+    "system": "nes",
+    "developer": "Damian Yerrick (Pin Eight)",
+    "year": "2018",
+    "license": "Zlib",
+    "description": "NES port of the zen simulation robotfindskitten, with a two-player mode.",
+    "url": "https://github.com/pinobatch/rfk-nes/releases/download/v0.10/robotfindskitten.nes",
+    "fileName": "robotfindskitten.nes",
+    "cover": null,
+    "source": "https://github.com/pinobatch/rfk-nes",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "sblobber64",
+    "title": "Sblobber64",
+    "system": "n64",
+    "developer": "vrgl117 games",
+    "year": "2020",
+    "license": "MIT",
+    "description": "A blob-themed puzzle game made for N64brew Jam #1 (theme: size), with Rumble Pak support.",
+    "url": "https://github.com/vrgl117-games/sblobber64/releases/download/n64brew-jam-1/sblobber64.z64",
+    "fileName": "sblobber64.z64",
+    "cover": "https://raw.githubusercontent.com/vrgl117-games/sblobber64/main/resources/screenshots/level1.png",
+    "source": "https://github.com/vrgl117-games/sblobber64",
+    "collection": "homebrew"
   },
   {
     "slug": "shock-lobster",
@@ -858,6 +1420,34 @@
     "source": "https://github.com/Deft-Spade/Solar-Guard"
   },
   {
+    "slug": "space-rescue-squad",
+    "title": "Space Rescue Squad (Demo)",
+    "system": "snes",
+    "developer": "undisbeliever (Marcus Rowe)",
+    "year": "2025",
+    "license": "Freeware (author's GitHub release; code Zlib, assets reserved)",
+    "description": "Armed with stun weapons, the rescue squad must save the crew of a mad scientists' research station (SNESdev 2025 jam demo).",
+    "url": "https://github.com/undisbeliever/space-rescue-squad/releases/download/game-jam-v1.1/Space.Rescue.Squad.Demo.v1.1.zip",
+    "fileName": "Space.Rescue.Squad.Demo.v1.1.zip",
+    "cover": "https://raw.githubusercontent.com/undisbeliever/space-rescue-squad/master/screenshot.jpeg",
+    "source": "https://github.com/undisbeliever/space-rescue-squad",
+    "collection": "homebrew"
+  },
+  {
+    "slug": "arcade-spectar",
+    "title": "Spectar",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1980",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "The follow-up to Targ: chase down Rammers and dodge shooting Spectars in a 9x9 maze.",
+    "url": "https://www.mamedev.org/roms/spectar/spectar.zip",
+    "fileName": "spectar.zip",
+    "cover": "https://www.mamedev.org/roms/spectar/0000.png",
+    "source": "https://www.mamedev.org/roms/spectar/",
+    "collection": "classic"
+  },
+  {
     "slug": "squishy-the-turtle",
     "title": "Squishy the Turtle",
     "system": "gb",
@@ -869,6 +1459,20 @@
     "fileName": "squishy-magfest.gb",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/squishy-the-turtle/squishy.png",
     "source": "https://github.com/potatolain/SquishyTheTurtle"
+  },
+  {
+    "slug": "stalactites-sms",
+    "title": "Stalactites",
+    "system": "sms",
+    "developer": "Haroldo O. Pinheiro",
+    "year": "2026",
+    "license": "MIT",
+    "description": "Blast growing stalactites and dodge falling drips with a rapid-fire gun; made for the SMS Power! 2026 competition.",
+    "url": "https://github.com/haroldo-ok/stalactites-sms/releases/download/v0.6/stalactites-0.6.sms.zip",
+    "fileName": "stalactites-0.6.sms.zip",
+    "cover": "https://raw.githubusercontent.com/haroldo-ok/stalactites-sms/master/data/img/title_screen.png",
+    "source": "https://github.com/haroldo-ok/stalactites-sms",
+    "collection": "homebrew"
   },
   {
     "slug": "superconnard",
@@ -884,6 +1488,20 @@
     "source": "http://furrtek.free.fr/superconnard/source.php"
   },
   {
+    "slug": "super-tilt-bro",
+    "title": "Super Tilt Bro.",
+    "system": "nes",
+    "developer": "sgadrat",
+    "year": null,
+    "license": "WTFPL",
+    "description": "A Super Smash Bros.-style fighting game demake for the NES with original characters and local two-player battles.",
+    "url": "https://super-tilt-bro.com/shares/stb_igbik.nes",
+    "fileName": "Super_Tilt_Bro.nes",
+    "cover": null,
+    "source": "https://github.com/sgadrat/super-tilt-bro",
+    "collection": "homebrew"
+  },
+  {
     "slug": "sushi-nights",
     "title": "Sushi Nights",
     "system": "gb",
@@ -895,6 +1513,34 @@
     "fileName": "SushiNights.gb",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/sushi-nights/su.png",
     "source": "https://github.com/Zal0/SushiNights"
+  },
+  {
+    "slug": "arcade-targ",
+    "title": "Targ",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1980",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "Steer the Whummel through a grid maze and blast the invading Targ riders.",
+    "url": "https://www.mamedev.org/roms/targ/targ.zip",
+    "fileName": "targ.zip",
+    "cover": "https://www.mamedev.org/roms/targ/0000.png",
+    "source": "https://www.mamedev.org/roms/targ/",
+    "collection": "classic"
+  },
+  {
+    "slug": "arcade-teetert",
+    "title": "Teeter Torture",
+    "system": "arcade",
+    "developer": "Exidy",
+    "year": "1982",
+    "license": "Free for non-commercial use (rights holder via mamedev.org)",
+    "description": "A mysterious Exidy-hardware shooter known from a single surviving cabinet; aim the cannon and fend off attackers.",
+    "url": "https://www.mamedev.org/roms/teetert/teetert.zip",
+    "fileName": "teetert.zip",
+    "cover": "https://www.mamedev.org/roms/teetert/0001.png",
+    "source": "https://www.mamedev.org/roms/teetert/",
+    "collection": "classic"
   },
   {
     "slug": "the-hat-chooses-the-wizard",
@@ -962,6 +1608,20 @@
     "source": "https://github.com/SimonLarsen/tobutobugirl-dx"
   },
   {
+    "slug": "totally-bazaar",
+    "title": "Totally Bazaar",
+    "system": "dreamcast",
+    "developer": "Rich Stokes",
+    "year": "2026",
+    "license": "MIT",
+    "description": "A market trading card game for 2-4 players with hot-seat play, CPU merchants and animated 3D goods.",
+    "url": "https://github.com/richstokes/dreamcast-homebrew/releases/download/continuous/totally-bazaar.cdi",
+    "fileName": "totally-bazaar.cdi",
+    "cover": "https://raw.githubusercontent.com/richstokes/dreamcast-homebrew/main/docs/screenshots/totally-bazaar.png",
+    "source": "https://github.com/richstokes/dreamcast-homebrew/tree/main/projects/games/totally-bazaar",
+    "collection": "homebrew"
+  },
+  {
     "slug": "trabant",
     "title": "Trabant",
     "system": "gbc",
@@ -973,6 +1633,20 @@
     "fileName": "Trabant_1_3.gbc",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/trabant/cover.png",
     "source": "https://github.com/NotImplementedLife/Trabant"
+  },
+  {
+    "slug": "traffic-escape-ds",
+    "title": "Traffic Escape DS",
+    "system": "nds",
+    "developer": "Warioware64",
+    "year": "2026",
+    "license": "Apache-2.0",
+    "description": "A Rush Hour-style sliding-car traffic puzzle game for the Nintendo DS.",
+    "url": "https://github.com/Warioware64/Traffic-Escape-DS/releases/download/v1.2/Traffic_Escape_DS.nds",
+    "fileName": "Traffic_Escape_DS.nds",
+    "cover": null,
+    "source": "https://github.com/Warioware64/Traffic-Escape-DS",
+    "collection": "homebrew"
   },
   {
     "slug": "jeremyelkayam_trogba",
@@ -1051,6 +1725,22 @@
     "fileName": "waternet.gbc",
     "cover": "https://hh3.gbdev.io/static/database-gb/entries/waternet/title_gbc.png",
     "source": "https://github.com/joyrider3774/waternet"
+  },
+  {
+    "slug": "waternet-sms",
+    "title": "Waternet",
+    "system": "sms",
+    "developer": "joyrider3774",
+    "year": "2022",
+    "license": "MIT",
+    "description": "Rotate pipe pieces to connect every house to the water network in this puzzle game.",
+    "url": "https://github.com/joyrider3774/waternet/releases/download/v1.0/Waternet.Sega.Master.System.zip",
+    "fileName": "waternet.sms",
+    "extract": true,
+    "archivePath": "waternet.sms",
+    "cover": "https://raw.githubusercontent.com/joyrider3774/waternet/main/source/res/images/titlescreen.png",
+    "source": "https://github.com/joyrider3774/waternet",
+    "collection": "homebrew"
   },
   {
     "slug": "wyrmhole",
