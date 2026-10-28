@@ -8,6 +8,7 @@ import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
 import type { GraphicsSetting, PowerSetting, Tier } from "../lib/types";
 import { formatLastPlayed } from "../lib/format";
+import { THEMES, themeOf } from "../lib/themes";
 
 const TIER_LABEL: Record<Tier, string> = { standard: "Dengeli", high: "Yüksek" };
 const POWER_LABEL: Record<PowerSetting, string> = {
@@ -39,7 +40,7 @@ export function Menu({
   onOpenStore: () => void;
   onOpenRaLogin: () => void;
 }) {
-  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra">("main");
+  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme">("main");
   // Restore overwrites saves: it needs a second press to confirm.
   const [confirmRestore, setConfirmRestore] = useState(false);
   const overview = useStore((s) => s.overview);
@@ -105,6 +106,13 @@ export function Menu({
       run: () => setPage("backup"),
     },
     { id: "emulators", title: "Emülatörler", sub: "Kurulum, durum ve BIOS dosyaları", value: "›", run: () => setPage("emulators") },
+    {
+      id: "theme",
+      title: "Tema",
+      sub: themeOf(overview?.settings.theme).description,
+      value: themeOf(overview?.settings.theme).name,
+      run: () => setPage("theme"),
+    },
     {
       id: "graphics",
       title: "Grafik profili",
@@ -300,8 +308,24 @@ export function Menu({
     },
   ];
 
+  const themeItems: Item[] = THEMES.map((t) => ({
+    id: t.id,
+    title: t.name,
+    sub: t.description,
+    value: overview?.settings.theme === t.id ? <span className="pill ok">Seçili</span> : undefined,
+    run: () => actions.setTheme(t.id),
+  }));
+
   const items =
-    page === "main" ? main : page === "backup" ? backupItems : page === "ra" ? raItems : emulatorItems;
+    page === "main"
+      ? main
+      : page === "backup"
+        ? backupItems
+        : page === "ra"
+          ? raItems
+          : page === "theme"
+            ? themeItems
+            : emulatorItems;
   const [focus, setFocus] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const index = Math.min(focus, items.length - 1);
@@ -360,7 +384,9 @@ export function Menu({
               ? "Kayıt yedekleme"
               : page === "ra"
                 ? "RetroAchievements"
-                : "Emülatörler"}
+                : page === "theme"
+                  ? "Tema"
+                  : "Emülatörler"}
         </h2>
         <p className="menu-sub">
           {page === "main"
@@ -369,6 +395,8 @@ export function Menu({
               ? "Kayıtlar ve save state'ler seçtiğin klasöre kopyalanır; OneDrive klasörü buluta da taşır."
               : page === "ra"
                 ? "Tek giriş tüm emülatörlere yazılır. Şifren saklanmaz, sadece oturum anahtarı tutulur."
+                : page === "theme"
+                  ? "Her tema kendi düzenini, yazı tiplerini ve gezinmesini getirir."
               : "Emülatörler resmi kaynaklarından indirilir. Oyun ve BIOS dosyaları indirilmez."}
         </p>
         <div className="menu-list" ref={listRef}>

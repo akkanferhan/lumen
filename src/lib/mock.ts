@@ -93,6 +93,13 @@ let autostart = false;
 let backup: BackupSettings = { enabled: true, dir: null, lastBackup: null };
 let raUser: { username: string; score: number | null } | null = null;
 let raHardcore = false;
+let theme = (() => {
+  try {
+    return localStorage.getItem("lumen-theme") ?? new URLSearchParams(location.search).get("theme") ?? "lumen";
+  } catch {
+    return "lumen";
+  }
+})();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -130,7 +137,7 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme },
     raUser,
     backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
@@ -281,6 +288,14 @@ export const mockApi: Api = {
   },
   setAutostart: async (value) => {
     autostart = value;
+  },
+  setTheme: async (value) => {
+    theme = value;
+    try {
+      localStorage.setItem("lumen-theme", value);
+    } catch {
+      /* preview only */
+    }
   },
   setGraphics: async (value) => {
     graphics = value;

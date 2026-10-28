@@ -1,0 +1,513 @@
+/* Themes: each one changes layout (see Library.tsx), type, shape and color.
+   Base tokens live in styles.css; these override them per [data-theme]. */
+
+@import "@fontsource-variable/fraunces";
+@import "@fontsource/press-start-2p";
+@import "@fontsource/vt323";
+
+/* ======================= Galeri: editorial, art-first ======================= */
+
+:root[data-theme="galeri"] {
+  --bg: #0d0b09;
+  --bg-elev: #17130f;
+  --surface: rgba(255, 244, 228, 0.06);
+  --surface-strong: rgba(255, 244, 228, 0.12);
+  --line: rgba(255, 244, 228, 0.1);
+  --text: #f6efe3;
+  --text-dim: #c9bda9;
+  --text-faint: #8d8170;
+  --brand: #e3b26b;
+  --brand-soft: rgba(227, 178, 107, 0.16);
+  --on-text: #15110c;
+  --chrome: rgba(13, 11, 9, 0.6);
+  --panel: rgba(23, 19, 15, 0.96);
+  --radius-s: 0.15rem;
+  --radius-m: 0.25rem;
+  --radius-l: 0.35rem;
+  --font-display: "Fraunces Variable", Georgia, serif;
+}
+
+[data-theme="galeri"] h1,
+[data-theme="galeri"] h2,
+[data-theme="galeri"] .brand,
+[data-theme="galeri"] .menu h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Tabs become an underlined text index instead of pills. */
+[data-theme="galeri"] .tab {
+  border-radius: 0;
+  padding: 0.4rem 0.2rem;
+  margin: 0 0.6rem;
+  background: none;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+[data-theme="galeri"] .tab.active {
+  background: none;
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+
+[data-theme="galeri"] .tab.active .count {
+  color: var(--text-faint);
+}
+
+[data-theme="galeri"] .btn {
+  border-radius: var(--radius-m);
+  letter-spacing: 0.02em;
+}
+
+.gallery {
+  position: absolute;
+  inset: 0 0 4.2rem;
+  overflow: hidden;
+}
+
+/* The art runs under the header; keep the header on top of it. */
+[data-theme="galeri"] .topbar,
+[data-theme="galeri"] .tabs {
+  position: relative;
+  z-index: 2;
+}
+
+.gallery-hero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: auto;
+  filter: saturate(1.05);
+  animation: hero-in 700ms var(--ease-out);
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+/* Legibility: dark from the left and the bottom, art showing on the right. */
+.gallery::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 80%, transparent) 35%, transparent 70%),
+    linear-gradient(0deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 30%, transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 85%, transparent) 0%, transparent 25%);
+  pointer-events: none;
+}
+
+.gallery-copy {
+  position: absolute;
+  z-index: 1;
+  left: var(--gutter);
+  top: 18%;
+  max-width: min(46rem, 60%);
+  animation: rise 500ms var(--ease-out);
+}
+
+.gallery-system {
+  color: var(--brand);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.gallery-copy h1 {
+  margin: 0.8rem 0 1rem;
+  font-size: clamp(2.6rem, 5.4vw, 5.2rem);
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.gallery-copy p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 1.05rem;
+}
+
+.gallery-rail {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 1.2rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 1.4rem var(--gutter) 0.6rem;
+  mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+}
+
+.gallery-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail-card {
+  position: relative;
+  flex: none;
+  width: 7.5rem;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: var(--surface);
+  opacity: 0.7;
+  outline: none;
+  transition: width 320ms var(--ease-out), opacity 200ms, box-shadow 240ms var(--ease-out);
+}
+
+.rail-card.focused {
+  width: 10.5rem;
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--brand), 0 1.4rem 2.6rem rgba(0, 0, 0, 0.6);
+}
+
+/* ======================= Sade: light, list-first ======================= */
+
+:root[data-theme="sade"] {
+  --bg: #f4f3ef;
+  --bg-elev: #ffffff;
+  --surface: rgba(20, 22, 28, 0.045);
+  --surface-strong: rgba(20, 22, 28, 0.09);
+  --line: rgba(20, 22, 28, 0.1);
+  --text: #15171c;
+  --text-dim: #4d525d;
+  --text-faint: #8a8f99;
+  --brand: #2f62f0;
+  --brand-soft: rgba(47, 98, 240, 0.12);
+  --success: #12924a;
+  --danger: #d43c3c;
+  --on-text: #ffffff;
+  --chrome: rgba(244, 243, 239, 0.88);
+  --panel: rgba(255, 255, 255, 0.97);
+  --scrim: rgba(244, 243, 239, 0.55);
+  --scrim-strong: rgba(244, 243, 239, 0.94);
+  --radius-s: 0.4rem;
+  --radius-m: 0.6rem;
+  --radius-l: 0.9rem;
+  color-scheme: light;
+}
+
+/* No glow or blurred art behind a light UI. */
+[data-theme="sade"] .ambient-art {
+  display: none;
+}
+
+[data-theme="sade"] .ambient {
+  background: var(--bg);
+}
+
+[data-theme="sade"] .card-art,
+[data-theme="sade"] .sheet-art,
+[data-theme="sade"] .menu,
+[data-theme="sade"] .toast {
+  box-shadow: 0 0.4rem 1.4rem rgba(20, 22, 28, 0.12);
+}
+
+[data-theme="sade"] .glyph.key,
+[data-theme="sade"] .glyph.pill {
+  color: var(--text);
+}
+
+[data-theme="sade"] .callout.info {
+  color: #1d3fa8;
+}
+
+[data-theme="sade"] .callout {
+  color: #7a1f1f;
+}
+
+[data-theme="sade"] .fav-badge {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.plain {
+  position: absolute;
+  inset: 8.6rem 0 4.2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
+  gap: 2.4rem;
+  padding: 0 var(--gutter) 1.2rem;
+}
+
+.plain-list {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0 2rem;
+  mask-image: linear-gradient(180deg, transparent 0, #000 0.8rem, #000 calc(100% - 2rem), transparent);
+}
+
+.plain-list::-webkit-scrollbar {
+  display: none;
+}
+
+.plain-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-m);
+  text-align: left;
+  outline: none;
+  transition: background 120ms;
+}
+
+.plain-row + .plain-row {
+  border-top: 1px solid var(--line);
+}
+
+.plain-row.focused {
+  background: var(--text);
+  border-color: transparent;
+  color: var(--on-text);
+}
+
+.plain-row.focused + .plain-row {
+  border-color: transparent;
+}
+
+.plain-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plain-fav {
+  color: #e0a100;
+}
+
+.plain-system {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.plain-row.focused .plain-system {
+  color: color-mix(in srgb, var(--on-text) 65%, transparent);
+}
+
+.plain-preview {
+  align-self: start;
+  animation: fade-in 220ms var(--ease-out);
+}
+
+.plain-art {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  max-height: 52vh;
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.18);
+}
+
+.plain-preview h2 {
+  margin: 1.2rem 0 0.8rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.plain-preview dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1.2rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.plain-preview dt {
+  color: var(--text-faint);
+}
+
+.plain-preview dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* ======================= Kartuş: pixel / CRT ======================= */
+
+:root[data-theme="kartus"] {
+  --bg: #140c26;
+  --bg-elev: #1f1438;
+  --surface: rgba(205, 180, 255, 0.08);
+  --surface-strong: rgba(205, 180, 255, 0.16);
+  --line: rgba(205, 180, 255, 0.18);
+  --text: #f2eaff;
+  --text-dim: #c4b4e6;
+  --text-faint: #8a7bb0;
+  --brand: #ffd23f;
+  --brand-soft: rgba(255, 210, 63, 0.16);
+  --on-text: #140c26;
+  --chrome: rgba(20, 12, 38, 0.9);
+  --panel: rgba(31, 20, 56, 0.98);
+  --radius-s: 0;
+  --radius-m: 0;
+  --radius-l: 0;
+  --font-display: "Press Start 2P", monospace;
+}
+
+/* Body text in a CRT terminal face; it runs small, so size it up. */
+:root[data-theme="kartus"] {
+  font-family: "VT323", ui-monospace, monospace;
+  font-size: clamp(17px, 1.4vw, 27px);
+}
+
+[data-theme="kartus"] h1,
+[data-theme="kartus"] h2,
+[data-theme="kartus"] h3,
+[data-theme="kartus"] .brand,
+[data-theme="kartus"] .tab,
+[data-theme="kartus"] .btn,
+[data-theme="kartus"] .cartridge-name,
+[data-theme="kartus"] .eyebrow,
+[data-theme="kartus"] .sheet-system {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+[data-theme="kartus"] h1 {
+  font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+}
+
+[data-theme="kartus"] .tab {
+  font-size: 0.62rem;
+  padding: 0.6rem 0.8rem;
+}
+
+/* Pixel theme: nothing is rounded. */
+[data-theme="kartus"] .btn,
+[data-theme="kartus"] .tab,
+[data-theme="kartus"] .pill,
+[data-theme="kartus"] .glyph,
+[data-theme="kartus"] .facts span,
+[data-theme="kartus"] .toast,
+[data-theme="kartus"] .search-field,
+[data-theme="kartus"] .fav-badge {
+  border-radius: 0;
+}
+
+[data-theme="kartus"] .btn {
+  font-size: 0.7rem;
+  box-shadow: 0 0 0 2px #000, 4px 4px 0 2px #000;
+}
+
+[data-theme="kartus"] .btn.focused {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2px #000, 6px 6px 0 2px var(--brand);
+}
+
+[data-theme="kartus"] .menu-item.focused,
+[data-theme="kartus"] .kb-key.focused {
+  box-shadow: inset 0 0 0 3px var(--brand);
+}
+
+/* Scanlines and a soft vignette over everything. */
+[data-theme="kartus"] .app::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 100% at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.45));
+}
+
+.cartridge-grid {
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 2.2rem 1.6rem;
+}
+
+.cartridge {
+  outline: none;
+  text-align: left;
+}
+
+/* Cartridge silhouette: notched top corner, ridges, label window. */
+.cartridge-shell {
+  position: relative;
+  padding: 1.1rem 0.8rem 0.8rem;
+  background: linear-gradient(180deg, #4a3a6e, #2d2148);
+  clip-path: polygon(0 0, 82% 0, 100% 9%, 100% 100%, 0 100%);
+  transition: transform 160ms steps(2), filter 160ms;
+}
+
+.cartridge-shell::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  left: 0.8rem;
+  right: 22%;
+  height: 0.35rem;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0 4px, transparent 4px 8px);
+}
+
+.cartridge-label {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #0a0614;
+  outline: 3px solid #000;
+}
+
+.cartridge-label .cover-img {
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.cartridge-label .cover-blur {
+  display: none;
+}
+
+.cartridge-name {
+  margin-top: 0.7rem;
+  font-size: 0.55rem;
+  line-height: 1.6;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 1.8rem;
+}
+
+.cartridge-system {
+  margin-top: 0.3rem;
+  font-size: 1rem;
+  color: var(--text-faint);
+}
+
+.cartridge.focused .cartridge-shell {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 0 0 var(--brand)) drop-shadow(4px 4px 0 var(--card-accent, var(--brand)));
+  background: linear-gradient(180deg, #5b4886, #382a5a);
+}
+
+.cartridge.focused .cartridge-name {
+  color: var(--brand);
+}
+
+[data-theme="kartus"] .ambient-art {
+  filter: blur(40px) saturate(1.6) contrast(1.2);
+}

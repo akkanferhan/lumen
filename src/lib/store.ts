@@ -6,6 +6,7 @@ import { api } from "./api";
 import { installLabel, isPcSystem, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
 import { formatBytes } from "./format";
+import { applyTheme } from "./themes";
 import type { AppUpdate, Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 export interface Notice {
@@ -83,6 +84,7 @@ function errorText(e: unknown): string {
 async function refreshOverview() {
   const overview = await api.getOverview();
   setSoundsEnabled(overview.settings.sounds);
+  applyTheme(overview.settings.theme);
   set({ overview, runningGameId: overview.runningGameId });
 }
 
@@ -370,6 +372,12 @@ export const actions = {
     } catch (e) {
       notify(errorText(e), "error");
     }
+    await refreshOverview();
+  },
+
+  async setTheme(theme: string) {
+    applyTheme(theme); // instant; the setting follows
+    await api.setTheme(theme);
     await refreshOverview();
   },
 

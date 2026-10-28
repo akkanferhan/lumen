@@ -49,6 +49,7 @@ export interface Settings {
   graphics: GraphicsSetting;
   power: PowerSetting;
   raHardcore: boolean;
+  theme: string;
 }
 
 export interface RaUser {
