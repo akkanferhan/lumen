@@ -78,6 +78,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     match emu.id.as_str() {
         "rpcs3" => ensure_ps3_firmware(app, &exe, bios.as_deref(), &state.dirs.downloads).await?,
         "xemu" => installer::ensure_xbox_hdd(app, exe_dir, &state.dirs.downloads).await?,
+        "vita3k" => crate::vita::ensure_firmware(app, &exe, &state.dirs.downloads).await?,
         _ => {}
     }
 
@@ -108,14 +109,22 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             .unwrap_or_default(),
         _ => Vec::new(),
     };
+    // Vita3K takes an installed title ID instead of a path once installed.
+    let rom_args = if emu.id == "vita3k" {
+        crate::vita::rom_args(exe_dir, &rom_path)
+    } else {
+        vec![rom.to_string()]
+    };
     let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier(), fresh)
         .into_iter()
         .chain(resume_args)
-        .chain(
-            emu.args
-                .iter()
-                .map(|a| a.replace("{rom}", &rom).replace("{core}", &core)),
-        )
+        .chain(emu.args.iter().flat_map(|a| {
+            if a == "{rom}" {
+                rom_args.clone()
+            } else {
+                vec![a.replace("{rom}", &rom).replace("{core}", &core)]
+            }
+        }))
         .collect();
 
     let mut child = tokio::process::Command::new(&exe)

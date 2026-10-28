@@ -113,6 +113,11 @@ pub fn configure(
             }
             formats::merge_toml(&exe_dir.join("xemu.toml"), &entries)
         }
+        "vita3k" => {
+            // A `portable` dir next to the exe keeps Vita3K's fs, config and cache there.
+            fs::create_dir_all(exe_dir.join("portable"))?;
+            Ok(())
+        }
         "cemu" => {
             // A `portable` dir next to Cemu.exe keeps settings, saves and the mlc
             // beside the emulator; without settings.xml Cemu opens its setup wizard.

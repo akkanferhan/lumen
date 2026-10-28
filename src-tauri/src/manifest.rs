@@ -144,6 +144,7 @@ mod tests {
         ("shadps4", "shadps4-win64-sdl-2026-0.20.0.zip"),
         ("xemu", "xemu-win-x86_64-release.zip"),
         ("xenia", "xenia_canary_windows_.zip"),
+        ("vita3k", "windows-latest.zip"),
     ];
 
     /// Assets in the same releases that must not be picked.
@@ -155,6 +156,7 @@ mod tests {
         ("rpcs3", "rpcs3-v0.0.43-20412-744126ca_win64_msvc.7z.sha256"),
         ("shadps4", "shadps4-linux-sdl-0.20.0.zip"),
         ("xemu", "xemu-win-aarch64-release.zip"),
+        ("vita3k", "windows-arm64-latest.zip"),
     ];
 
     fn asset_regex(id: &str) -> Regex {

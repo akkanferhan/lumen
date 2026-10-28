@@ -17,6 +17,7 @@ mod retroachievements;
 mod sleep;
 mod state;
 mod uninstall;
+mod vita;
 mod windows;
 mod xbox;
 

@@ -108,6 +108,11 @@
       "emulator": "rpcs3", "thumbnails": "Sony - PlayStation 3"
     },
     {
+      "id": "psvita", "name": "PlayStation Vita", "short": "Vita", "maker": "Sony", "year": 2011, "accent": "#3a8ee6",
+      "extensions": ["vpk", "zip"], "folders": ["psvita", "vita"], "folderMarker": "sce_sys",
+      "emulator": "vita3k", "thumbnails": "Sony - PlayStation Vita"
+    },
+    {
       "id": "ps4", "power": "turbo", "name": "PlayStation 4", "short": "PS4", "maker": "Sony", "year": 2013, "accent": "#2e6be6",
       "extensions": [], "folders": ["ps4"], "folderMarker": "sce_sys", "launchFile": "eboot.bin",
       "emulator": "shadps4", "thumbnails": "Sony - PlayStation 4",
@@ -173,6 +178,11 @@
       "id": "rpcs3", "name": "RPCS3",
       "source": { "type": "github", "repo": "RPCS3/rpcs3-binaries-win", "asset": "\\.7z$" },
       "exe": ["**/rpcs3.exe"], "args": ["--no-gui", "--fullscreen", "{rom}"]
+    },
+    {
+      "id": "vita3k", "name": "Vita3K",
+      "source": { "type": "github", "repo": "Vita3K/Vita3K", "tag": "continuous", "asset": "^windows-latest\\.zip$" },
+      "exe": ["**/Vita3K.exe"], "args": ["--frontend", "sdl", "-F", "-B", "Vulkan", "{rom}"]
     },
     {
       "id": "shadps4", "name": "shadPS4",
