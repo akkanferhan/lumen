@@ -4,6 +4,9 @@
 @import "@fontsource-variable/fraunces";
 @import "@fontsource/press-start-2p";
 @import "@fontsource/vt323";
+@import "@fontsource-variable/orbitron";
+@import "@fontsource/special-elite";
+@import "@fontsource-variable/outfit";
 
 /* ======================= Galeri: editorial, art-first ======================= */
 
@@ -510,4 +513,377 @@
 
 [data-theme="kartus"] .ambient-art {
   filter: blur(40px) saturate(1.6) contrast(1.2);
+}
+
+/* ======================= Raf: shelves per system ======================= */
+
+:root[data-theme="raf"] {
+  --bg: #101318;
+  --bg-elev: #191d25;
+  --text: #eef1f6;
+  --text-dim: #aeb6c4;
+  --text-faint: #6f7889;
+  --brand: #6fd3ff;
+  --brand-soft: rgba(111, 211, 255, 0.14);
+  --radius-m: 0.45rem;
+  --radius-l: 0.8rem;
+  --font-display: "Outfit Variable", "Inter Variable", sans-serif;
+  font-family: "Outfit Variable", "Inter Variable", system-ui, sans-serif;
+}
+
+[data-theme="raf"] h1,
+[data-theme="raf"] h2,
+[data-theme="raf"] .brand {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.shelves {
+  position: absolute;
+  inset: 8.2rem 0 4.2rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 0.6rem 0 30vh;
+  mask-image: linear-gradient(180deg, transparent 0, #000 1.2rem, #000 calc(100% - 3rem), transparent);
+}
+
+.shelves::-webkit-scrollbar {
+  display: none;
+}
+
+.shelf {
+  margin-bottom: 1.6rem;
+  opacity: 0.55;
+  transition: opacity 260ms var(--ease-out);
+}
+
+.shelf.active {
+  opacity: 1;
+}
+
+.shelf h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
+  padding: 0 var(--gutter);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.shelf h3 span {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.shelf.active h3 {
+  color: var(--card-accent, var(--brand));
+}
+
+/* The shelf plank: a glassy edge the cases stand on. */
+.shelf-row {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 1rem var(--gutter) 1.4rem;
+  background:
+    linear-gradient(180deg, transparent calc(100% - 1.15rem), rgba(255, 255, 255, 0.1) calc(100% - 1.15rem),
+      rgba(255, 255, 255, 0.03) calc(100% - 0.6rem), transparent 100%);
+}
+
+.shelf-row::-webkit-scrollbar {
+  display: none;
+}
+
+.shelf-item {
+  flex: none;
+  width: 8.4rem;
+  outline: none;
+  text-align: left;
+}
+
+.shelf-case {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.08), 0 0.6rem 1.2rem rgba(0, 0, 0, 0.45);
+  transition: transform 240ms var(--ease-spring), box-shadow 240ms var(--ease-out);
+  transform-origin: bottom center;
+}
+
+.shelf-item.focused .shelf-case {
+  transform: scale(1.12) translateY(-0.3rem);
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 0 0 5px var(--card-accent, var(--brand)),
+    0 1.2rem 2.2rem rgba(0, 0, 0, 0.55);
+}
+
+.shelf-title {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shelf-item.focused .shelf-title {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ======================= Neon: 3D cover flow ======================= */
+
+:root[data-theme="neon"] {
+  --bg: #07021a;
+  --bg-elev: #12073a;
+  --surface: rgba(176, 120, 255, 0.08);
+  --surface-strong: rgba(176, 120, 255, 0.16);
+  --line: rgba(176, 120, 255, 0.22);
+  --text: #f6eeff;
+  --text-dim: #c6b2ec;
+  --text-faint: #8a74b8;
+  --brand: #ff3fd1;
+  --brand-soft: rgba(255, 63, 209, 0.16);
+  --on-text: #07021a;
+  --chrome: rgba(7, 2, 26, 0.82);
+  --panel: rgba(18, 7, 58, 0.97);
+  --font-display: "Orbitron Variable", "Inter Variable", sans-serif;
+  --neon-cyan: #2ef2ff;
+}
+
+[data-theme="neon"] h1,
+[data-theme="neon"] h2,
+[data-theme="neon"] .brand,
+[data-theme="neon"] .tab,
+[data-theme="neon"] .btn {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+[data-theme="neon"] .tab.active {
+  background: transparent;
+  color: var(--neon-cyan);
+  box-shadow: 0 0 0 2px var(--neon-cyan), 0 0 18px rgba(46, 242, 255, 0.55), inset 0 0 12px rgba(46, 242, 255, 0.35);
+}
+
+[data-theme="neon"] .tab.active .count {
+  color: var(--neon-cyan);
+}
+
+[data-theme="neon"] .btn.primary {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(255, 63, 209, 0.6);
+}
+
+[data-theme="neon"] .ambient {
+  background:
+    radial-gradient(70% 55% at 50% 110%, rgba(255, 63, 209, 0.35), transparent 70%),
+    radial-gradient(60% 50% at 50% -10%, rgba(46, 242, 255, 0.18), transparent 70%),
+    var(--bg);
+}
+
+.flow {
+  position: absolute;
+  inset: 8.2rem 0 4.2rem;
+  overflow: hidden;
+  perspective: 1100px;
+}
+
+/* Synthwave floor: a grid receding to the horizon. */
+.flow-floor {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: -10%;
+  height: 55%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 63, 209, 0.55) 0 2px, transparent 2px 80px),
+    repeating-linear-gradient(0deg, rgba(255, 63, 209, 0.55) 0 2px, transparent 2px 60px);
+  transform: rotateX(72deg);
+  transform-origin: top center;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 45%);
+  opacity: 0.6;
+}
+
+.flow-stage {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  width: 0;
+  height: 62%;
+  transform-style: preserve-3d;
+}
+
+.flow-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--surface);
+  outline: none;
+  transition: transform 420ms var(--ease-out), opacity 300ms;
+  -webkit-box-reflect: below 6px linear-gradient(transparent 70%, rgba(255, 255, 255, 0.18));
+}
+
+.flow-card.focused {
+  box-shadow: 0 0 0 3px var(--neon-cyan), 0 0 40px rgba(46, 242, 255, 0.55), 0 0 90px rgba(255, 63, 209, 0.35);
+}
+
+.flow-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3%;
+  text-align: center;
+  animation: fade-in 300ms var(--ease-out);
+}
+
+.flow-caption span {
+  color: var(--neon-cyan);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.flow-caption h1 {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  text-shadow: 0 0 12px rgba(255, 63, 209, 0.8), 0 0 32px rgba(255, 63, 209, 0.45);
+}
+
+/* ======================= Kâğıt: monochrome zine ======================= */
+
+:root[data-theme="kagit"] {
+  --bg: #eeeae0;
+  --bg-elev: #f7f4ec;
+  --surface: rgba(22, 22, 22, 0.05);
+  --surface-strong: rgba(22, 22, 22, 0.1);
+  --line: rgba(22, 22, 22, 0.25);
+  --text: #161616;
+  --text-dim: #3c3a36;
+  --text-faint: #7b776e;
+  --brand: #161616;
+  --brand-soft: rgba(22, 22, 22, 0.08);
+  --success: #161616;
+  --danger: #a3221a;
+  --on-text: #eeeae0;
+  --chrome: rgba(238, 234, 224, 0.92);
+  --panel: rgba(247, 244, 236, 0.98);
+  --scrim: rgba(238, 234, 224, 0.6);
+  --scrim-strong: rgba(238, 234, 224, 0.95);
+  --radius-s: 0;
+  --radius-m: 0;
+  --radius-l: 0;
+  --font-display: "Special Elite", "Courier New", monospace;
+  color-scheme: light;
+}
+
+/* Paper grain and no colored glow. */
+[data-theme="kagit"] .ambient,
+[data-theme="kagit"] body {
+  background:
+    radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px) 0 0 / 4px 4px,
+    var(--bg);
+}
+
+[data-theme="kagit"] .ambient-art {
+  display: none;
+}
+
+[data-theme="kagit"] h1,
+[data-theme="kagit"] h2,
+[data-theme="kagit"] h3,
+[data-theme="kagit"] .brand,
+[data-theme="kagit"] .tab,
+[data-theme="kagit"] .btn,
+[data-theme="kagit"] .card-title,
+[data-theme="kagit"] .menu-item-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+[data-theme="kagit"] .tab,
+[data-theme="kagit"] .btn,
+[data-theme="kagit"] .pill,
+[data-theme="kagit"] .glyph,
+[data-theme="kagit"] .facts span,
+[data-theme="kagit"] .toast {
+  border-radius: 0;
+}
+
+[data-theme="kagit"] .tab.active {
+  background: var(--text);
+  color: var(--on-text);
+}
+
+/* Ink drawings: covers are greyscale until chosen. */
+[data-theme="kagit"] .card-art {
+  border: 2px solid var(--text);
+  box-shadow: 5px 5px 0 var(--text);
+}
+
+[data-theme="kagit"] .card .cover-img,
+[data-theme="kagit"] .card .cover-blur {
+  filter: grayscale(1) contrast(1.15);
+  transition: filter 260ms var(--ease-out);
+}
+
+[data-theme="kagit"] .card.focused .cover-img {
+  filter: none;
+}
+
+[data-theme="kagit"] .card.focused .card-art {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 var(--text);
+}
+
+[data-theme="kagit"] .btn {
+  border: 2px solid var(--text);
+  box-shadow: 3px 3px 0 var(--text);
+}
+
+[data-theme="kagit"] .btn.focused {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--text);
+}
+
+[data-theme="kagit"] .menu-item.focused {
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+
+[data-theme="kagit"] .sheet-art,
+[data-theme="kagit"] .menu {
+  border: 2px solid var(--text);
+  box-shadow: 6px 6px 0 var(--text);
+}
+
+[data-theme="kagit"] .callout,
+[data-theme="kagit"] .callout.info {
+  color: var(--text);
+  background: var(--surface);
+  border: 2px dashed var(--text);
+}
+
+[data-theme="kagit"] .cover-fallback {
+  background: repeating-linear-gradient(135deg, var(--surface) 0 6px, transparent 6px 12px), var(--bg-elev);
+  color: var(--text);
+}
+
+[data-theme="kagit"] .cover-fallback-system {
+  color: var(--text-dim);
 }
