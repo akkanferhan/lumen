@@ -136,6 +136,8 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         game_id: game.id.clone(),
         stop: Some(stop_tx),
         pid: child.id(),
+        emulator: emu.id.clone(),
+        suspended: false,
     });
     let session_start = SystemTime::now();
 
@@ -196,6 +198,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             }
         }
 
+        let _ = std::fs::remove_file(frozen_marker(&app));
         focus_lumen(&app, false);
         let _ = app.emit(
             EXITED_EVENT,
@@ -366,8 +369,71 @@ pub fn focus_lumen(app: &AppHandle, on_top: bool) {
     let _ = window.set_focus();
 }
 
-/// Leaves the quick menu: drops Lumen's always-on-top and refocuses the game.
+/// Emulators without a pause-on-focus-loss option; the quick menu freezes
+/// their process instead (see presets.rs for the ones that pause themselves).
+const FREEZE_FOR_MENU: &[&str] = &["vita3k", "xemu", "xenia", "shadps4", "cemu"];
+
+/// Marker for a frozen emulator, so a crashed Lumen can thaw it on next start.
+fn frozen_marker(app: &AppHandle) -> std::path::PathBuf {
+    app.state::<AppState>().dirs.data.join("frozen-pid")
+}
+
+/// Opens the in-game quick menu: Lumen on top, the game paused (by focus loss,
+/// or by freezing emulators that can't pause themselves).
+pub fn open_quick_menu(app: &AppHandle) {
+    let _ = app.emit(crate::input::QUICK_MENU_EVENT, ());
+    let frozen = {
+        let state = app.state::<AppState>();
+        let mut running = state.running.lock().unwrap();
+        match running.as_mut() {
+            Some(game) if !game.suspended && FREEZE_FOR_MENU.contains(&game.emulator.as_str()) => {
+                match game.pid {
+                    Some(pid) if crate::windows::set_process_suspended(pid, true) => {
+                        game.suspended = true;
+                        Some(pid)
+                    }
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    };
+    if let Some(pid) = frozen {
+        let _ = std::fs::write(frozen_marker(app), pid.to_string());
+    }
+    focus_lumen(app, true);
+}
+
+/// Thaws the emulator if the quick menu froze it.
+fn thaw(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    let mut running = state.running.lock().unwrap();
+    if let Some(game) = running.as_mut().filter(|g| g.suspended) {
+        if let Some(pid) = game.pid {
+            crate::windows::set_process_suspended(pid, false);
+        }
+        game.suspended = false;
+    }
+    drop(running);
+    let _ = std::fs::remove_file(frozen_marker(app));
+}
+
+/// On start: a process Lumen froze before crashing would stay frozen forever.
+pub fn thaw_leftover(app: &AppHandle) {
+    let marker = frozen_marker(app);
+    if let Some(pid) = std::fs::read_to_string(&marker)
+        .ok()
+        .and_then(|s| s.trim().parse().ok())
+    {
+        crate::windows::set_process_suspended(pid, false);
+    }
+    let _ = std::fs::remove_file(marker);
+}
+
+/// Leaves the quick menu: thaws a frozen emulator, drops Lumen's
+/// always-on-top and refocuses the game.
 pub fn resume_game(app: &AppHandle) {
+    thaw(app);
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_always_on_top(false);
     }
@@ -385,6 +451,10 @@ const CLOSE_GRACE: Duration = Duration::from_secs(10);
 /// shutdown (save state on exit, flushing memory cards), and only kills it
 /// if it hasn't exited after `CLOSE_GRACE`.
 async fn close_gracefully(child: &mut tokio::process::Child) {
+    // A frozen process can't handle WM_CLOSE; thaw it first (no-op otherwise).
+    if let Some(pid) = child.id() {
+        crate::windows::set_process_suspended(pid, false);
+    }
     let asked = child.id().map(crate::windows::request_close).unwrap_or(0);
     if asked > 0
         && tokio::time::timeout(CLOSE_GRACE, child.wait())
@@ -401,6 +471,19 @@ pub fn stop(state: &AppState) {
     if let Some(game) = state.running.lock().unwrap().as_mut() {
         if let Some(stop) = game.stop.take() {
             let _ = stop.send(());
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn freeze_list_names_real_emulators() {
+        for id in super::FREEZE_FOR_MENU {
+            assert!(
+                crate::manifest::emulator(id).is_some(),
+                "unknown emulator {id}"
+            );
         }
     }
 }

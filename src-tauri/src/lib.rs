@@ -37,6 +37,7 @@ pub fn run() {
             let state = state::AppState::load(app.handle())?;
             input::spawn(app.handle().clone(), state.running.clone());
             sleep::watch(app.handle().clone());
+            launcher::thaw_leftover(app.handle());
             app.manage(state);
             Ok(())
         })

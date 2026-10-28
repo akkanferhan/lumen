@@ -29,7 +29,7 @@ so you never open an emulator window.
 |---|---|
 | **One setup, every system** | Pick a game folder; Lumen creates the system folders, downloads emulators from their official releases and writes their configs. |
 | **Tuned for the Ally** | Detects Z1 / Z1 Extreme / Z2 A / Z2 Extreme and applies per-emulator presets: Vulkan, internal resolution per GPU tier, async shaders, borderless fullscreen, controller mapping, no first-run wizards. |
-| **Quick menu** | Tap **Select + Start** in any game: the game pauses and Lumen comes up. Hold it to save and quit. Sleep also pauses the game. |
+| **Quick menu** | Tap **Select + Start** in any game: the game pauses and Lumen comes up. Hold it to save and quit. Sleep also pauses the game. Emulators that can't pause on their own are frozen while the menu is open. |
 | **Continue where you left off** | Resume states for RetroArch, DuckStation and PCSX2, with a *Start over* option. |
 | **PC games too** | Installed Steam, Epic Games and Xbox app (Game Pass) titles sit in the same library. |
 | **RetroAchievements** | Sign in once; achievements work in RetroArch, DuckStation, PCSX2, PPSSPP and Dolphin. |

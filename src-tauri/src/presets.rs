@@ -6,7 +6,9 @@
 //! source; tier values follow community guidance for Ally/Deck-class APUs.
 //!
 //! Emulators that support it pause on focus loss: Lumen's quick menu takes
-//! focus, which pauses the game until "back to game" returns it.
+//! focus, which pauses the game until "back to game" returns it. The rest
+//! (Vita3K, xemu, Xenia, shadPS4, Cemu) are frozen instead; see
+//! `launcher::FREEZE_FOR_MENU`.
 
 use crate::config::{set_cfg, set_ini};
 use crate::device::Tier;
