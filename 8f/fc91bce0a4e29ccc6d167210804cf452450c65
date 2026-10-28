@@ -1,0 +1,44 @@
+src-tauri/src/autofix.rs
+  s_c69bab437f7e12::t_d9a855803d46f7 1-41,44-52,55-97,101-102
+  s_c69bab437f7e12::t_93d86701776912 42-43,53-54,98-100
+src-tauri/src/commands.rs
+  s_c69bab437f7e12::t_5e5bda3dcf8cda 683-716
+src/lib/api.ts
+  s_c69bab437f7e12::t_401f4decff3193 12,34-35,102
+src/lib/catalog.ts
+  s_c69bab437f7e12::t_401f4decff3193 35
+src/lib/types.ts
+  s_c69bab437f7e12::t_401f4decff3193 182-188
+src-tauri/src/lib.rs
+  s_c69bab437f7e12::t_93d86701776912 1,84
+src-tauri/src/launcher.rs
+  s_c69bab437f7e12::t_5e5bda3dcf8cda 152-161,185,197-203,207-218
+src-tauri/src/launch_check.rs
+  s_c69bab437f7e12::t_73caf24dc43627 210,228,236,244,248,258,269,280-286
+  s_c69bab437f7e12::t_846ab256dc8b21 1-5,7,19-45,47-61,63-73,76-80,82,85,87,91,96,99,101-102,112,116,120,123,127-133,136-138,142-146,148-155,157
+  s_c69bab437f7e12::t_93d86701776912 106-107,211-215,217,223-227,229-235,237-243,259-263,265-267,275-279
+  s_c69bab437f7e12::t_5e5bda3dcf8cda 186-191,195,200,204
+src-tauri/src/state.rs
+  s_c69bab437f7e12::t_93d86701776912 92-95,121-122
+src/lib/mock.ts
+  s_c69bab437f7e12::t_401f4decff3193 235
+src/lib/store.ts
+  s_c69bab437f7e12::t_401f4decff3193 13,95-118,152,273-274
+  s_c69bab437f7e12::t_cbf7b578f49424 151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8ffc91bce0a4e29ccc6d167210804cf452450c65",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
