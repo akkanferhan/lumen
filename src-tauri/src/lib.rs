@@ -13,6 +13,7 @@ mod power;
 mod presets;
 mod state;
 mod windows;
+mod xbox;
 
 use tauri::Manager;
 

@@ -97,6 +97,16 @@ const SAMPLE_PC: [string, string, string][] = [
   ["steam", "620", "Portal 2"],
   ["steam", "1245620", "Elden Ring"],
   ["epic", "Dill", "Alan Wake 2"],
+  [
+    "xboxapp",
+    "https://store-images.s-microsoft.com/image/apps.35187.13567343664224659.1eb6fdf9-8a0b-4344-a135-ab17dfa3c609.c83b6d6a-56c3-4c3f-8b31-456cfb21c3b7",
+    "Starfield",
+  ],
+  [
+    "xboxapp",
+    "https://store-images.s-microsoft.com/image/apps.49800.13718773309227929.bebdcc0e-1ed5-4778-8732-f4ef65a2f445.9ac09d39-064d-466c-81ca-2f1b6f0b95c5",
+    "Forza Horizon 5",
+  ],
 ];
 
 function games(): Game[] {
@@ -107,7 +117,7 @@ function games(): Game[] {
     return { id, systemId, title: cleanTitle(stem), thumbName: stem, path: `${store.romRoot}/${systemId}/${stem}`, ...user(id) };
   }).sort((a, b) => a.title.localeCompare(b.title, "tr"));
   const pc = SAMPLE_PC.map(([systemId, appId, title]) => {
-    const id = `mock-${systemId}-${appId}`;
+    const id = `mock-${systemId}-${title.replace(/\W/g, "")}`;
     return { id, systemId, title, thumbName: appId, path: `${systemId}://${appId}`, ...user(id) };
   });
   return [...emulated, ...pc];
@@ -185,7 +195,7 @@ export const mockApi: Api = {
   isResumable: async (gameId) => (store.user[gameId]?.playSeconds ?? 0) > 0,
   resumeGame: async () => {},
   launchGame: async (gameId) => {
-    if (gameId.startsWith("mock-steam") || gameId.startsWith("mock-epic")) {
+    if (/^mock-(steam|epic|xboxapp)-/.test(gameId)) {
       touchUser(gameId).lastPlayed = Math.floor(Date.now() / 1000);
       save();
       return;

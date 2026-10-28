@@ -5,9 +5,11 @@ import type { EmulatorDef, Game, SystemDef } from "./types";
 const PC_SYSTEMS: SystemDef[] = [
   { id: "steam", name: "Steam", short: "Steam", maker: "Valve", year: 2003, accent: "#66c0f4", extensions: [], folders: [], emulator: "steam", thumbnails: "" },
   { id: "epic", name: "Epic Games", short: "Epic", maker: "Epic Games", year: 2018, accent: "#c8c8c8", extensions: [], folders: [], emulator: "epic", thumbnails: "" },
+  // Games installed by the Xbox app (Game Pass, purchases). Not the original Xbox system.
+  { id: "xboxapp", name: "Xbox uygulaması", short: "Xbox PC", maker: "Microsoft", year: 2020, accent: "#3fa142", extensions: [], folders: [], emulator: "xboxapp", thumbnails: "" },
 ];
 
-export const isPcSystem = (id: string) => id === "steam" || id === "epic";
+export const isPcSystem = (id: string) => id === "steam" || id === "epic" || id === "xboxapp";
 
 export const systems = [...PC_SYSTEMS, ...(manifestJson.systems as unknown as SystemDef[])];
 export const emulators = manifestJson.emulators as unknown as EmulatorDef[];
@@ -45,6 +47,10 @@ function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKin
       : null;
   }
   if (game.systemId === "epic") return null;
+  if (game.systemId === "xboxapp") {
+    // thumbName is the Microsoft Store poster URL (resolved during the scan).
+    return kind === "Named_Boxarts" && game.thumbName.startsWith("https://") ? game.thumbName : null;
+  }
   const system = systemOf(game.systemId);
   if (!system) return null;
   return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/${kind}/${encodeURIComponent(game.thumbName)}.png`;

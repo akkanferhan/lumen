@@ -175,6 +175,23 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     })
     .await
     .map_err(err)?;
+    // Xbox games carry their Store id; swap it for the Store's poster URL.
+    let mut games = games;
+    let store_ids: Vec<String> = games
+        .iter()
+        .filter(|g| g.system_id == crate::xbox::XBOX_APP && !g.thumb_name.is_empty())
+        .map(|g| g.thumb_name.clone())
+        .collect();
+    if !store_ids.is_empty() {
+        let posters =
+            crate::xbox::posters(&store_ids, &state.dirs.data.join("xbox-posters.json")).await;
+        for game in games
+            .iter_mut()
+            .filter(|g| g.system_id == crate::xbox::XBOX_APP)
+        {
+            game.thumb_name = posters.get(&game.thumb_name).cloned().unwrap_or_default();
+        }
+    }
     *state.library.lock().unwrap() = games;
     state.save_library().map_err(err)?;
     Ok(library_view(&state))
