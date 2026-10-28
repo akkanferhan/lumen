@@ -1,6 +1,7 @@
 mod backup;
 mod commands;
 mod config;
+mod crash;
 mod device;
 mod formats;
 mod homebrew;
@@ -35,10 +36,13 @@ pub fn run() {
         ))
         .setup(|app| {
             let state = state::AppState::load(app.handle())?;
-            input::spawn(app.handle().clone(), state.running.clone());
-            sleep::watch(app.handle().clone());
-            launcher::thaw_leftover(app.handle());
+            crash::install(&state.dirs.data);
+            launcher::thaw_leftover(&state.dirs.data);
+            // Manage state before starting anything that may call app.state().
             app.manage(state);
+            let running = app.state::<state::AppState>().running.clone();
+            input::spawn(app.handle().clone(), running);
+            sleep::watch(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -59,6 +63,7 @@ pub fn run() {
             commands::is_resumable,
             commands::set_power,
             commands::game_info,
+            commands::take_crash_report,
             commands::uninstall_plan,
             commands::uninstall_game,
             commands::uninstall_emulator,

@@ -830,3 +830,9 @@ pub async fn uninstall_emulator(app: AppHandle, id: String) -> CmdResult<()> {
     .map_err(err)?
     .map_err(err)
 }
+
+/// A crash report from the previous run, if Lumen panicked.
+#[tauri::command]
+pub fn take_crash_report(state: State<'_, AppState>) -> Option<String> {
+    crate::crash::take(&state.dirs.data)
+}

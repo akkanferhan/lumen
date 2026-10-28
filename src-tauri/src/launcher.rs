@@ -198,7 +198,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             }
         }
 
-        let _ = std::fs::remove_file(frozen_marker(&app));
+        let _ = std::fs::remove_file(frozen_marker(&state.dirs.data));
         focus_lumen(&app, false);
         let _ = app.emit(
             EXITED_EVENT,
@@ -374,8 +374,8 @@ pub fn focus_lumen(app: &AppHandle, on_top: bool) {
 const FREEZE_FOR_MENU: &[&str] = &["vita3k", "xemu", "xenia", "shadps4", "cemu"];
 
 /// Marker for a frozen emulator, so a crashed Lumen can thaw it on next start.
-fn frozen_marker(app: &AppHandle) -> std::path::PathBuf {
-    app.state::<AppState>().dirs.data.join("frozen-pid")
+fn frozen_marker(data_dir: &Path) -> std::path::PathBuf {
+    data_dir.join("frozen-pid")
 }
 
 /// Opens the in-game quick menu: Lumen on top, the game paused (by focus loss,
@@ -399,7 +399,8 @@ pub fn open_quick_menu(app: &AppHandle) {
         }
     };
     if let Some(pid) = frozen {
-        let _ = std::fs::write(frozen_marker(app), pid.to_string());
+        let data = app.state::<AppState>().dirs.data.clone();
+        let _ = std::fs::write(frozen_marker(&data), pid.to_string());
     }
     focus_lumen(app, true);
 }
@@ -415,12 +416,14 @@ fn thaw(app: &AppHandle) {
         game.suspended = false;
     }
     drop(running);
-    let _ = std::fs::remove_file(frozen_marker(app));
+    let _ = std::fs::remove_file(frozen_marker(&state.dirs.data));
 }
 
 /// On start: a process Lumen froze before crashing would stay frozen forever.
-pub fn thaw_leftover(app: &AppHandle) {
-    let marker = frozen_marker(app);
+/// Takes the data dir (not the AppHandle) because it runs during setup,
+/// before AppState is managed: `app.state()` there panics.
+pub fn thaw_leftover(data_dir: &Path) {
+    let marker = frozen_marker(data_dir);
     if let Some(pid) = std::fs::read_to_string(&marker)
         .ok()
         .and_then(|s| s.trim().parse().ok())
