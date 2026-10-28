@@ -785,6 +785,15 @@ pub async fn uninstall_game(app: AppHandle, game_id: String) -> CmdResult<Vec<Ga
         return Err("Oyun açıkken kaldırılamaz".into());
     }
     let game = find_game(&state, &game_id)?;
+    // Vita games also live inside Vita3K once installed; remove them there too.
+    if game.system_id == "psvita" {
+        if let Some(emu) = manifest::emulator("vita3k") {
+            let exe = installer::find_exe(emu, &state.dirs.emulators.join(&emu.id));
+            if let (Some(exe), Some(id)) = (exe, crate::vita::title_id(&game.path)) {
+                let _ = crate::vita::delete_title(&exe, &id);
+            }
+        }
+    }
     let gone = tauri::async_runtime::spawn_blocking(move || crate::uninstall::uninstall(&game))
         .await
         .map_err(err)?

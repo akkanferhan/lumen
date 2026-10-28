@@ -201,7 +201,7 @@ fn folder_title(dir: &Path) -> Option<String> {
 }
 
 /// Reads a UTF-8 value from a PlayStation SFO (PSF) key/value file.
-fn sfo_string(data: &[u8], wanted: &str) -> Option<String> {
+pub(crate) fn sfo_string(data: &[u8], wanted: &str) -> Option<String> {
     let u16_at = |o: usize| {
         data.get(o..o + 2)
             .map(|b| u16::from_le_bytes([b[0], b[1]]) as usize)

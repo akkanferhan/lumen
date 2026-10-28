@@ -126,6 +126,17 @@ pub async fn install_core(
     Ok(())
 }
 
+/// Downloads a single file (no unpacking) and returns its path.
+pub async fn download_file(
+    app: &AppHandle,
+    id: &str,
+    url: &str,
+    downloads_dir: &Path,
+) -> anyhow::Result<PathBuf> {
+    emit(app, id, "downloading", 0.0, None);
+    download(app, id, url, downloads_dir).await
+}
+
 /// Sony's official PS3 system software list (plain HTTP is all Sony serves).
 const PS3_UPDATE_LIST: &str =
     "http://fus01.ps3.update.playstation.net/update/ps3/list/us/ps3-updatelist.txt";
@@ -408,6 +419,20 @@ mod tests {
                 None => failures.push("ps3-fw: no PS3UPDAT.PUP in list".into()),
             },
             Err(e) => failures.push(format!("ps3-fw: {e}")),
+        }
+        for (name, url) in [
+            ("vita-fw", crate::vita::FIRMWARE),
+            ("vita-fonts", crate::vita::FONTS),
+        ] {
+            match super::client()
+                .head(url)
+                .send()
+                .await
+                .and_then(|r| r.error_for_status())
+            {
+                Ok(_) => println!("{name:<12} {url}"),
+                Err(e) => failures.push(format!("{name}: {e}")),
+            }
         }
         match super::resolve_url(&super::xbox_hdd_source()).await {
             Ok(url) => println!("{:<12} {url}", "xbox-hdd"),

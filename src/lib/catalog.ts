@@ -33,6 +33,8 @@ export function installLabel(id: string): string {
   if (id.startsWith("homebrew:")) return homebrew.find((g) => `homebrew:${g.slug}` === id)?.title ?? "Homebrew";
   if (id === "firmware:ps3") return "PS3 firmware (Sony)";
   if (id === "hdd:xbox") return "Xbox HDD imajı";
+  if (id === "firmware:vita") return "PS Vita firmware (Sony)";
+  if (id === "firmware:vita-fonts") return "PS Vita font paketi (Sony)";
   if (id.startsWith("core:")) {
     const core = id.slice(5);
     const users = systems.filter((s) => s.core === core || s.fallback?.core === core).map((s) => s.short);

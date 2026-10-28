@@ -24,6 +24,7 @@ pub fn save_dirs(emulator: &str) -> &'static [&'static str] {
         "rpcs3" => &["dev_hdd0/home/00000001/savedata"],
         "shadps4" => &["user/home"],
         "xenia" => &["content"],
+        "vita3k" => &["portable/fs/ux0/user/00/savedata"],
         // xemu keeps saves inside its HDD image; melonDS writes .sav beside the ROM.
         _ => &[],
     }
