@@ -1,7 +1,7 @@
 // Themes change layout, type and navigation, not just color. Each theme
 // picks a library layout; its look lives in styles.css under [data-theme].
 
-export type LibraryLayout = "grid" | "rail" | "list" | "cartridge";
+export type LibraryLayout = "grid" | "rail" | "list" | "cartridge" | "shelves" | "coverflow";
 
 export interface Theme {
   id: string;
@@ -34,6 +34,24 @@ export const THEMES: Theme[] = [
     name: "Kartuş",
     description: "Kartuş kartlar, piksel yazılar ve CRT tarama çizgileri. Retro ruhu.",
     layout: "cartridge",
+  },
+  {
+    id: "raf",
+    name: "Raf",
+    description: "Her sistem bir raf: raflar arasında yukarı-aşağı, raf içinde sağa-sola.",
+    layout: "shelves",
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    description: "3B kapak akışı, neon ışıklar ve perspektif ızgara. Atari salonu gecesi.",
+    layout: "coverflow",
+  },
+  {
+    id: "kagit",
+    name: "Kâğıt",
+    description: "Siyah-beyaz, daktilo yazısı; kapaklar seçilince renklenir. Fanzin sayfası gibi.",
+    layout: "grid",
   },
 ];
 

@@ -50,6 +50,9 @@ Menu → Theme. Each theme brings its own library layout, type and navigation, n
 | Galeri | Full-screen game art, serif headlines, a cover rail along the bottom |
 | Sade | Light theme: text list with a large preview, fastest for big libraries |
 | Kartuş | Cartridge cards, pixel fonts and CRT scanlines |
+| Raf | A shelf per system; up/down between shelves, left/right along one |
+| Neon | 3D cover flow over a synthwave grid, neon glow |
+| Kâğıt | Monochrome zine: typewriter type, ink borders, covers color in when focused |
 
 ### Console mode and power
 

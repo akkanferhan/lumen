@@ -71,7 +71,11 @@ export function Library({
     const needle = fold(query.trim());
     return needle ? games.filter((g) => fold(g.title).includes(needle)) : [];
   }, [games, query]);
-  const list = searching ? results : (tab?.games ?? []);
+  const baseList = searching ? results : (tab?.games ?? []);
+  // Raf: one shelf per system; the flat list follows shelf order so the
+  // focus index maps onto (shelf, position).
+  const shelves = useMemo(() => (layout === "shelves" ? groupShelves(baseList) : null), [layout, baseList]);
+  const list = shelves ? shelves.flatMap((s) => s.games) : baseList;
   // Big letter shown briefly when jumping with LT/RT.
   const [jumpLetter, setJumpLetter] = useState<string | null>(null);
   useEffect(() => {
@@ -86,12 +90,18 @@ export function Library({
   const tabTrackRef = useRef<HTMLDivElement>(null);
   const measured = useColumns(gridRef);
   // Navigation follows the layout: a rail is one row, a list one column.
-  const columns = layout === "rail" ? Math.max(1, list.length) : layout === "list" ? 1 : measured;
+  const columns =
+    layout === "rail" || layout === "coverflow" ? Math.max(1, list.length) : layout === "list" ? 1 : measured;
 
   useEffect(() => {
-    gridRef.current?.children[index]?.scrollIntoView({
-      block: "nearest",
-      inline: layout === "rail" ? "center" : "nearest",
+    if (layout === "coverflow") return; // positioned, not scrolled
+    const target =
+      layout === "shelves"
+        ? gridRef.current?.querySelector(`[data-index="${index}"]`)
+        : gridRef.current?.children[index];
+    target?.scrollIntoView({
+      block: layout === "shelves" ? "center" : "nearest",
+      inline: layout === "rail" || layout === "shelves" ? "center" : "nearest",
       behavior: "smooth",
     });
   }, [index, tabId, layout]);
@@ -139,7 +149,26 @@ export function Library({
     setJumpLetter(letterAt(i));
   };
 
+  /** Raf navigation: left/right inside a shelf, up/down keeps the column. */
+  const moveShelf = (action: "up" | "down" | "left" | "right") => {
+    if (!shelves) return;
+    const row = shelves.findIndex((s) => index >= s.start && index < s.start + s.games.length);
+    const shelf = shelves[row];
+    if (!shelf) return;
+    const col = index - shelf.start;
+    if (action === "left" && col > 0) move(index - 1);
+    if (action === "right" && col < shelf.games.length - 1) move(index + 1);
+    if (action === "up" || action === "down") {
+      const next = shelves[row + (action === "up" ? -1 : 1)];
+      if (next) move(next.start + Math.min(col, next.games.length - 1));
+    }
+  };
+
   useInput((action) => {
+    if (shelves && (action === "up" || action === "down" || action === "left" || action === "right")) {
+      moveShelf(action);
+      return;
+    }
     switch (action) {
       case "lt":
         jumpGroup(-1);
@@ -256,6 +285,10 @@ export function Library({
         </div>
       ) : layout === "rail" ? (
         <GalleryView list={list} index={index} railRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
+      ) : layout === "shelves" && shelves ? (
+        <ShelvesView shelves={shelves} index={index} scrollRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
+      ) : layout === "coverflow" ? (
+        <CoverflowView list={list} index={index} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
       ) : layout === "list" ? (
         <PlainView list={list} index={index} listRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
       ) : (
@@ -491,5 +524,119 @@ function CartridgeCard({ game, focused, onClick }: { game: Game; focused: boolea
         <div className="cartridge-system">{system?.short}</div>
       </div>
     </button>
+  );
+}
+
+interface Shelf {
+  id: string;
+  label: string;
+  games: Game[];
+  /** Index of the shelf's first game in the flat list. */
+  start: number;
+}
+
+function groupShelves(games: Game[]): Shelf[] {
+  const shelves: Shelf[] = [];
+  let start = 0;
+  for (const system of systems) {
+    const row = games.filter((g) => g.systemId === system.id);
+    if (!row.length) continue;
+    shelves.push({ id: system.id, label: system.name, games: row, start });
+    start += row.length;
+  }
+  return shelves;
+}
+
+/** Raf: a shelf per system, scrolling sideways; shelves stack vertically. */
+function ShelvesView({
+  shelves,
+  index,
+  scrollRef,
+  onPick,
+}: {
+  shelves: Shelf[];
+  index: number;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  onPick: (i: number) => void;
+}) {
+  return (
+    <div className="shelves" ref={scrollRef}>
+      {shelves.map((shelf) => {
+        const active = index >= shelf.start && index < shelf.start + shelf.games.length;
+        return (
+          <section
+            key={shelf.id}
+            className={`shelf${active ? " active" : ""}`}
+            style={{ "--card-accent": systemOf(shelf.id)?.accent } as CSSProperties}
+          >
+            <h3 lang="en">
+              {shelf.label}
+              <span>{shelf.games.length}</span>
+            </h3>
+            <div className="shelf-row">
+              {shelf.games.map((g, i) => {
+                const flat = shelf.start + i;
+                return (
+                  <button
+                    key={g.id}
+                    data-index={flat}
+                    className={`shelf-item${flat === index ? " focused" : ""}`}
+                    onClick={() => onPick(flat)}
+                    tabIndex={-1}
+                  >
+                    <div className="shelf-case">
+                      <Cover game={g} />
+                    </div>
+                    <span className="shelf-title">{g.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Neon: 3D cover flow; only the covers around the focus are drawn. */
+function CoverflowView({ list, index, onPick }: { list: Game[]; index: number; onPick: (i: number) => void }) {
+  const game = list[index];
+  const system = game && systemOf(game.systemId);
+  const WINDOW = 6;
+  const from = Math.max(0, index - WINDOW);
+  const visible = list.slice(from, Math.min(list.length, index + WINDOW + 1));
+
+  return (
+    <div className="flow" style={{ "--card-accent": system?.accent } as CSSProperties}>
+      <div className="flow-floor" />
+      <div className="flow-stage">
+        {visible.map((g, k) => {
+          const i = from + k;
+          const offset = i - index;
+          const side = Math.sign(offset);
+          const distance = Math.abs(offset);
+          const style = {
+            transform:
+              offset === 0
+                ? "translateX(-50%) translateZ(160px)"
+                : `translateX(calc(-50% + ${side * (11 + (distance - 1) * 5.2)}rem)) rotateY(${-side * 58}deg)`,
+            zIndex: 100 - distance,
+            opacity: distance > WINDOW - 1 ? 0 : 1,
+          } as CSSProperties;
+          return (
+            <button key={g.id} className={`flow-card${offset === 0 ? " focused" : ""}`} style={style} onClick={() => onPick(i)} tabIndex={-1}>
+              <Cover game={g} />
+            </button>
+          );
+        })}
+      </div>
+      {game && (
+        <div className="flow-caption" key={game.id}>
+          <span lang="en">{system?.name}</span>
+          <h1>{game.title}</h1>
+        </div>
+      )}
+    </div>
   );
 }
