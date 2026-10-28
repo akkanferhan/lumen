@@ -142,6 +142,7 @@ mod tests {
         ("cemu", "cemu-2.6-windows-x64.zip"),
         ("rpcs3", "rpcs3-v0.0.43-20412-744126ca_win64_msvc.7z"),
         ("shadps4", "shadps4-win64-sdl-2026-0.20.0.zip"),
+        ("sharpemu", "sharpemu-0.0.6-mono-win-x64.zip"),
         ("xemu", "xemu-win-x86_64-release.zip"),
         ("xenia", "xenia_canary_windows_.zip"),
         ("vita3k", "windows-latest.zip"),
@@ -155,6 +156,8 @@ mod tests {
         ("azahar", "azahar-libretro-windows-x86_64-2126.2.zip"),
         ("rpcs3", "rpcs3-v0.0.43-20412-744126ca_win64_msvc.7z.sha256"),
         ("shadps4", "shadps4-linux-sdl-0.20.0.zip"),
+        ("sharpemu", "sharpemu-0.0.6-mono-linux-x64.tar.gz"),
+        ("sharpemu", "sharpemu-0.0.6-mono-osx-x64.tar.gz"),
         ("xemu", "xemu-win-aarch64-release.zip"),
         ("vita3k", "windows-arm64-latest.zip"),
     ];

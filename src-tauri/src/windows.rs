@@ -14,7 +14,54 @@ pub fn request_close(pid: u32) -> usize {
     windows.len()
 }
 
-/// Visible top-level windows owned by `pid`.
+/// `pid` and every process it started, directly or not. SharpEmu, for one,
+/// runs the game in a child process that owns the window.
+#[cfg(windows)]
+fn process_tree(pid: u32) -> Vec<u32> {
+    use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+        TH32CS_SNAPPROCESS,
+    };
+
+    let mut pairs = Vec::new();
+    // SAFETY: the snapshot handle is checked and closed; `entry.dwSize` is set
+    // as Process32FirstW requires.
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snapshot == INVALID_HANDLE_VALUE {
+            return vec![pid];
+        }
+        let mut entry: PROCESSENTRY32W = std::mem::zeroed();
+        entry.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+        let mut more = Process32FirstW(snapshot, &mut entry) != 0;
+        while more {
+            pairs.push((entry.th32ProcessID, entry.th32ParentProcessID));
+            more = Process32NextW(snapshot, &mut entry) != 0;
+        }
+        CloseHandle(snapshot);
+    }
+    descendants(pid, &pairs)
+}
+
+/// `root` followed by its descendants, from `(pid, parent pid)` pairs.
+#[cfg(any(windows, test))]
+fn descendants(root: u32, pairs: &[(u32, u32)]) -> Vec<u32> {
+    let mut tree = vec![root];
+    let mut i = 0;
+    while i < tree.len() {
+        let parent = tree[i];
+        for &(pid, ppid) in pairs {
+            if ppid == parent && pid != 0 && !tree.contains(&pid) {
+                tree.push(pid);
+            }
+        }
+        i += 1;
+    }
+    tree
+}
+
+/// Visible top-level windows owned by `pid` or one of its child processes.
 #[cfg(windows)]
 fn process_windows(pid: u32) -> Vec<windows_sys::Win32::Foundation::HWND> {
     use windows_sys::Win32::Foundation::{HWND, LPARAM};
@@ -23,7 +70,7 @@ fn process_windows(pid: u32) -> Vec<windows_sys::Win32::Foundation::HWND> {
     };
 
     struct Search {
-        pid: u32,
+        pids: Vec<u32>,
         windows: Vec<HWND>,
     }
 
@@ -31,14 +78,14 @@ fn process_windows(pid: u32) -> Vec<windows_sys::Win32::Foundation::HWND> {
         let search = &mut *(lparam as *mut Search);
         let mut owner = 0u32;
         GetWindowThreadProcessId(hwnd, &mut owner);
-        if owner == search.pid && IsWindowVisible(hwnd) != 0 {
+        if search.pids.contains(&owner) && IsWindowVisible(hwnd) != 0 {
             search.windows.push(hwnd);
         }
         1 // keep enumerating
     }
 
     let mut search = Search {
-        pid,
+        pids: process_tree(pid),
         windows: Vec::new(),
     };
     // SAFETY: `visit` only runs during this call and `search` outlives it.
@@ -95,9 +142,10 @@ pub fn focus_process(_pid: u32) -> bool {
     false
 }
 
-/// Freezes (`suspend = true`) or thaws every thread of `pid` via ntdll's
-/// NtSuspendProcess / NtResumeProcess, the calls debuggers use. Used as a
-/// universal pause for emulators that can't pause on focus loss.
+/// Freezes (`suspend = true`) or thaws every thread of `pid` and its child
+/// processes via ntdll's NtSuspendProcess / NtResumeProcess, the calls
+/// debuggers use. Used as a universal pause for emulators that can't pause on
+/// focus loss. Returns whether `pid` itself was handled.
 #[cfg(windows)]
 pub fn set_process_suspended(pid: u32, suspend: bool) -> bool {
     use windows_sys::Win32::Foundation::CloseHandle;
@@ -124,17 +172,35 @@ pub fn set_process_suspended(pid: u32, suspend: bool) -> bool {
             return false;
         };
         let call: NtProcessCall = std::mem::transmute(proc_addr);
-        let process = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
-        if process.is_null() {
-            return false;
+        let apply = |pid: u32| {
+            let process = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
+            if process.is_null() {
+                return false;
+            }
+            let status = call(process);
+            CloseHandle(process);
+            status >= 0
+        };
+        let root = apply(pid);
+        for child in process_tree(pid).into_iter().skip(1) {
+            apply(child);
         }
-        let status = call(process);
-        CloseHandle(process);
-        status >= 0
+        root
     }
 }
 
 #[cfg(not(windows))]
 pub fn set_process_suspended(_pid: u32, _suspend: bool) -> bool {
     false
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn descendants_follow_the_whole_tree() {
+        // 10 → 11 → 12, 10 → 13; 20 is unrelated; 0 is the idle process.
+        let pairs = [(11, 10), (12, 11), (13, 10), (20, 1), (0, 0), (10, 10)];
+        assert_eq!(super::descendants(10, &pairs), vec![10, 11, 13, 12]);
+        assert_eq!(super::descendants(20, &pairs), vec![20]);
+    }
 }

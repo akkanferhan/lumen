@@ -190,14 +190,34 @@ fn make_game(system: &System, path: &Path) -> Game {
     }
 }
 
-/// Title from a PS3 (`PS3_GAME/PARAM.SFO`) or PS4 (`sce_sys/param.sfo`) folder dump.
+/// Title from a PS3 (`PS3_GAME/PARAM.SFO`), PS4 (`sce_sys/param.sfo`) or
+/// PS5 (`sce_sys/param.json`) folder dump.
 fn folder_title(dir: &Path) -> Option<String> {
     ["PS3_GAME/PARAM.SFO", "sce_sys/param.sfo"]
         .iter()
         .find_map(|rel| fs::read(dir.join(rel)).ok())
         .and_then(|bytes| sfo_string(&bytes, "TITLE"))
+        .or_else(|| {
+            fs::read(dir.join("sce_sys/param.json"))
+                .ok()
+                .and_then(|bytes| param_json_title(&bytes))
+        })
         .map(|t| t.split_whitespace().collect::<Vec<_>>().join(" "))
         .filter(|t| !t.is_empty())
+}
+
+/// `localizedParameters.<defaultLanguage>.titleName` from a PS5 `param.json`,
+/// falling back to any language that has a title.
+fn param_json_title(data: &[u8]) -> Option<String> {
+    let root: serde_json::Value = serde_json::from_slice(data).ok()?;
+    let localized = root.get("localizedParameters")?.as_object()?;
+    let title = |lang: &serde_json::Value| lang.get("titleName")?.as_str().map(str::to_owned);
+    localized
+        .get("defaultLanguage")
+        .and_then(|d| d.as_str())
+        .and_then(|d| localized.get(d))
+        .and_then(title)
+        .or_else(|| localized.values().find_map(title))
 }
 
 /// Reads a UTF-8 value from a PlayStation SFO (PSF) key/value file.
@@ -342,6 +362,16 @@ mod tests {
         );
         assert_eq!(super::sfo_string(&sfo, "TITLE_ID"), None);
         assert_eq!(super::sfo_string(b"garbage", "TITLE"), None);
+    }
+
+    #[test]
+    fn reads_ps5_param_json_title() {
+        let json = br#"{"localizedParameters": {"defaultLanguage": "en-US",
+            "ja-JP": {"titleName": "Japanese"}, "en-US": {"titleName": "Demo  Game"}}}"#;
+        assert_eq!(super::param_json_title(json).as_deref(), Some("Demo  Game"));
+        let other = br#"{"localizedParameters": {"fr-FR": {"titleName": "Jeu"}}}"#;
+        assert_eq!(super::param_json_title(other).as_deref(), Some("Jeu"));
+        assert_eq!(super::param_json_title(b"not json"), None);
     }
 
     #[test]

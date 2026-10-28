@@ -85,11 +85,13 @@ Also **Işık** (the default cover grid), **Raf** (a shelf per system) and **Kâ
 | Sega | Master System, Mega Drive, Saturn, Dreamcast | RetroArch |
 | Sony | PlayStation · PS2 · PSP | DuckStation · PCSX2 · PPSSPP |
 | | PS3 · PS4 (experimental) · PS Vita | RPCS3 · shadPS4 · Vita3K |
+| | PS5 (experimental) | SharpEmu |
 | Microsoft | Xbox · Xbox 360 | xemu · Xenia Canary |
 | Arcade | FinalBurn Neo | RetroArch |
 | PC | Steam, Epic Games, Xbox app | their own launchers |
 
-There is no usable PS5 emulator, so PS5 isn't supported.
+PS5 runs on SharpEmu, which is in early development: expect most games not to boot yet.
+PS4 and PS5 games are installed folders (the one that holds `sce_sys/` and `eboot.bin`).
 
 ## Games and BIOS files
 
@@ -106,7 +108,7 @@ What it provides on its own:
 
 ```
 <game folder>/
-├─ snes/  ps2/  gc/ ...   ← games, one folder per system
+├─ snes/  ps2/  ps5/ ...  ← games, one folder per system
 └─ bios/
    └─ ps1/  ps2/  ps3/  ps4/  xbox/  dc/
 ```
@@ -124,7 +126,7 @@ SmartScreen asks for confirmation (*More info* → *Run anyway*).
   ASUS ACPI) under a React + TypeScript interface.
 - **Emulator presets** are re-applied before every launch. Emulators keep their own state in their
   config files, so Lumen only sets the keys it owns (read–merge–write for INI, TOML, YAML and JSON);
-  Xenia gets its settings as command-line flags. Every key was checked against the emulator's source.
+  Xenia and SharpEmu get their settings as command-line flags. Every key was checked against the emulator's source.
 - **Downloads** come from official releases only; a weekly CI job checks every source still resolves.
 
 ## Development
