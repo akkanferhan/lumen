@@ -40,14 +40,10 @@ pub fn watch(app: AppHandle) {
             return 0;
         }
         match kind {
-            PBT_APMSUSPEND => {
-                let _ = app.emit(crate::input::QUICK_MENU_EVENT, ());
-                crate::launcher::focus_lumen(app, true);
-            }
+            PBT_APMSUSPEND => crate::launcher::open_quick_menu(app),
             PBT_APMRESUMEAUTOMATIC | PBT_APMRESUMESUSPEND => {
-                let _ = app.emit(crate::input::QUICK_MENU_EVENT, ());
+                crate::launcher::open_quick_menu(app);
                 let _ = app.emit(RESUMED_EVENT, ());
-                crate::launcher::focus_lumen(app, true);
             }
             _ => {}
         }

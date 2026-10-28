@@ -5,7 +5,7 @@
 use crate::state::Running;
 use gilrs::{Button, Gilrs};
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 /// Holding the combo this long saves and quits instead of opening the menu.
 const HOLD: Duration = Duration::from_millis(800);
@@ -39,8 +39,7 @@ pub fn spawn(app: AppHandle, running: Running) {
                 // Released before the hold fired: a tap.
                 (false, Some((_, false))) => {
                     if in_game {
-                        let _ = app.emit(QUICK_MENU_EVENT, ());
-                        crate::launcher::focus_lumen(&app, true);
+                        crate::launcher::open_quick_menu(&app);
                     }
                     held = None;
                 }

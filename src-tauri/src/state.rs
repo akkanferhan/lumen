@@ -68,6 +68,11 @@ pub struct RunningGame {
     pub stop: Option<oneshot::Sender<()>>,
     /// Emulator process, for handing focus back after the quick menu.
     pub pid: Option<u32>,
+    /// Emulator id, to pick how the quick menu pauses it.
+    pub emulator: String,
+    /// The process is frozen by Lumen (quick menu on an emulator that can't
+    /// pause on focus loss); must be thawed before resuming or closing.
+    pub suspended: bool,
 }
 
 pub type Running = Arc<Mutex<Option<RunningGame>>>;

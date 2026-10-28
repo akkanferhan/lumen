@@ -94,3 +94,47 @@ pub fn focus_process(pid: u32) -> bool {
 pub fn focus_process(_pid: u32) -> bool {
     false
 }
+
+/// Freezes (`suspend = true`) or thaws every thread of `pid` via ntdll's
+/// NtSuspendProcess / NtResumeProcess, the calls debuggers use. Used as a
+/// universal pause for emulators that can't pause on focus loss.
+#[cfg(windows)]
+pub fn set_process_suspended(pid: u32, suspend: bool) -> bool {
+    use windows_sys::Win32::Foundation::CloseHandle;
+    use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress};
+    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SUSPEND_RESUME};
+
+    type NtProcessCall =
+        unsafe extern "system" fn(process: windows_sys::Win32::Foundation::HANDLE) -> i32;
+    let ntdll: Vec<u16> = "ntdll.dll".encode_utf16().chain(Some(0)).collect();
+    let name: &[u8] = if suspend {
+        b"NtSuspendProcess\0"
+    } else {
+        b"NtResumeProcess\0"
+    };
+
+    // SAFETY: ntdll is always loaded; the looked-up export has the
+    // NTSTATUS(HANDLE) signature; the handle is closed before returning.
+    unsafe {
+        let module = GetModuleHandleW(ntdll.as_ptr());
+        if module.is_null() {
+            return false;
+        }
+        let Some(proc_addr) = GetProcAddress(module, name.as_ptr()) else {
+            return false;
+        };
+        let call: NtProcessCall = std::mem::transmute(proc_addr);
+        let process = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
+        if process.is_null() {
+            return false;
+        }
+        let status = call(process);
+        CloseHandle(process);
+        status >= 0
+    }
+}
+
+#[cfg(not(windows))]
+pub fn set_process_suspended(_pid: u32, _suspend: bool) -> bool {
+    false
+}
