@@ -23,6 +23,8 @@ pub struct Settings {
     pub graphics: TierSetting,
     /// ASUS power mode while playing.
     pub power: PowerSetting,
+    /// Save backups (on by default).
+    pub backup: crate::backup::BackupSettings,
 }
 
 impl Default for Settings {
@@ -32,6 +34,7 @@ impl Default for Settings {
             sounds: true,
             graphics: TierSetting::Auto,
             power: PowerSetting::Auto,
+            backup: crate::backup::BackupSettings::enabled_by_default(),
         }
     }
 }

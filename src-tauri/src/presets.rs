@@ -373,6 +373,7 @@ const RETROARCH_FRESH: &str = "lumen-fresh.cfg";
 
 fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
     let on = |v: bool| if v { "true" } else { "false" }.to_string();
+    let path = |p: std::path::PathBuf| p.to_string_lossy().into_owned();
     set_cfg(
         &exe_dir.join(RETROARCH_OVERRIDES),
         &[
@@ -394,6 +395,10 @@ fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             // L3 + R3 opens RetroArch's menu; quitting is Lumen's Select + Start.
             ("input_menu_toggle_gamepad_combo", "2".into()),
             ("input_quit_gamepad_combo", "0".into()),
+            // Saves and states in fixed folders next to RetroArch (not beside the
+            // ROMs), so resume detection and backups know where to look.
+            ("savefile_directory", path(exe_dir.join("saves"))),
+            ("savestate_directory", path(exe_dir.join("states"))),
             // Resume where you left off.
             ("savestate_auto_save", on(true)),
             ("savestate_auto_load", on(true)),

@@ -125,6 +125,8 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
 
     let app = app.clone();
     let game_id = game.id.clone();
+    let emu_id = emu.id.clone();
+    let emu_dir = exe_dir.to_path_buf();
     tauri::async_runtime::spawn(async move {
         let started = Instant::now();
         tokio::select! {
@@ -152,6 +154,25 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         let _ = state.save_user();
         if power_changed {
             crate::power::set(crate::power::PowerMode::Performance);
+        }
+
+        // Mirror this emulator's saves right after the session.
+        let backup = state.settings.lock().unwrap().backup.clone();
+        if backup.enabled {
+            let (emu_id, dir, data, target) = (
+                emu_id.clone(),
+                emu_dir.clone(),
+                state.dirs.data.clone(),
+                backup.target(),
+            );
+            let done = tauri::async_runtime::spawn_blocking(move || {
+                crate::backup::backup_lumen(&data, &target)?;
+                crate::backup::backup_emulator(&emu_id, &dir, &target)
+            })
+            .await;
+            if matches!(done, Ok(Ok(_))) {
+                crate::commands::mark_backed_up(&state);
+            }
         }
 
         focus_lumen(&app, false);
