@@ -1286,6 +1286,75 @@ button {
   }
 }
 
+/* ---------- Import ---------- */
+
+.import-list {
+  max-width: 52rem;
+}
+
+.import-row .import-check {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line);
+  color: var(--success);
+  font-weight: 700;
+}
+
+.import-row.skipped .menu-item-title {
+  color: var(--text-faint);
+}
+
+.import-system {
+  min-width: 3.4rem;
+  text-align: center;
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--card-accent, var(--line)) 60%, transparent);
+  background: color-mix(in srgb, var(--card-accent, transparent) 18%, transparent);
+}
+
+.import-row.skipped .import-system {
+  color: var(--text-faint);
+  background: none;
+}
+
+.guide-item {
+  align-items: flex-start;
+}
+
+.guide-how {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.guide-item .pill {
+  flex: none;
+  max-width: 13rem;
+  white-space: normal;
+  text-align: right;
+}
+
+.import-status {
+  color: var(--text-dim);
+  padding: 1rem 0;
+}
+
+.import-done h3 {
+  margin: 0.4rem 0 0.8rem;
+  font-size: 1.5rem;
+}
+
+.import-done p,
+.import-done li {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
 /* ---------- Toasts ---------- */
 
 .toasts {

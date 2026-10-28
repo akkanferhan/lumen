@@ -108,7 +108,25 @@ export interface Game {
   playSeconds: number;
 }
 
-export type InstallStage = "downloading" | "extracting" | "configuring" | "done" | "error";
+export type InstallStage = "downloading" | "extracting" | "configuring" | "copying" | "done" | "error";
+
+/** A game found in a folder the user wants to import. */
+export interface ImportCandidate {
+  path: string;
+  name: string;
+  /** Detected system; null when the user has to pick one of `choices`. */
+  systemId: string | null;
+  choices: string[];
+  size: number;
+}
+
+export interface ImportReport {
+  imported: number;
+  skipped: number;
+  failed: string[];
+}
+
+export type ImportMode = "copy" | "move";
 
 export interface InstallProgress {
   /** Emulator id, or `core:<name>` for libretro cores. */

@@ -11,6 +11,8 @@ import type {
   AppUpdate,
   Game,
   GraphicsSetting,
+  ImportMode,
+  ImportReport,
   InstallProgress,
   Overview,
   PowerSetting,
@@ -281,6 +283,22 @@ export const actions = {
     } catch (e) {
       notify(errorText(e), "error", 6000);
       return false;
+    }
+  },
+
+  /** Copies or moves the user's own dumps into the ROM folder. */
+  async importGames(
+    items: { path: string; systemId: string }[],
+    mode: ImportMode,
+  ): Promise<ImportReport | null> {
+    try {
+      const { report, games } = await api.importGames(items, mode);
+      set({ games });
+      await refreshOverview();
+      return report;
+    } catch (e) {
+      notify(errorText(e), "error", 6000);
+      return null;
     }
   },
 

@@ -6,6 +6,7 @@ const STAGE: Record<InstallStage, string> = {
   downloading: "İndiriliyor",
   extracting: "Açılıyor",
   configuring: "Ayarlanıyor",
+  copying: "Kopyalanıyor",
   done: "Hazır",
   error: "Hata",
 };
@@ -23,10 +24,15 @@ export function Toasts({ hideInstalls = false }: { hideInstalls?: boolean }) {
               <span>{installLabel(p.id)}</span>
               <span>
                 {STAGE[p.stage]}
-                {p.stage === "downloading" && p.progress > 0 ? ` · %${Math.round(p.progress * 100)}` : ""}
+                {(p.stage === "downloading" || p.stage === "copying") && p.progress > 0
+                  ? ` · %${Math.round(p.progress * 100)}`
+                  : ""}
               </span>
             </div>
-            <ProgressBar value={p.stage === "downloading" ? p.progress : 1} indeterminate={p.stage === "downloading" && p.progress === 0} />
+            <ProgressBar
+              value={p.stage === "downloading" || p.stage === "copying" ? p.progress : 1}
+              indeterminate={(p.stage === "downloading" || p.stage === "copying") && p.progress === 0}
+            />
           </div>
         ))}
       {notices.map((n) => (

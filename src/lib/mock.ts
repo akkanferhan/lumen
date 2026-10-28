@@ -232,6 +232,24 @@ export const mockApi: Api = {
     homebrewInstalled.add(slug);
     return games();
   },
+  importScan: async () => {
+    await sleep(500);
+    return [
+      { path: "E:\\Dumps\\Chrono Trigger (USA).sfc", name: "Chrono Trigger (USA).sfc", systemId: "snes", choices: ["snes"], size: 4_194_304 },
+      { path: "E:\\Dumps\\Crash Bandicoot (USA).cue", name: "Crash Bandicoot (USA).cue", systemId: "ps1", choices: ["saturn", "ps1"], size: 512_000_000 },
+      { path: "E:\\Dumps\\Okami (USA).iso", name: "Okami (USA).iso", systemId: "ps2", choices: ["gc", "wii", "ps1", "ps2", "psp", "ps3", "xbox", "x360"], size: 4_300_000_000 },
+      { path: "E:\\Dumps\\Shenmue (Disc 1).chd", name: "Shenmue (Disc 1).chd", systemId: null, choices: ["saturn", "dreamcast", "ps1", "ps2", "psp"], size: 1_100_000_000 },
+      { path: "E:\\Dumps\\CUSA00552", name: "CUSA00552", systemId: "ps4", choices: ["ps4"], size: 38_000_000_000 },
+    ];
+  },
+  importGames: async (items) => {
+    for (let p = 0; p <= 1; p += 0.1) {
+      progressListeners.forEach((cb) => cb({ id: "import", stage: "copying", progress: p, message: null }));
+      await sleep(150);
+    }
+    progressListeners.forEach((cb) => cb({ id: "import", stage: "done", progress: 1, message: null }));
+    return { report: { imported: items.length, skipped: 0, failed: [] }, games: games() };
+  },
   gameInfo: async (gameId) => {
     const game = games().find((g) => g.id === gameId);
     return game ? (SAMPLE_INFO[game.title] ?? null) : null;

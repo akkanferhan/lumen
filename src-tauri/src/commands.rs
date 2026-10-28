@@ -606,6 +606,60 @@ pub async fn install_homebrew(app: AppHandle, slug: String) -> CmdResult<Vec<Gam
     scan_library(app.clone()).await
 }
 
+/// Lists the games in a folder the user picked (USB stick, Downloads) with
+/// their detected systems, ready for `import_games`.
+#[tauri::command]
+pub async fn import_scan(
+    app: AppHandle,
+    path: PathBuf,
+) -> CmdResult<Vec<crate::importer::Candidate>> {
+    let state = app.state::<AppState>();
+    let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
+    if path.starts_with(&root) {
+        return Err("Bu klasör zaten Lumen'in oyun klasöründe".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || crate::importer::scan(&path))
+        .await
+        .map_err(err)
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportResult {
+    report: crate::importer::Report,
+    games: Vec<GameView>,
+}
+
+/// Copies or moves the chosen games into their system folders and rescans.
+#[tauri::command]
+pub async fn import_games(
+    app: AppHandle,
+    items: Vec<crate::importer::Item>,
+    mode: crate::importer::Mode,
+) -> CmdResult<ImportResult> {
+    let state = app.state::<AppState>();
+    let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
+    const ID: &str = "import";
+    installer::emit(&app, ID, "copying", 0.0, None);
+    let progress_app = app.clone();
+    let report = tauri::async_runtime::spawn_blocking(move || {
+        let mut last = 0.0;
+        crate::importer::import(&items, &root, mode, |p| {
+            // A few hundred events per import at most.
+            if p - last >= 0.005 || p >= 1.0 {
+                last = p;
+                installer::emit(&progress_app, ID, "copying", p, None);
+            }
+        })
+    })
+    .await
+    .map_err(err)?;
+    let summary = format!("{} oyun eklendi", report.imported);
+    installer::emit(&app, ID, "done", 1.0, Some(summary));
+    let games = scan_library(app.clone()).await?;
+    Ok(ImportResult { report, games })
+}
+
 /// Backs up every installed emulator's saves and Lumen's play data now.
 #[tauri::command]
 pub async fn backup_now(app: AppHandle) -> CmdResult<crate::backup::Report> {
