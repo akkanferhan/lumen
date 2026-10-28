@@ -1033,6 +1033,21 @@ button {
   transform: scale(1.08);
 }
 
+.text-title {
+  margin: 0 0 0.9rem;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+.key-row.special.four {
+  grid-template-columns: 1fr 1fr 1fr 1.6fr;
+}
+
+.kb-key.on {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
 .search-hints {
   display: flex;
   justify-content: flex-end;

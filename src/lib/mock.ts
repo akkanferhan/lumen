@@ -91,6 +91,8 @@ const homebrewInstalled = new Set<string>();
 let power: PowerSetting = "auto";
 let autostart = false;
 let backup: BackupSettings = { enabled: true, dir: null, lastBackup: null };
+let raUser: { username: string; score: number | null } | null = null;
+let raHardcore = false;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -128,7 +130,8 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore },
+    raUser,
     backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
     autostart,
@@ -247,6 +250,19 @@ export const mockApi: Api = {
   updateEmulator: async (id) => {
     store.installed = store.installed.filter((x) => x !== id);
     await simulateInstall(id);
+  },
+  raLogin: async (username, password) => {
+    await sleep(900);
+    if (password.length < 4) throw "Kullanıcı adı veya şifre hatalı";
+    raUser = { username, score: 1250 };
+    return raUser;
+  },
+  raLogout: async () => {
+    raUser = null;
+  },
+  raRefresh: async () => raUser,
+  setRaHardcore: async (enabled) => {
+    raHardcore = enabled;
   },
   backupNow: async () => {
     await sleep(800);

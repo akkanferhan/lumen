@@ -297,6 +297,38 @@ export const actions = {
     if (pending.length) notify("Emülatörler güncellendi", "success");
   },
 
+  async raLogin(username: string, password: string): Promise<boolean> {
+    try {
+      const user = await api.raLogin(username, password);
+      notify(`RetroAchievements: ${user.username} olarak bağlandın`, "success");
+      await refreshOverview();
+      return true;
+    } catch (e) {
+      sfx.error();
+      notify(errorText(e), "error", 6000);
+      return false;
+    }
+  },
+
+  async raLogout() {
+    await api.raLogout();
+    await refreshOverview();
+  },
+
+  async raRefresh() {
+    try {
+      await api.raRefresh();
+    } catch (e) {
+      notify(errorText(e), "error", 7000);
+    }
+    await refreshOverview();
+  },
+
+  async setRaHardcore(enabled: boolean) {
+    await api.setRaHardcore(enabled);
+    await refreshOverview();
+  },
+
   async backupNow() {
     try {
       const report = await api.backupNow();

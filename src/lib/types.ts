@@ -48,6 +48,12 @@ export interface Settings {
   sounds: boolean;
   graphics: GraphicsSetting;
   power: PowerSetting;
+  raHardcore: boolean;
+}
+
+export interface RaUser {
+  username: string;
+  score: number | null;
 }
 
 export interface Device {
@@ -85,6 +91,7 @@ export interface Overview {
   autostart: boolean;
   /** Where backups go (chosen folder or the OneDrive/Documents default). */
   backupDir: string;
+  raUser: RaUser | null;
   platformSupported: boolean;
 }
 
