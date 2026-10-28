@@ -749,3 +749,75 @@ pub fn set_theme(state: State<'_, AppState>, theme: String) -> CmdResult<()> {
     state.settings.lock().unwrap().theme = theme;
     state.save_settings().map_err(err)
 }
+
+fn find_game(state: &AppState, game_id: &str) -> CmdResult<Game> {
+    state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|g| g.id == game_id)
+        .cloned()
+        .ok_or_else(|| "Oyun bulunamadı".into())
+}
+
+/// What removing a game will do (and how much space it frees).
+#[tauri::command]
+pub async fn uninstall_plan(app: AppHandle, game_id: String) -> CmdResult<crate::uninstall::Plan> {
+    let game = find_game(&app.state::<AppState>(), &game_id)?;
+    tauri::async_runtime::spawn_blocking(move || crate::uninstall::plan(&game))
+        .await
+        .map_err(err)
+}
+
+/// Removes a game. Emulated games go to the Recycle Bin (saves stay);
+/// store games are handed to their store. Returns the updated library.
+#[tauri::command]
+pub async fn uninstall_game(app: AppHandle, game_id: String) -> CmdResult<Vec<GameView>> {
+    let state = app.state::<AppState>();
+    if state
+        .running
+        .lock()
+        .unwrap()
+        .as_ref()
+        .is_some_and(|g| g.game_id == game_id)
+    {
+        return Err("Oyun açıkken kaldırılamaz".into());
+    }
+    let game = find_game(&state, &game_id)?;
+    let gone = tauri::async_runtime::spawn_blocking(move || crate::uninstall::uninstall(&game))
+        .await
+        .map_err(err)?
+        .map_err(err)?;
+    if gone {
+        state.library.lock().unwrap().retain(|g| g.id != game_id);
+        state.save_library().map_err(err)?;
+    }
+    Ok(library_view(&state))
+}
+
+/// Removes an installed emulator. Its folder holds portable saves, so they are
+/// backed up first (when backups are on) and the folder goes to the Recycle Bin.
+#[tauri::command]
+pub async fn uninstall_emulator(app: AppHandle, id: String) -> CmdResult<()> {
+    let state = app.state::<AppState>();
+    if state.running.lock().unwrap().is_some() {
+        return Err("Oyun açıkken emülatör kaldırılamaz".into());
+    }
+    let emu = manifest::emulator(&id).ok_or("Bilinmeyen emülatör")?;
+    let dir = state.dirs.emulators.join(&emu.id);
+    if !dir.exists() {
+        return Ok(());
+    }
+    let backup = state.settings.lock().unwrap().backup.clone();
+    let emu_id = emu.id.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        if backup.enabled {
+            crate::backup::backup_emulator(&emu_id, &dir, &backup.target())?;
+        }
+        trash::delete(&dir).map_err(|e| anyhow::anyhow!("Geri Dönüşüm Kutusu'na taşınamadı: {e}"))
+    })
+    .await
+    .map_err(err)?
+    .map_err(err)
+}

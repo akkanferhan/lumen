@@ -7,7 +7,15 @@ import { installLabel, isPcSystem, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
 import { formatBytes } from "./format";
 import { applyTheme } from "./themes";
-import type { AppUpdate, Game, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type {
+  AppUpdate,
+  Game,
+  GraphicsSetting,
+  InstallProgress,
+  Overview,
+  PowerSetting,
+  UninstallPlan,
+} from "./types";
 
 export interface Notice {
   id: number;
@@ -264,6 +272,42 @@ export const actions = {
       notify(errorText(e), "error", 6000);
       return false;
     }
+  },
+
+  /** Removes a game; true when it has left the library. */
+  async uninstallGame(game: Game, method: UninstallPlan["method"]): Promise<boolean> {
+    try {
+      const games = await api.uninstallGame(game.id);
+      set({ games });
+      await refreshOverview();
+      const gone = !games.some((g) => g.id === game.id);
+      notify(
+        method === "recycleBin"
+          ? `${game.title} Geri Dönüşüm Kutusu'na taşındı · kayıtların duruyor`
+          : method === "windowsPackage"
+            ? `${game.title} kaldırıldı`
+            : method === "storeDialog"
+              ? `${game.title} için Steam'de kaldırmayı onayla, ardından kütüphaneyi yenile`
+              : `Epic Games açıldı: ${game.title} oyununu oradan kaldır, ardından kütüphaneyi yenile`,
+        gone ? "success" : "info",
+        7000,
+      );
+      return gone;
+    } catch (e) {
+      sfx.error();
+      notify(errorText(e), "error", 7000);
+      return false;
+    }
+  },
+
+  async uninstallEmulator(id: string, name: string) {
+    try {
+      await api.uninstallEmulator(id);
+      notify(`${name} kaldırıldı · kayıtları yedeklendi ve Geri Dönüşüm Kutusu'nda`, "success", 7000);
+    } catch (e) {
+      notify(errorText(e), "error", 7000);
+    }
+    await refreshOverview();
   },
 
   async checkUpdates() {

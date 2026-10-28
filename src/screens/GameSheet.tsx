@@ -8,7 +8,8 @@ import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
-import type { Game, GameInfo } from "../lib/types";
+import type { Game, GameInfo, UninstallPlan } from "../lib/types";
+import { formatBytes } from "../lib/format";
 
 export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => void }) {
   // Read live so favorite / playtime updates show immediately.
@@ -50,7 +51,34 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     : undefined;
   const canPlay = missing.length === 0 && !busy;
 
-  const buttons = resumable ? (["play", "fresh", "fav"] as const) : (["play", "fav"] as const);
+  const buttons = resumable
+    ? (["play", "fresh", "fav", "remove"] as const)
+    : (["play", "fav", "remove"] as const);
+
+  // Removing needs a second press; the first shows what will happen.
+  const [plan, setPlan] = useState<UninstallPlan | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  useEffect(() => {
+    api.uninstallPlan(gameId).then(setPlan).catch(() => {});
+  }, [gameId]);
+  useEffect(() => setConfirmRemove(false), [focus]);
+
+  const remove = async () => {
+    if (!game || !plan || removing) return;
+    if (!confirmRemove) {
+      sfx.error();
+      rumble(0.3, 40);
+      setConfirmRemove(true);
+      return;
+    }
+    setRemoving(true);
+    sfx.back();
+    const gone = await actions.uninstallGame(game, plan.method);
+    setRemoving(false);
+    setConfirmRemove(false);
+    if (gone) onClose();
+  };
 
   const play = async (g: Game, fresh = false) => {
     if (!canPlay) {
@@ -78,6 +106,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
       case "a":
         if (buttons[focus] === "play") play(game);
         else if (buttons[focus] === "fresh") play(game, true);
+        else if (buttons[focus] === "remove") remove();
         else {
           sfx.confirm();
           actions.toggleFavorite(game.id);
@@ -204,7 +233,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             >
               {game.favorite ? "★ Favorilerde" : "☆ Favorilere ekle"}
             </button>
+            <button
+              className={`btn danger${focusOf("remove") ? " focused" : ""}${confirmRemove ? " armed" : ""}`}
+              onClick={remove}
+              disabled={removing || !plan}
+            >
+              {removing ? "Kaldırılıyor…" : confirmRemove ? "Emin misin? Tekrar bas" : "Kaldır"}
+            </button>
           </div>
+          {confirmRemove && plan && <p className="remove-note">{removeNote(plan)}</p>}
 
           <Screenshots game={game} />
         </div>
@@ -244,4 +281,17 @@ function Screenshots({ game }: { game: Game }) {
       ))}
     </div>
   );
+}
+
+function removeNote(plan: UninstallPlan): string {
+  switch (plan.method) {
+    case "recycleBin":
+      return `${plan.files} dosya${plan.bytes ? ` (${formatBytes(plan.bytes)})` : ""} Geri Dönüşüm Kutusu'na taşınacak. Kayıtların silinmez.`;
+    case "storeDialog":
+      return "Steam'in kaldırma penceresi açılacak; onay Steam'den istenir.";
+    case "windowsPackage":
+      return "Oyun Windows'tan kaldırılacak. Bulut kayıtların Xbox hesabında kalır.";
+    case "openStore":
+      return "Epic Games açılacak; kaldırmayı oradan yapabilirsin.";
+  }
 }
