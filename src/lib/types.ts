@@ -179,6 +179,21 @@ export interface EmulatorUpdate {
   updateAvailable: boolean;
 }
 
+export interface Achievement {
+  id: number;
+  title: string;
+  description: string;
+  points: number;
+  /** Badge image (the locked version while not unlocked). */
+  badge: string;
+  unlocked: boolean;
+}
+
+export interface AchievementProgress {
+  gameId: number;
+  achievements: Achievement[];
+}
+
 /** A save-state slot of the running game (RetroArch systems). */
 export interface StateSlot {
   slot: number;

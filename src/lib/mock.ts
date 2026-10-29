@@ -257,6 +257,20 @@ export const mockApi: Api = {
     progressListeners.forEach((cb) => cb({ id: "import", stage: "done", progress: 1, message: null }));
     return { report: { imported: items.length, skipped: 0, failed: [] }, games: games() };
   },
+  gameAchievements: async () =>
+    raUser
+      ? {
+          gameId: 1,
+          achievements: Array.from({ length: 18 }, (_, i) => ({
+            id: i,
+            title: `Başarım ${i + 1}`,
+            description: "Örnek açıklama",
+            points: [5, 10, 25][i % 3],
+            badge: "",
+            unlocked: i < 7,
+          })),
+        }
+      : null,
   gameInfo: async (gameId) => {
     const game = games().find((g) => g.id === gameId);
     return game ? (SAMPLE_INFO[game.title] ?? null) : null;

@@ -15,6 +15,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  AchievementProgress,
   InstallProgress,
   Overview,
   PowerSetting,
@@ -38,6 +39,8 @@ export interface Api {
   autoFix(gameId: string): Promise<FixResult | null>;
   isResumable(gameId: string): Promise<boolean>;
   gameInfo(gameId: string): Promise<GameInfo | null>;
+  /** RetroAchievements of the game; null when signed out or not covered. */
+  gameAchievements(gameId: string): Promise<AchievementProgress | null>;
   uninstallPlan(gameId: string): Promise<UninstallPlan>;
   uninstallGame(gameId: string): Promise<Game[]>;
   uninstallEmulator(id: string): Promise<void>;
@@ -110,6 +113,7 @@ const tauriApi: Api = {
   autoFix: (gameId) => invoke("auto_fix", { gameId }),
   isResumable: (gameId) => invoke("is_resumable", { gameId }),
   gameInfo: (gameId) => invoke("game_info", { gameId }),
+  gameAchievements: (gameId) => invoke("game_achievements", { gameId }),
   uninstallPlan: (gameId) => invoke("uninstall_plan", { gameId }),
   uninstallGame: (gameId) => invoke("uninstall_game", { gameId }),
   uninstallEmulator: (id) => invoke("uninstall_emulator", { id }),

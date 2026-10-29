@@ -724,6 +724,41 @@ fn running_states(state: &AppState) -> Option<(PathBuf, PathBuf)> {
     Some((exe.parent()?.join("states"), rom))
 }
 
+/// The game's RetroAchievements with the user's unlocks. None when signed
+/// out, the system isn't covered, or RetroAchievements doesn't know the game.
+#[tauri::command]
+pub async fn game_achievements(
+    app: AppHandle,
+    game_id: String,
+) -> CmdResult<Option<crate::achievements::Progress>> {
+    let state = app.state::<AppState>();
+    let Some(account) = state.ra.lock().unwrap().clone() else {
+        return Ok(None);
+    };
+    let Some(game) = state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|g| g.id == game_id)
+        .cloned()
+    else {
+        return Ok(None);
+    };
+    if !crate::achievements::supported(&game.system_id) {
+        return Ok(None);
+    }
+    let (system, path) = (game.system_id.clone(), game.path.clone());
+    let hash =
+        tauri::async_runtime::spawn_blocking(move || crate::achievements::rom_hash(&system, &path))
+            .await
+            .map_err(err)?
+            .map_err(err)?;
+    crate::achievements::progress(&account, &hash)
+        .await
+        .map_err(err)
+}
+
 /// Save-state slots of the running game; None when its emulator has none.
 #[tauri::command]
 pub fn state_slots(state: State<'_, AppState>) -> Option<Vec<crate::states::Slot>> {

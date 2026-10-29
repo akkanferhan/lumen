@@ -8,7 +8,7 @@ import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
-import type { Game, GameInfo, UninstallPlan } from "../lib/types";
+import type { AchievementProgress, Game, GameInfo, UninstallPlan } from "../lib/types";
 import { formatBytes } from "../lib/format";
 
 export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => void }) {
@@ -245,6 +245,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
           {confirmRemove && plan && <p className="remove-note">{removeNote(plan)}</p>}
 
           <Screenshots game={game} />
+          <Achievements gameId={game.id} />
         </div>
       </section>
 
@@ -264,6 +265,44 @@ function sep(path: string) {
 }
 
 /** Title screen + gameplay shot; each hides itself if the archive lacks it. */
+/** The game's RetroAchievements: progress and badges, unlocked first. */
+function Achievements({ gameId }: { gameId: string }) {
+  const [progress, setProgress] = useState<AchievementProgress | null>(null);
+  useEffect(() => {
+    let live = true;
+    setProgress(null);
+    api.gameAchievements(gameId).then((p) => live && setProgress(p)).catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [gameId]);
+  if (!progress || progress.achievements.length === 0) return null;
+
+  const all = progress.achievements;
+  const won = all.filter((a) => a.unlocked);
+  const points = (list: typeof all) => list.reduce((sum, a) => sum + a.points, 0);
+  const shown = [...won, ...all.filter((a) => !a.unlocked)];
+
+  return (
+    <section className="achievements">
+      <div className="achievements-head">
+        <span className="stat-label">Başarımlar</span>
+        <span>
+          {won.length} / {all.length} · {points(won)} / {points(all)} puan
+        </span>
+      </div>
+      <ProgressBar value={won.length / all.length} />
+      <div className="badges">
+        {shown.map((a) => (
+          <span key={a.id} className={`badge${a.unlocked ? "" : " locked"}`} title={`${a.title} (${a.points}) · ${a.description}`}>
+            {a.badge ? <img src={a.badge} alt={a.title} loading="lazy" draggable={false} /> : <span>{a.points}</span>}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Screenshots({ game }: { game: Game }) {
   const [failed, setFailed] = useState<Set<string>>(new Set());
   const urls = screenshotUrls(game).filter((u) => !failed.has(u));
