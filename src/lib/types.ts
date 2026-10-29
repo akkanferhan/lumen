@@ -82,6 +82,13 @@ export interface SystemStatus {
   gameCount: number;
 }
 
+/** The user's own list of games, shown as a library tab. */
+export interface Collection {
+  id: string;
+  name: string;
+  games: string[];
+}
+
 export interface Overview {
   settings: Settings;
   systems: SystemStatus[];
@@ -97,6 +104,7 @@ export interface Overview {
   backupDir: string;
   raUser: RaUser | null;
   platformSupported: boolean;
+  collections: Collection[];
 }
 
 export interface Game {

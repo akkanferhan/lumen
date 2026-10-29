@@ -10,6 +10,7 @@ import { applyTheme } from "./themes";
 import type {
   AppUpdate,
   Game,
+  Collection,
   FilterSetting,
   FixResult,
   GraphicsSetting,
@@ -118,6 +119,10 @@ async function tryAutoFix(game: Game, fresh: boolean) {
   } else {
     notify("Windows Güvenliği açıldı: ayarı değiştirirsen oyunu yeniden başlat.", "info", 10000);
   }
+}
+
+function setCollections(collections: Collection[]) {
+  set((s) => (s.overview ? { overview: { ...s.overview, collections } } : {}));
 }
 
 async function refreshOverview() {
@@ -518,6 +523,33 @@ export const actions = {
   async setGraphics(graphics: GraphicsSetting) {
     await api.setGraphics(graphics);
     await refreshOverview();
+  },
+
+  /** Collection changes come back as the full list; the overview carries it. */
+  async createCollection(name: string): Promise<boolean> {
+    try {
+      setCollections(await api.createCollection(name));
+      return true;
+    } catch (e) {
+      notify(errorText(e), "error");
+      return false;
+    }
+  },
+
+  async deleteCollection(id: string) {
+    try {
+      setCollections(await api.deleteCollection(id));
+    } catch (e) {
+      notify(errorText(e), "error");
+    }
+  },
+
+  async toggleCollection(id: string, gameId: string) {
+    try {
+      setCollections(await api.toggleCollection(id, gameId));
+    } catch (e) {
+      notify(errorText(e), "error");
+    }
   },
 
   async setFilter(filter: FilterSetting) {

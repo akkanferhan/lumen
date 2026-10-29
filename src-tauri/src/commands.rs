@@ -36,6 +36,7 @@ pub struct Overview {
     pub ra_user: Option<RaUser>,
     /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
     pub platform_supported: bool,
+    pub collections: Vec<crate::state::Collection>,
 }
 
 #[derive(Serialize)]
@@ -133,6 +134,7 @@ fn overview(state: &AppState, autostart: bool) -> Overview {
         ra_user,
         running_game_id,
         platform_supported: cfg!(target_os = "windows"),
+        collections: state.collections.lock().unwrap().clone(),
     }
 }
 
@@ -367,6 +369,80 @@ pub fn set_sounds(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
 pub fn set_graphics(state: State<'_, AppState>, graphics: TierSetting) -> CmdResult<()> {
     state.settings.lock().unwrap().graphics = graphics;
     state.save_settings().map_err(err)
+}
+
+/// Creates a collection; names are trimmed and must be new.
+#[tauri::command]
+pub fn create_collection(
+    state: State<'_, AppState>,
+    name: String,
+) -> CmdResult<Vec<crate::state::Collection>> {
+    let name = name.split_whitespace().collect::<Vec<_>>().join(" ");
+    if name.is_empty() {
+        return Err("Koleksiyonun bir adı olmalı".into());
+    }
+    let mut collections = state.collections.lock().unwrap();
+    if collections
+        .iter()
+        .any(|c| c.name.eq_ignore_ascii_case(&name))
+    {
+        return Err(format!("“{name}” adında bir koleksiyon zaten var"));
+    }
+    let id = format!(
+        "c{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or_default()
+    );
+    collections.push(crate::state::Collection {
+        id,
+        name,
+        games: Vec::new(),
+    });
+    let list = collections.clone();
+    drop(collections);
+    state.save_collections().map_err(err)?;
+    Ok(list)
+}
+
+#[tauri::command]
+pub fn delete_collection(
+    state: State<'_, AppState>,
+    id: String,
+) -> CmdResult<Vec<crate::state::Collection>> {
+    let list = {
+        let mut collections = state.collections.lock().unwrap();
+        collections.retain(|c| c.id != id);
+        collections.clone()
+    };
+    state.save_collections().map_err(err)?;
+    Ok(list)
+}
+
+/// Adds the game to the collection, or removes it if it's there.
+#[tauri::command]
+pub fn toggle_collection(
+    state: State<'_, AppState>,
+    id: String,
+    game_id: String,
+) -> CmdResult<Vec<crate::state::Collection>> {
+    let list = {
+        let mut collections = state.collections.lock().unwrap();
+        let collection = collections
+            .iter_mut()
+            .find(|c| c.id == id)
+            .ok_or("Koleksiyon bulunamadı")?;
+        match collection.games.iter().position(|g| *g == game_id) {
+            Some(i) => {
+                collection.games.remove(i);
+            }
+            None => collection.games.push(game_id),
+        }
+        collections.clone()
+    };
+    state.save_collections().map_err(err)?;
+    Ok(list)
 }
 
 #[tauri::command]

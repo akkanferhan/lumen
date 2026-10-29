@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { Collection, FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -89,6 +89,7 @@ const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
 let filter: FilterSetting = "original";
+let collections: Collection[] = [];
 const homebrewInstalled = new Set<string>();
 let mockSlots: StateSlot[] = [1, 2, 3, 4].map((slot) => ({
   slot,
@@ -146,6 +147,7 @@ function overview(): Overview {
   const list = games();
   return {
     settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter },
+    collections,
     raUser,
     backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
@@ -371,6 +373,21 @@ export const mockApi: Api = {
   },
   setFilter: async (value) => {
     filter = value;
+  },
+  createCollection: async (name) => {
+    if (collections.some((c) => c.name.toLowerCase() === name.trim().toLowerCase())) throw "Bu adda bir koleksiyon var";
+    collections = [...collections, { id: `c${Date.now()}`, name: name.trim(), games: [] }];
+    return collections;
+  },
+  deleteCollection: async (id) => {
+    collections = collections.filter((c) => c.id !== id);
+    return collections;
+  },
+  toggleCollection: async (id, gameId) => {
+    collections = collections.map((c) =>
+      c.id !== id ? c : { ...c, games: c.games.includes(gameId) ? c.games.filter((g) => g !== gameId) : [...c.games, gameId] },
+    );
+    return collections;
   },
   onInstallProgress: (cb) => {
     progressListeners.add(cb);
