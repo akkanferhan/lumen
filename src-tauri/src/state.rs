@@ -31,6 +31,10 @@ pub struct Settings {
     pub theme: String,
     /// Display filter for RetroArch systems.
     pub filter: crate::filters::FilterSetting,
+    /// Select + Start in game opens the quick menu (hold: save and quit).
+    pub quick_combo: bool,
+    /// A small touch button over the game opens the quick menu.
+    pub overlay_button: bool,
 }
 
 impl Default for Settings {
@@ -44,6 +48,8 @@ impl Default for Settings {
             ra_hardcore: false,
             theme: "lumen".into(),
             filter: crate::filters::FilterSetting::Original,
+            quick_combo: true,
+            overlay_button: true,
         }
     }
 }

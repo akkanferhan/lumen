@@ -5,7 +5,7 @@
 use crate::state::Running;
 use gilrs::{Button, Gilrs};
 use std::time::{Duration, Instant};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 /// Holding the combo this long saves and quits instead of opening the menu.
 const HOLD: Duration = Duration::from_millis(800);
@@ -24,7 +24,13 @@ pub fn spawn(app: AppHandle, running: Running) {
             let combo = gilrs
                 .gamepads()
                 .any(|(_, pad)| pad.is_pressed(Button::Select) && pad.is_pressed(Button::Start));
-            let in_game = running.lock().unwrap().is_some();
+            let in_game = running.lock().unwrap().is_some()
+                && app
+                    .state::<crate::state::AppState>()
+                    .settings
+                    .lock()
+                    .unwrap()
+                    .quick_combo;
 
             match (combo && in_game, held) {
                 (true, None) => held = Some((Instant::now(), false)),

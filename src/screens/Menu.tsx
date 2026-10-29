@@ -181,6 +181,20 @@ export function Menu({
       },
     },
     {
+      id: "overlay",
+      title: "Oyun içi menü düğmesi",
+      sub: "Oyunun sağ üst köşesinde küçük bir düğme; dokununca menü açılır, oyuna hiçbir tuş gitmez",
+      value: overview?.settings.overlayButton ? "Açık" : "Kapalı",
+      run: () => actions.setOverlayButton(!overview?.settings.overlayButton),
+    },
+    {
+      id: "combo",
+      title: "Select + Start kısayolu",
+      sub: "Oyunda menüyü açar, basılı tutmak kaydedip çıkar. Bazı oyunlarda bu tuşlar oyuna da gider",
+      value: overview?.settings.quickCombo ? "Açık" : "Kapalı",
+      run: () => actions.setQuickCombo(!overview?.settings.quickCombo),
+    },
+    {
       id: "filter",
       title: "Görüntü filtresi",
       sub: FILTER_LABEL[overview?.settings.filter ?? "original"][1],

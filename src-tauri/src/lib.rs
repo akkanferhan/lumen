@@ -20,6 +20,7 @@ mod launcher;
 mod library;
 mod manifest;
 mod metadata;
+mod overlay;
 mod pc;
 mod power;
 mod presets;
@@ -55,6 +56,7 @@ pub fn run() {
             let running = app.state::<state::AppState>().running.clone();
             input::spawn(app.handle().clone(), running);
             sleep::watch(app.handle().clone());
+            overlay::create(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -75,6 +77,9 @@ pub fn run() {
             commands::toggle_collection,
             commands::play_stats,
             commands::set_steam_key,
+            commands::overlay_pressed,
+            commands::set_quick_combo,
+            commands::set_overlay_button,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,
