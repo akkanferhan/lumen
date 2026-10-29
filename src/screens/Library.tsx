@@ -3,7 +3,8 @@ import { BrandMark } from "../components/BrandMark";
 import { Cover } from "../components/Cover";
 import { HintBar } from "../components/HintBar";
 import { StatusBar } from "../components/StatusBar";
-import { boxArtUrl, systemOf, systems } from "../lib/catalog";
+import { SystemGuide } from "../components/SystemGuide";
+import { boxArtUrl, homebrew, isPcSystem, systemOf, systems } from "../lib/catalog";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";
@@ -19,6 +20,8 @@ interface Tab {
   id: string;
   label: string;
   games: Game[];
+  /** A supported system with no games yet: its tab shows how to add some. */
+  empty?: boolean;
 }
 
 function useTabs(games: Game[]): Tab[] {
@@ -28,9 +31,14 @@ function useTabs(games: Game[]): Tab[] {
       .sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))
       .slice(0, 24);
     const favorites = games.filter((g) => g.favorite);
+    // Every emulated system has a tab, so users see what Lumen supports;
+    // store launchers (Steam, Epic) only once they have games.
     const bySystem = systems
-      .map((s) => ({ id: s.id, label: s.short, games: games.filter((g) => g.systemId === s.id) }))
-      .filter((t) => t.games.length > 0);
+      .map((s) => {
+        const list = games.filter((g) => g.systemId === s.id);
+        return { id: s.id, label: s.short, games: list, empty: list.length === 0 };
+      })
+      .filter((t) => !t.empty || !isPcSystem(t.id));
 
     return [
       { id: "all", label: "Tümü", games },
@@ -44,10 +52,14 @@ function useTabs(games: Game[]): Tab[] {
 export function Library({
   onOpen,
   onMenu,
+  onImport,
+  onStore,
   covered,
 }: {
   onOpen: (game: Game) => void;
   onMenu: () => void;
+  onImport: () => void;
+  onStore: () => void;
   /** An overlay owns the hint bar. */
   covered: boolean;
 }) {
@@ -85,6 +97,9 @@ export function Library({
   }, [jumpLetter]);
   const index = Math.min(focus, Math.max(0, list.length - 1));
   const focused = list[index];
+  // An empty system tab shows that system's guide instead of a blank page.
+  const guide = !searching && tab?.empty ? tab.id : null;
+  const freeGames = guide ? homebrew.filter((g) => g.system === guide).length : 0;
 
   const gridRef = useRef<HTMLDivElement>(null);
   const tabTrackRef = useRef<HTMLDivElement>(null);
@@ -208,12 +223,18 @@ export function Library({
           sfx.confirm();
           rumble();
           onOpen(focused);
+        } else if (guide) {
+          sfx.confirm();
+          onImport();
         }
         break;
       case "y":
         if (focused) {
           sfx.confirm();
           actions.toggleFavorite(focused.id);
+        } else if (guide && freeGames > 0) {
+          sfx.confirm();
+          onStore();
         }
         break;
       case "x":
@@ -255,7 +276,7 @@ export function Library({
           {tabs.map((t, i) => (
             <button
               key={t.id}
-              className={`tab${i === tabIndex ? " active" : ""}`}
+              className={`tab${i === tabIndex ? " active" : ""}${t.empty ? " tab-empty" : ""}`}
               onClick={() => switchTab(i - tabIndex)}
             >
               {t.label}
@@ -266,7 +287,11 @@ export function Library({
         <span className="glyph pill" hidden={searching}>RB</span>
       </nav>
 
-      {list.length === 0 ? (
+      {guide ? (
+        <div className="empty">
+          <SystemGuide systemId={guide} onImport={onImport} onStore={onStore} />
+        </div>
+      ) : list.length === 0 ? (
         <div className="empty">
           <div className="empty-inner">
             <h2>{searching ? "Sonuç yok" : scanning ? "Oyunlar aranıyor…" : "Henüz oyun yok"}</h2>
@@ -338,7 +363,12 @@ export function Library({
       {!covered && !keyboard && (
         <HintBar
           left={focused ? `${index + 1} / ${list.length}` : null}
-          hints={[
+          hints={guide ? [
+            { action: "a", label: "İçe aktar" },
+            ...(freeGames > 0 ? [{ action: "y" as const, label: "Ücretsiz oyunlar" }] : []),
+            { action: "x", label: "Ara" },
+            { action: "start", label: "Menü" },
+          ] : [
             { action: "a", label: "Aç" },
             { action: "y", label: focused?.favorite ? "Favoriden çıkar" : "Favori" },
             { action: "x", label: "Ara" },
