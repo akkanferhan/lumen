@@ -32,6 +32,7 @@ export const homebrew = homebrewJson as HomebrewGame[];
 export function installLabel(id: string): string {
   if (id.startsWith("homebrew:")) return homebrew.find((g) => `homebrew:${g.slug}` === id)?.title ?? "Homebrew";
   if (id === "import") return "Oyunlar içe aktarılıyor";
+  if (id === "shaders") return "Görüntü filtreleri";
   if (id === "fix:vcredist") return "Microsoft Visual C++ çalışma zamanı";
   if (id === "firmware:ps3") return "PS3 firmware (Sony)";
   if (id === "hdd:xbox") return "Xbox HDD imajı";

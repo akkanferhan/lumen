@@ -7,7 +7,7 @@ import { EXPERIMENTAL } from "../components/SystemGuide";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
-import type { GraphicsSetting, PowerSetting, Tier } from "../lib/types";
+import type { FilterSetting, GraphicsSetting, PowerSetting, Tier } from "../lib/types";
 import { formatLastPlayed } from "../lib/format";
 import { THEMES, themeOf } from "../lib/themes";
 
@@ -20,6 +20,14 @@ const POWER_LABEL: Record<PowerSetting, string> = {
   off: "Lumen değiştirmesin",
 };
 const POWER_ORDER: PowerSetting[] = ["auto", "silent", "performance", "turbo", "off"];
+const FILTER_ORDER: FilterSetting[] = ["original", "auto", "smooth", "crt", "lcd"];
+const FILTER_LABEL: Record<FilterSetting, [string, string]> = {
+  original: ["Orijinal", "Keskin pikseller, olduğu gibi"],
+  auto: ["Otomatik", "El konsollarında LCD, 2D konsollarda CRT, 3D'de orijinal"],
+  smooth: ["Pürüzsüz", "Pikseller yumuşatılır"],
+  crt: ["CRT", "Tüplü televizyon tarama çizgileri"],
+  lcd: ["LCD", "El konsolu ekranının ızgarası"],
+};
 const GRAPHICS_LABEL: Record<GraphicsSetting, string> = { auto: "Otomatik", ...TIER_LABEL };
 
 interface Item {
@@ -148,6 +156,16 @@ export function Menu({
         const order: GraphicsSetting[] = ["auto", "standard", "high"];
         const current = overview?.settings.graphics ?? "auto";
         actions.setGraphics(order[(order.indexOf(current) + 1) % order.length]);
+      },
+    },
+    {
+      id: "filter",
+      title: "Görüntü filtresi",
+      sub: FILTER_LABEL[overview?.settings.filter ?? "original"][1],
+      value: FILTER_LABEL[overview?.settings.filter ?? "original"][0],
+      run: () => {
+        const current = overview?.settings.filter ?? "original";
+        actions.setFilter(FILTER_ORDER[(FILTER_ORDER.indexOf(current) + 1) % FILTER_ORDER.length]);
       },
     },
     ...(overview?.powerAvailable

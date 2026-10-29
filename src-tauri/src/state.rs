@@ -29,6 +29,8 @@ pub struct Settings {
     pub ra_hardcore: bool,
     /// UI theme id (see src/lib/themes.ts).
     pub theme: String,
+    /// Display filter for RetroArch systems.
+    pub filter: crate::filters::FilterSetting,
 }
 
 impl Default for Settings {
@@ -41,6 +43,7 @@ impl Default for Settings {
             backup: crate::backup::BackupSettings::enabled_by_default(),
             ra_hardcore: false,
             theme: "lumen".into(),
+            filter: crate::filters::FilterSetting::Original,
         }
     }
 }

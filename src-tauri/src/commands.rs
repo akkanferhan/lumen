@@ -369,6 +369,15 @@ pub fn set_graphics(state: State<'_, AppState>, graphics: TierSetting) -> CmdRes
     state.save_settings().map_err(err)
 }
 
+#[tauri::command]
+pub fn set_filter(
+    state: State<'_, AppState>,
+    filter: crate::filters::FilterSetting,
+) -> CmdResult<()> {
+    state.settings.lock().unwrap().filter = filter;
+    state.save_settings().map_err(err)
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EmulatorUpdate {

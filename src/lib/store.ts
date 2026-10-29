@@ -10,6 +10,7 @@ import { applyTheme } from "./themes";
 import type {
   AppUpdate,
   Game,
+  FilterSetting,
   FixResult,
   GraphicsSetting,
   ImportMode,
@@ -516,6 +517,11 @@ export const actions = {
 
   async setGraphics(graphics: GraphicsSetting) {
     await api.setGraphics(graphics);
+    await refreshOverview();
+  },
+
+  async setFilter(filter: FilterSetting) {
+    await api.setFilter(filter);
     await refreshOverview();
   },
 

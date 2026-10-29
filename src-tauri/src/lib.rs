@@ -6,6 +6,7 @@ mod commands;
 mod config;
 mod crash;
 mod device;
+mod filters;
 mod formats;
 mod homebrew;
 mod importer;
@@ -63,6 +64,7 @@ pub fn run() {
             commands::toggle_favorite,
             commands::set_sounds,
             commands::set_graphics,
+            commands::set_filter,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,

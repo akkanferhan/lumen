@@ -43,7 +43,10 @@ pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier, fresh: bool) -> V
         // Our settings live in their own file layered over retroarch.cfg, so
         // the user's own RetroArch config is never rewritten.
         "retroarch" => {
-            let mut layers = vec![exe_dir.join(RETROARCH_OVERRIDES)];
+            let mut layers = vec![
+                exe_dir.join(RETROARCH_OVERRIDES),
+                exe_dir.join(crate::filters::LAYER),
+            ];
             if fresh {
                 layers.push(exe_dir.join(RETROARCH_FRESH));
             }
