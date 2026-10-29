@@ -160,7 +160,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             anyhow!(diagnosis.message)
         })?;
     if let Some(pid) = child.id() {
-        bring_up_when_shown(pid);
+        bring_up_when_shown(app.clone(), pid);
     }
     let (stop_tx, stop_rx) = oneshot::channel();
     *state.running.lock().unwrap() = Some(RunningGame {
@@ -414,17 +414,39 @@ pub fn is_resumable(state: &AppState, game: &Game) -> bool {
     .is_some()
 }
 
-/// Brings the emulator's window to the front once it appears, so it never
-/// opens hidden behind Lumen's fullscreen window.
-fn bring_up_when_shown(pid: u32) {
+/// Brings the emulator's window to the front once it appears and minimizes
+/// Lumen, so the game never opens hidden behind Lumen's fullscreen window
+/// (where button presses went to Lumen instead of the game). Slow starters
+/// (RPCS3 compiling, Xenia) get half a minute.
+fn bring_up_when_shown(app: AppHandle, pid: u32) {
     tauri::async_runtime::spawn(async move {
-        for _ in 0..60 {
+        for _ in 0..120 {
             tokio::time::sleep(Duration::from_millis(250)).await;
+            let running = app
+                .state::<AppState>()
+                .running
+                .lock()
+                .unwrap()
+                .as_ref()
+                .is_some_and(|g| g.pid == Some(pid));
+            if !running {
+                return;
+            }
             if crate::windows::focus_process(pid) {
+                hide_lumen(&app);
                 return;
             }
         }
     });
+}
+
+/// Steps Lumen out of the way while the game plays; `focus_lumen` brings it
+/// back for the quick menu and when the game ends.
+fn hide_lumen(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_always_on_top(false);
+        let _ = window.minimize();
+    }
 }
 
 /// Shows Lumen above the emulator. `on_top` keeps it there for the quick menu.
@@ -515,7 +537,9 @@ pub fn resume_game(app: &AppHandle) {
     let state = app.state::<AppState>();
     let pid = state.running.lock().unwrap().as_ref().and_then(|g| g.pid);
     if let Some(pid) = pid {
-        crate::windows::focus_process(pid);
+        if crate::windows::focus_process(pid) {
+            hide_lumen(app);
+        }
     }
 }
 
