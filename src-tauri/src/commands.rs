@@ -223,16 +223,11 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     .await
     .map_err(err)?;
     let mut games = games;
-    // Owned-but-not-installed store games, in their own tabs.
+    // Owned Steam games that aren't installed, in the Steam tab.
     let installed_steam: HashSet<String> = games
         .iter()
         .filter(|g| g.system_id == crate::pc::STEAM)
         .map(|g| g.thumb_name.clone())
-        .collect();
-    let installed_xbox: HashSet<String> = games
-        .iter()
-        .filter(|g| g.system_id == crate::xbox::XBOX_APP)
-        .map(|g| g.thumb_name.to_uppercase())
         .collect();
     let steam_key = state.steam_key.lock().unwrap().clone();
     let steam_user = crate::pc::steam_root().and_then(|r| crate::store_library::steam_user(&r));
@@ -252,13 +247,6 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
         games.extend(crate::store_library::steam_uninstalled(
             &owned,
             &installed_steam,
-        ));
-    }
-    if state.settings.lock().unwrap().game_pass {
-        let catalog = crate::store_library::gamepass(&state.dirs.data.join("gamepass.json")).await;
-        games.extend(crate::store_library::gamepass_uninstalled(
-            &catalog,
-            &installed_xbox,
         ));
     }
     // Xbox games carry their Store id; swap it for the Store's poster URL.
@@ -453,12 +441,6 @@ pub async fn set_steam_key(app: AppHandle, key: String) -> CmdResult<usize> {
     *state.steam_key.lock().unwrap() = Some(key);
     state.save_steam_key().map_err(err)?;
     Ok(owned.len())
-}
-
-#[tauri::command]
-pub fn set_game_pass(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
-    state.settings.lock().unwrap().game_pass = enabled;
-    state.save_settings().map_err(err)
 }
 
 /// Play time by day, week and year, and the most played games and systems.

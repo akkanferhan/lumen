@@ -92,7 +92,7 @@ Also **Işık** (the default cover grid), **Raf** (a shelf per system) and **Kâ
 | Atari | 2600, 7800 | RetroArch |
 | Arcade | FinalBurn Neo | RetroArch |
 | PC | Steam, Epic Games, Xbox app, GOG, itch.io | their own launchers (GOG and itch.io games start directly) |
-| | Owned Steam games not yet installed (with your Steam Web API key) · PC Game Pass catalog | install through Steam / Microsoft Store |
+| | Owned Steam games not yet installed (with your Steam Web API key) | install through Steam |
 
 PS5 runs on SharpEmu, which is in early development: expect most games not to boot yet.
 PS4 and PS5 games are installed folders (the one that holds `sce_sys/` and `eboot.bin`).

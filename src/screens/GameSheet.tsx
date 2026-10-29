@@ -134,9 +134,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
   const bios = overview?.settings.romRoot ? `${overview.settings.romRoot}${sep(overview.settings.romRoot)}bios` : "bios";
   const playLabel = game.notInstalled
-    ? game.systemId === "steam"
-      ? "Steam'de yükle"
-      : "Microsoft Store'da aç"
+    ? "Steam'de yükle"
     : busy
     ? install
       ? "Hazırlanıyor…"
@@ -275,9 +273,8 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <div className="callout info">
               <span>↓</span>
               <div>
-                {game.systemId === "steam"
-                  ? "Bu oyun Steam kütüphanende ama yüklü değil. Steam kurulum penceresi açılır; indirme bitince oyun burada oynanabilir olur."
-                  : "Bu oyun PC Game Pass kataloğunda. Microsoft Store'da sayfası açılır; Game Pass aboneliğinle oradan yükleyebilirsin."}
+                Bu oyun Steam kütüphanende ama yüklü değil. Steam kurulum penceresi açılır; indirme bitince oyun burada
+                oynanabilir olur.
               </div>
             </div>
           )}
