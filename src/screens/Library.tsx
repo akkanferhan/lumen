@@ -71,6 +71,13 @@ export function Library({
 
   const [tabId, setTabId] = useState("all");
   const tabIndex = Math.max(0, tabs.findIndex((t) => t.id === tabId));
+  const jumpTab = useStore((s) => s.jumpTab);
+  useEffect(() => {
+    if (!jumpTab) return;
+    setTabId(jumpTab);
+    setFocus(0);
+    actions.systemShown();
+  }, [jumpTab]);
   const tab = tabs[tabIndex];
   // Focus is remembered per tab, so switching back lands where you left off.
   const focusByTab = useRef(new Map<string, number>());
