@@ -24,13 +24,17 @@ export function SystemGuide({ systemId, onImport, onStore }: { systemId: string;
         .filter((e) => e !== "zip" && e !== "7z")
         .map((e) => `.${e}`)
         .join("  ") + (system.extensions.includes("zip") ? "  ya da bunların .zip hali" : "");
-  const bios = missing.length
-    ? status?.usingFallback
-      ? "Gerekmez: yerleşik BIOS ile çalışır"
-      : `Gerekli: ${missing.map((b) => b.label).join(", ")}`
-    : system.bios?.length
-      ? "Bulundu"
-      : "Gerekmez";
+  const present = status?.bios.find((b) => b.found);
+  const damaged = missing.find((b) => b.verdict === "wrongSize");
+  const bios = damaged
+    ? `${damaged.file} bozuk görünüyor (boyutu tutmuyor)`
+    : missing.length
+      ? status?.usingFallback
+        ? "Gerekmez: yerleşik BIOS ile çalışır"
+        : `Gerekli: ${missing.map((b) => b.label).join(", ")}`
+      : present
+        ? `${present.file}${present.verdict === "verified" ? " · ✓ doğrulandı" : " · tanınmayan sürüm, kullanılacak"}`
+        : "Gerekmez";
   const ready = status?.emulatorInstalled && status.coreInstalled;
 
   return (

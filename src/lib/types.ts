@@ -70,6 +70,10 @@ export interface BiosStatus {
   label: string;
   optional: boolean;
   found: boolean;
+  /** "verified": a known good dump; "unknown": right size, unlisted version; "wrongSize": damaged or not a BIOS. */
+  verdict: "verified" | "unknown" | "wrongSize" | null;
+  /** The best matching file's name. */
+  file: string | null;
 }
 
 export interface SystemStatus {

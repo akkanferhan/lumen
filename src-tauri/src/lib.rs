@@ -2,6 +2,7 @@ mod achievements;
 mod art;
 mod autofix;
 mod backup;
+mod bios_check;
 mod commands;
 mod config;
 mod crash;

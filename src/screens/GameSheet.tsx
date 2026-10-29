@@ -187,9 +187,20 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <div className="callout">
               <span>⚠</span>
               <div>
-                Bu sistem için bir dosya eksik: <b>{missing.map((m) => m.label).join(", ")}</b>
-                <br />
-                Dosyayı <code>{bios}</code> klasörüne koyduktan sonra menüden kütüphaneyi yenile.
+                {missing.some((m) => m.verdict === "wrongSize") ? (
+                  <>
+                    BIOS dosyası bulundu ama bozuk ya da yanlış görünüyor (boyutu tutmuyor):{" "}
+                    <b>{missing.filter((m) => m.verdict === "wrongSize").map((m) => m.file).join(", ")}</b>
+                    <br />
+                    Konsolundan yeniden döküm alıp <code>{bios}</code> klasörüne koy.
+                  </>
+                ) : (
+                  <>
+                    Bu sistem için bir dosya eksik: <b>{missing.map((m) => m.label).join(", ")}</b>
+                    <br />
+                    Dosyayı <code>{bios}</code> klasörüne koyduktan sonra menüden kütüphaneyi yenile.
+                  </>
+                )}
               </div>
             </div>
           )}

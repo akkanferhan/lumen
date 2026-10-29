@@ -27,7 +27,12 @@ pub struct Game {
 pub struct BiosStatus {
     pub label: String,
     pub optional: bool,
+    /// A usable file is present (a wrong-size file doesn't count).
     pub found: bool,
+    /// What the check made of the best file present, if any.
+    pub verdict: Option<crate::bios_check::Verdict>,
+    /// That file's name.
+    pub file: Option<String>,
 }
 
 pub fn scan(root: &Path) -> Vec<Game> {
@@ -297,13 +302,43 @@ pub fn bios_status(system: &System, bios_dir: Option<&Path>) -> Vec<BiosStatus> 
     system
         .bios
         .iter()
-        .map(|req| BiosStatus {
-            label: req.label.clone(),
-            optional: req.optional,
-            found: bios_dir
-                .is_some_and(|dir| req.any_of.iter().any(|p| find_file(dir, p).is_some())),
+        .map(|req| {
+            let candidates: Vec<(PathBuf, String)> = bios_dir
+                .map(|dir| {
+                    req.any_of
+                        .iter()
+                        .flat_map(|p| find_files(dir, p).into_iter().map(move |f| (f, p.clone())))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let best = crate::bios_check::best(&candidates);
+            BiosStatus {
+                label: req.label.clone(),
+                optional: req.optional,
+                found: best.is_some_and(|(_, v)| v != crate::bios_check::Verdict::WrongSize),
+                verdict: best.map(|(_, v)| v),
+                file: best
+                    .and_then(|(p, _)| p.file_name())
+                    .map(|n| n.to_string_lossy().into_owned()),
+            }
         })
         .collect()
+}
+
+/// Every file matching a case-insensitive glob relative to `dir`.
+pub fn find_files(dir: &Path, pattern: &str) -> Vec<PathBuf> {
+    let full = format!(
+        "{}/{}",
+        glob::Pattern::escape(&dir.to_string_lossy()),
+        pattern
+    );
+    let options = glob::MatchOptions {
+        case_sensitive: false,
+        ..Default::default()
+    };
+    glob::glob_with(&full, options)
+        .map(|paths| paths.flatten().filter(|p| p.is_file()).collect())
+        .unwrap_or_default()
 }
 
 /// Case-insensitive glob lookup relative to `dir`.
