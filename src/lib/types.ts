@@ -53,6 +53,7 @@ export interface Settings {
   raHardcore: boolean;
   theme: string;
   filter: FilterSetting;
+  gamePass: boolean;
 }
 
 export interface RaUser {
@@ -122,6 +123,10 @@ export interface Overview {
   raUser: RaUser | null;
   platformSupported: boolean;
   collections: Collection[];
+  /** A Steam account is signed in to the Steam client. */
+  steamAccount: boolean;
+  /** A Steam Web API key is saved; owned games are listed. */
+  steamLinked: boolean;
 }
 
 export interface Game {
@@ -134,6 +139,8 @@ export interface Game {
   /** Unix seconds. */
   lastPlayed: number | null;
   playSeconds: number;
+  /** Owned in a store (or in its catalog) but not installed; `path` installs it. */
+  notInstalled?: boolean;
 }
 
 export type InstallStage = "downloading" | "extracting" | "configuring" | "copying" | "done" | "error";

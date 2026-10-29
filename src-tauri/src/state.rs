@@ -31,6 +31,8 @@ pub struct Settings {
     pub theme: String,
     /// Display filter for RetroArch systems.
     pub filter: crate::filters::FilterSetting,
+    /// List the PC Game Pass catalog in its own tab.
+    pub game_pass: bool,
 }
 
 impl Default for Settings {
@@ -44,6 +46,7 @@ impl Default for Settings {
             ra_hardcore: false,
             theme: "lumen".into(),
             filter: crate::filters::FilterSetting::Original,
+            game_pass: true,
         }
     }
 }
@@ -98,6 +101,14 @@ pub struct AppState {
     pub fixes_tried: Mutex<HashSet<(String, crate::launch_check::Fix)>>,
     /// The user's own game lists, as tabs in the library.
     pub collections: Mutex<Vec<Collection>>,
+    /// Steam Web API key for listing owned games. Kept in steam.json, which
+    /// isn't backed up.
+    pub steam_key: Mutex<Option<String>>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SteamKey {
+    key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -137,6 +148,9 @@ impl AppState {
             collections: Mutex::new(
                 read_json(&dirs.data.join("collections.json")).unwrap_or_default(),
             ),
+            steam_key: Mutex::new(
+                read_json::<SteamKey>(&dirs.data.join("steam.json")).map(|k| k.key),
+            ),
             dirs,
         })
     }
@@ -159,6 +173,18 @@ impl AppState {
         let path = self.dirs.data.join("secrets.json");
         match &*self.ra.lock().unwrap() {
             Some(account) => write_json(&path, account),
+            None => {
+                let _ = fs::remove_file(path);
+                Ok(())
+            }
+        }
+    }
+
+    /// Saves the Steam key, or removes the file when signed out (None).
+    pub fn save_steam_key(&self) -> anyhow::Result<()> {
+        let path = self.dirs.data.join("steam.json");
+        match self.steam_key.lock().unwrap().clone() {
+            Some(key) => write_json(&path, &SteamKey { key }),
             None => {
                 let _ = fs::remove_file(path);
                 Ok(())

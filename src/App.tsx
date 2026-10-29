@@ -11,6 +11,7 @@ import { Running } from "./screens/Running";
 import { HomebrewStore } from "./screens/HomebrewStore";
 import { ImportGames } from "./screens/ImportGames";
 import { StatsScreen } from "./screens/StatsScreen";
+import { SteamLink } from "./screens/SteamLink";
 import { Tour } from "./components/Tour";
 import { Layer } from "./lib/input";
 import { RaLogin } from "./screens/RaLogin";
@@ -26,6 +27,7 @@ export function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [steamOpen, setSteamOpen] = useState(false);
   const [raLoginOpen, setRaLoginOpen] = useState(false);
   // Setup stays on screen until the user leaves it, even after a root is chosen.
   const [onboarding, setOnboarding] = useState<null | "welcome" | "folder">(null);
@@ -57,12 +59,13 @@ export function App() {
             onMenu={() => setMenuOpen(true)}
             onImport={() => setImportOpen(true)}
             onStore={() => setStoreOpen(true)}
-            covered={!!openGameId || menuOpen || storeOpen || importOpen || statsOpen || tourOpen || raLoginOpen}
+            covered={!!openGameId || menuOpen || storeOpen || importOpen || statsOpen || tourOpen || steamOpen || raLoginOpen}
           />
           {storeOpen && <HomebrewStore onClose={() => setStoreOpen(false)} />}
           {importOpen && <ImportGames onClose={() => setImportOpen(false)} />}
           {statsOpen && <StatsScreen onClose={() => setStatsOpen(false)} />}
           {tourOpen && <Tour layer={Layer.sheet} onDone={() => setTourOpen(false)} />}
+          {steamOpen && <SteamLink onClose={() => setSteamOpen(false)} />}
           {raLoginOpen && <RaLogin onClose={() => setRaLoginOpen(false)} />}
           {openGameId && <GameSheet gameId={openGameId} onClose={() => setOpenGameId(null)} />}
           {menuOpen && (
@@ -87,6 +90,10 @@ export function App() {
               onOpenTour={() => {
                 setMenuOpen(false);
                 setTourOpen(true);
+              }}
+              onOpenSteam={() => {
+                setMenuOpen(false);
+                setSteamOpen(true);
               }}
               onChangeRoot={() => {
                 setMenuOpen(false);

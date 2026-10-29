@@ -90,6 +90,8 @@ let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
 let filter: FilterSetting = "original";
 let collections: Collection[] = [];
+let steamLinked = false;
+let gamePass = true;
 const homebrewInstalled = new Set<string>();
 let mockSlots: StateSlot[] = [1, 2, 3, 4].map((slot) => ({
   slot,
@@ -140,14 +142,29 @@ function games(): Game[] {
     const id = `mock-${systemId}-${title.replace(/\W/g, "")}`;
     return { id, systemId, title, thumbName: appId, path: `${systemId}://${appId}`, ...user(id) };
   });
-  return [...emulated, ...pc].filter((g) => !removed.has(g.id));
+  // Owned but not installed (Steam, once linked) and the Game Pass catalog.
+  const notInstalled = [
+    ...(steamLinked
+      ? [
+          ["steam", "413150", "Stardew Valley"],
+          ["steam", "367520", "Hollow Knight"],
+        ]
+      : []),
+    ...(gamePass ? [["gamepass", "", "Sea of Thieves"], ["gamepass", "", "Hi-Fi Rush"]] : []),
+  ].map(([systemId, appId, title]) => {
+    const id = `mock-${systemId}-${title.replace(/\W/g, "")}`;
+    return { id, systemId, title, thumbName: appId, path: `${systemId}://install/${appId}`, notInstalled: true, ...user(id) };
+  });
+  return [...emulated, ...pc, ...notInstalled].filter((g) => !removed.has(g.id));
 }
 
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, gamePass },
     collections,
+    steamAccount: true,
+    steamLinked,
     raUser,
     backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
@@ -382,6 +399,14 @@ export const mockApi: Api = {
   },
   setFilter: async (value) => {
     filter = value;
+  },
+  setSteamKey: async (key) => {
+    await sleep(500);
+    steamLinked = !!key.trim();
+    return steamLinked ? 214 : 0;
+  },
+  setGamePass: async (enabled) => {
+    gamePass = enabled;
   },
   playStats: async (today, year) => {
     const list = games();

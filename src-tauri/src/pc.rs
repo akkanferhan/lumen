@@ -20,6 +20,7 @@ pub fn is_pc(system_id: &str) -> bool {
         || system_id == crate::xbox::XBOX_APP
         || system_id == crate::gog::GOG
         || system_id == crate::itch::ITCH
+        || system_id == crate::store_library::GAMEPASS
 }
 
 /// Steam tools that show up as installed apps but aren't games.
@@ -41,7 +42,7 @@ pub fn scan() -> Vec<Game> {
     games
 }
 
-fn steam_root() -> Option<PathBuf> {
+pub(crate) fn steam_root() -> Option<PathBuf> {
     #[cfg(windows)]
     {
         use winreg::{enums::HKEY_CURRENT_USER, RegKey};

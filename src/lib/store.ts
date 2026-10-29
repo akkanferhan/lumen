@@ -552,6 +552,26 @@ export const actions = {
     }
   },
 
+  /** Saves the Steam key and rescans so owned games appear; true on success. */
+  async setSteamKey(key: string): Promise<boolean> {
+    try {
+      const count = await api.setSteamKey(key);
+      notify(key.trim() ? `Steam bağlandı · ${count} oyun` : "Steam bağlantısı kaldırıldı", "success");
+      await actions.rescan(true);
+      await refreshOverview();
+      return true;
+    } catch (e) {
+      notify(errorText(e), "error", 9000);
+      return false;
+    }
+  },
+
+  async setGamePass(enabled: boolean) {
+    await api.setGamePass(enabled);
+    await refreshOverview();
+    await actions.rescan(true);
+  },
+
   async setFilter(filter: FilterSetting) {
     await api.setFilter(filter);
     await refreshOverview();

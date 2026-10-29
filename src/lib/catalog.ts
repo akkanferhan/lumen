@@ -8,6 +8,7 @@ const PC_SYSTEMS: SystemDef[] = [
   { id: "epic", name: "Epic Games", short: "Epic", maker: "Epic Games", year: 2018, accent: "#c8c8c8", extensions: [], folders: [], emulator: "epic", thumbnails: "" },
   // Games installed by the Xbox app (Game Pass, purchases). Not the original Xbox system.
   { id: "xboxapp", name: "Xbox uygulaması", short: "Xbox PC", maker: "Microsoft", year: 2020, accent: "#3fa142", extensions: [], folders: [], emulator: "xboxapp", thumbnails: "" },
+  { id: "gamepass", name: "PC Game Pass", short: "Game Pass", maker: "Microsoft", year: 2019, accent: "#9bf00b", extensions: [], folders: [], emulator: "gamepass", thumbnails: "" },
   { id: "gog", name: "GOG", short: "GOG", maker: "GOG.com", year: 2008, accent: "#a855f7", extensions: [], folders: [], emulator: "gog", thumbnails: "" },
   { id: "itch", name: "itch.io", short: "itch", maker: "itch.io", year: 2013, accent: "#fa5c5c", extensions: [], folders: [], emulator: "itch", thumbnails: "" },
 ];
@@ -69,7 +70,7 @@ function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKin
   }
   if (game.systemId === "epic") return null;
   // Resolved during the scan: the Store poster, GOG product art, itch cover.
-  if (game.systemId === "xboxapp" || game.systemId === "gog" || game.systemId === "itch") {
+  if (["xboxapp", "gamepass", "gog", "itch"].includes(game.systemId)) {
     return kind === "Named_Boxarts" && game.thumbName.startsWith("https://") ? game.thumbName : null;
   }
   const system = systemOf(game.systemId);

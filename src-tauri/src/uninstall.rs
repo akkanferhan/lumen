@@ -189,6 +189,7 @@ mod tests {
             title: "T".into(),
             thumb_name: String::new(),
             path: PathBuf::from(path),
+            not_installed: false,
         };
         assert_eq!(
             plan(&game("steam", "steam://rungameid/620")).method,

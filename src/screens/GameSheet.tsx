@@ -52,9 +52,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     : undefined;
   const canPlay = missing.length === 0 && !busy;
 
-  const buttons = resumable
-    ? (["play", "fresh", "fav", "lists", "remove"] as const)
-    : (["play", "fav", "lists", "remove"] as const);
+  const buttons = game?.notInstalled
+    ? (["play", "fav", "lists"] as const)
+    : resumable
+      ? (["play", "fresh", "fav", "lists", "remove"] as const)
+      : (["play", "fav", "lists", "remove"] as const);
   const [picking, setPicking] = useState(false);
 
   // Removing needs a second press; the first shows what will happen.
@@ -131,7 +133,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   if (!game || !system) return null;
 
   const bios = overview?.settings.romRoot ? `${overview.settings.romRoot}${sep(overview.settings.romRoot)}bios` : "bios";
-  const playLabel = busy
+  const playLabel = game.notInstalled
+    ? game.systemId === "steam"
+      ? "Steam'de yükle"
+      : "Microsoft Store'da aç"
+    : busy
     ? install
       ? "Hazırlanıyor…"
       : "Başlatılıyor…"
@@ -254,6 +260,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <button className={`btn${focusOf("lists") ? " focused" : ""}`} onClick={() => setPicking(true)}>
               {inLists ? `☰ ${inLists} listede` : "☰ Koleksiyona ekle"}
             </button>
+            {!game.notInstalled && (
             <button
               className={`btn danger${focusOf("remove") ? " focused" : ""}${confirmRemove ? " armed" : ""}`}
               onClick={remove}
@@ -261,8 +268,19 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             >
               {removing ? "Kaldırılıyor…" : confirmRemove ? "Emin misin? Tekrar bas" : "Kaldır"}
             </button>
+            )}
           </div>
           {confirmRemove && plan && <p className="remove-note">{removeNote(plan)}</p>}
+          {game.notInstalled && (
+            <div className="callout info">
+              <span>↓</span>
+              <div>
+                {game.systemId === "steam"
+                  ? "Bu oyun Steam kütüphanende ama yüklü değil. Steam kurulum penceresi açılır; indirme bitince oyun burada oynanabilir olur."
+                  : "Bu oyun PC Game Pass kataloğunda. Microsoft Store'da sayfası açılır; Game Pass aboneliğinle oradan yükleyebilirsin."}
+              </div>
+            </div>
+          )}
 
           <Screenshots game={game} />
           <Achievements gameId={game.id} />
