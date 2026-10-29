@@ -1,0 +1,37 @@
+src/lib/catalog.ts
+  s_c69bab437f7e12::t_92e4b1d97ad095 11-12,15,71-72
+src-tauri/src/pc.rs
+  s_c69bab437f7e12::t_92e4b1d97ad095 1-2,18-22,37-40,174-180
+src-tauri/Cargo.toml
+  s_c69bab437f7e12::t_92e4b1d97ad095 34
+src-tauri/src/gog.rs
+  s_c69bab437f7e12::t_ef1c41dbde16d9 1-75,78-112
+  s_c69bab437f7e12::t_80f637e96c9b7c 76-77
+src-tauri/src/itch.rs
+  s_c69bab437f7e12::t_deda24a5450bf1 1-49,56-81,94-158,164-166
+  s_c69bab437f7e12::t_92e4b1d97ad095 50-55,82-93,159-163
+src-tauri/src/commands.rs
+  s_c69bab437f7e12::t_92e4b1d97ad095 233-244
+src-tauri/src/lib.rs
+  s_c69bab437f7e12::t_92e4b1d97ad095 12,17
+src-tauri/Cargo.lock
+  s_c69bab437f7e12::t_566a6a2ccf6700 2151
+README.md
+  s_c69bab437f7e12::t_f0cd5939442cb8 94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "637ba7133c7abc2c3f985a1f4682ae0786998622",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
