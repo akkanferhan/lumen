@@ -44,9 +44,12 @@ interface State {
   /** Newer Lumen release, and download progress once installing (0–1). */
   appUpdate: AppUpdate | null;
   appUpdateProgress: number | null;
+  /** A system tab the library should switch to (from the systems page). */
+  jumpTab: string | null;
 }
 
 let state: State = {
+  jumpTab: null,
   ready: false,
   bootError: null,
   overview: null,
@@ -247,6 +250,16 @@ export const actions = {
     } finally {
       await refreshOverview();
     }
+  },
+
+  /** Opens a system's tab in the library. */
+  showSystem(id: string) {
+    set({ jumpTab: id });
+  },
+
+  /** The library switched to `jumpTab`. */
+  systemShown() {
+    set({ jumpTab: null });
   },
 
   async resume() {

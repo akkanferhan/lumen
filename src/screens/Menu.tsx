@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
 import { isTauri } from "../lib/api";
-import { emulators, installLabel, systems } from "../lib/catalog";
+import { emulatorOf, emulators, installLabel, isPcSystem, systems } from "../lib/catalog";
+import { EXPERIMENTAL } from "../components/SystemGuide";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
@@ -44,7 +45,7 @@ export function Menu({
   onOpenImport: () => void;
   onOpenRaLogin: () => void;
 }) {
-  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme">("main");
+  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems">("main");
   // Restore overwrites saves: it needs a second press to confirm.
   const [confirmRestore, setConfirmRestore] = useState(false);
   // Same for removing an emulator (holds the emulator id being confirmed).
@@ -59,6 +60,9 @@ export function Menu({
 
   const appUpdate = useStore((s) => s.appUpdate);
   const appUpdateProgress = useStore((s) => s.appUpdateProgress);
+
+  const consoleSystems = systems.filter((s) => !isPcSystem(s.id));
+  const gameCount = (id: string) => overview?.systems.find((s) => s.id === id)?.gameCount ?? 0;
 
   const main: Item[] = [
     ...(appUpdate
@@ -117,6 +121,13 @@ export function Menu({
       sub: overview?.settings.backup.enabled ? "Her oyundan sonra otomatik" : "Kapalı",
       value: "›",
       run: () => setPage("backup"),
+    },
+    {
+      id: "systems",
+      title: "Desteklenen sistemler",
+      sub: `${consoleSystems.length} sistem · ${consoleSystems.filter((s) => gameCount(s.id) > 0).length} sistemde oyun var`,
+      value: "›",
+      run: () => setPage("systems"),
     },
     { id: "emulators", title: "Emülatörler", sub: "Kurulum, durum ve BIOS dosyaları", value: "›", run: () => setPage("emulators") },
     {
@@ -334,6 +345,31 @@ export function Menu({
     },
   ];
 
+  const systemItems: Item[] = consoleSystems.map((s) => {
+    const status = overview?.systems.find((x) => x.id === s.id);
+    const count = gameCount(s.id);
+    const missing = status && !status.usingFallback ? status.bios.filter((b) => !b.found && !b.optional) : [];
+    const runner = status?.usingFallback && s.fallback ? s.fallback.emulator : s.emulator;
+    return {
+      id: s.id,
+      title: s.name,
+      sub: [s.maker, emulatorOf(runner)?.name, count ? `${count} oyun` : "oyun yok"].filter(Boolean).join(" · "),
+      value: EXPERIMENTAL.has(s.id) ? (
+        <span className="pill warn">Deneysel</span>
+      ) : missing.length ? (
+        <span className="pill warn">BIOS gerekli</span>
+      ) : status?.emulatorInstalled && status.coreInstalled ? (
+        <span className="pill ok">Hazır</span>
+      ) : (
+        <span className="pill">İlk oyunda kurulur</span>
+      ),
+      run: () => {
+        actions.showSystem(s.id);
+        onClose();
+      },
+    };
+  });
+
   const themeItems: Item[] = THEMES.map((t) => ({
     id: t.id,
     title: t.name,
@@ -351,7 +387,9 @@ export function Menu({
           ? raItems
           : page === "theme"
             ? themeItems
-            : emulatorItems;
+            : page === "systems"
+              ? systemItems
+              : emulatorItems;
   const [focus, setFocus] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const index = Math.min(focus, items.length - 1);
@@ -423,7 +461,9 @@ export function Menu({
                 ? "RetroAchievements"
                 : page === "theme"
                   ? "Tema"
-                  : "Emülatörler"}
+                  : page === "systems"
+                    ? "Desteklenen sistemler"
+                    : "Emülatörler"}
         </h2>
         <p className="menu-sub">
           {page === "main"
@@ -434,6 +474,8 @@ export function Menu({
                 ? "Tek giriş tüm emülatörlere yazılır. Şifren saklanmaz, sadece oturum anahtarı tutulur."
                 : page === "theme"
                   ? "Her tema kendi düzenini, yazı tiplerini ve gezinmesini getirir."
+                : page === "systems"
+                  ? "Lumen'in çalıştırdığı tüm sistemler. Birini seçince kütüphanede o sistemin sekmesi açılır; orada oyunların nereye konacağı yazar."
               : "Emülatörler resmi kaynaklarından indirilir. Oyun ve BIOS dosyaları indirilmez."}
         </p>
         <div className="menu-list" ref={listRef}>
