@@ -82,6 +82,19 @@ export interface SystemStatus {
   gameCount: number;
 }
 
+export interface PlayStats {
+  /** Last 7 days, oldest first; `start` is local midnight (Unix seconds). */
+  days: { start: number; seconds: number }[];
+  weekSeconds: number;
+  previousWeekSeconds: number;
+  year: number;
+  yearSeconds: number;
+  yearSessions: number;
+  yearGames: number;
+  topGames: { id: string; seconds: number }[];
+  topSystems: { id: string; seconds: number }[];
+}
+
 /** The user's own list of games, shown as a library tab. */
 export interface Collection {
   id: string;

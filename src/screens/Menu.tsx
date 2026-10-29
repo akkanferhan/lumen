@@ -45,12 +45,14 @@ export function Menu({
   onChangeRoot,
   onOpenStore,
   onOpenImport,
+  onOpenStats,
   onOpenRaLogin,
 }: {
   onClose: () => void;
   onChangeRoot: () => void;
   onOpenStore: () => void;
   onOpenImport: () => void;
+  onOpenStats: () => void;
   onOpenRaLogin: () => void;
 }) {
   const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems">("main");
@@ -113,6 +115,13 @@ export function Menu({
       sub: "USB bellek veya klasördeki dökümlerin doğru sisteme yerleşir",
       value: "›",
       run: onOpenImport,
+    },
+    {
+      id: "stats",
+      title: "İstatistikler",
+      sub: "Haftalık oynama süresi, en çok oynanan oyunlar ve sistemler",
+      value: "›",
+      run: onOpenStats,
     },
     {
       id: "ra",

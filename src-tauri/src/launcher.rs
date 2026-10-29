@@ -197,6 +197,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
 
     let app = app.clone();
     let game_id = game.id.clone();
+    let system_id = game.system_id.clone();
     let emu_id = emu.id.clone();
     let emu_dir = exe_dir.to_path_buf();
     let emu_name = emu.name.clone();
@@ -251,6 +252,21 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             }
         }
         let _ = state.save_user();
+        if error.is_none() {
+            let start = session_start
+                .duration_since(UNIX_EPOCH)
+                .map(|d| d.as_secs())
+                .unwrap_or_default();
+            let _ = crate::stats::record(
+                &state.dirs.data,
+                &crate::stats::Session {
+                    game_id: game_id.clone(),
+                    system_id: system_id.clone(),
+                    start,
+                    seconds: session_seconds,
+                },
+            );
+        }
         if power_changed {
             crate::power::set(crate::power::PowerMode::Performance);
         }

@@ -371,6 +371,28 @@ pub fn set_graphics(state: State<'_, AppState>, graphics: TierSetting) -> CmdRes
     state.save_settings().map_err(err)
 }
 
+/// Play time by day, week and year, and the most played games and systems.
+/// The UI passes local midnights, which it knows and the backend doesn't.
+#[tauri::command]
+pub fn play_stats(
+    state: State<'_, AppState>,
+    today: u64,
+    year: i32,
+    year_start: u64,
+) -> crate::stats::Stats {
+    let library = state.library.lock().unwrap();
+    let user = state.user.lock().unwrap();
+    let all_time = library
+        .iter()
+        .filter_map(|g| {
+            let seconds = user.get(&g.id)?.play_seconds;
+            Some((g.id.clone(), (g.system_id.clone(), seconds)))
+        })
+        .collect();
+    let sessions = crate::stats::load(&state.dirs.data);
+    crate::stats::summarize(&sessions, &all_time, today, year, year_start)
+}
+
 /// Creates a collection; names are trimmed and must be new.
 #[tauri::command]
 pub fn create_collection(

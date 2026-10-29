@@ -24,6 +24,7 @@ mod retroachievements;
 mod sleep;
 mod state;
 mod states;
+mod stats;
 mod uninstall;
 mod vita;
 mod windows;
@@ -68,6 +69,7 @@ pub fn run() {
             commands::create_collection,
             commands::delete_collection,
             commands::toggle_collection,
+            commands::play_stats,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,

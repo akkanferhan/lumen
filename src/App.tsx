@@ -10,6 +10,7 @@ import { Onboarding } from "./screens/Onboarding";
 import { Running } from "./screens/Running";
 import { HomebrewStore } from "./screens/HomebrewStore";
 import { ImportGames } from "./screens/ImportGames";
+import { StatsScreen } from "./screens/StatsScreen";
 import { RaLogin } from "./screens/RaLogin";
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [storeOpen, setStoreOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [raLoginOpen, setRaLoginOpen] = useState(false);
   // Setup stays on screen until the user leaves it, even after a root is chosen.
   const [onboarding, setOnboarding] = useState<null | "welcome" | "folder">(null);
@@ -52,10 +54,11 @@ export function App() {
             onMenu={() => setMenuOpen(true)}
             onImport={() => setImportOpen(true)}
             onStore={() => setStoreOpen(true)}
-            covered={!!openGameId || menuOpen || storeOpen || importOpen || raLoginOpen}
+            covered={!!openGameId || menuOpen || storeOpen || importOpen || statsOpen || raLoginOpen}
           />
           {storeOpen && <HomebrewStore onClose={() => setStoreOpen(false)} />}
           {importOpen && <ImportGames onClose={() => setImportOpen(false)} />}
+          {statsOpen && <StatsScreen onClose={() => setStatsOpen(false)} />}
           {raLoginOpen && <RaLogin onClose={() => setRaLoginOpen(false)} />}
           {openGameId && <GameSheet gameId={openGameId} onClose={() => setOpenGameId(null)} />}
           {menuOpen && (
@@ -72,6 +75,10 @@ export function App() {
               onOpenImport={() => {
                 setMenuOpen(false);
                 setImportOpen(true);
+              }}
+              onOpenStats={() => {
+                setMenuOpen(false);
+                setStatsOpen(true);
               }}
               onChangeRoot={() => {
                 setMenuOpen(false);
