@@ -6,6 +6,7 @@ import { emulatorOf, installLabel, isPcSystem, systemOf, systems as allSystems }
 
 // Store launchers (Steam, Epic) have nothing to install.
 const systems = allSystems.filter((s) => !isPcSystem(s.id));
+import { api } from "../lib/api";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";
@@ -77,6 +78,16 @@ function Welcome({ onNext }: { onNext: () => void }) {
 function Folder({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   const scanning = useStore((s) => s.scanning);
 
+  const [defaultRoot, setDefaultRoot] = useState<string | null>(null);
+  useEffect(() => {
+    api.defaultRomRoot().then(setDefaultRoot).catch(() => {});
+  }, []);
+
+  const useDefault = async () => {
+    if (scanning) return;
+    sfx.confirm();
+    if (await actions.useDefaultRomRoot()) onNext();
+  };
   const choose = async () => {
     if (scanning) return;
     sfx.confirm();
@@ -84,7 +95,8 @@ function Folder({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
   };
 
   useInput((a) => {
-    if (a === "a") choose();
+    if (a === "a") useDefault();
+    if (a === "x") choose();
     if (a === "b") {
       sfx.back();
       onBack();
@@ -97,18 +109,24 @@ function Folder({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
         <div className="step-count">Adım 1 / 2</div>
         <h1>Oyunların nerede dursun?</h1>
         <p className="lead">
-          Bir klasör seç. İçinde her sistem için bir klasör (<b>snes</b>, <b>ps2</b>, <b>gc</b>…) ve BIOS dosyaları için{" "}
-          <b>bios</b> klasörünü biz oluşturacağız. Daha önce oluşturduğun klasörler de tanınır.
+          Masaüstünde <b>Lumen Oyunlar</b> klasörünü oluşturacağız. İçinde her sistemin kendi klasörü (<b>ps1</b>,{" "}
+          <b>snes</b>, <b>gba</b>…) ve BIOS dosyaları için <b>bios</b> klasörü olacak. Oyun dosyasını ilgili klasöre
+          bırakman yeterli; Lumen her açılışta klasörü yeniden tarar.
         </p>
+        {defaultRoot && <div className="path-chip">{defaultRoot}</div>}
         <div className="actions">
-          <button className="btn primary focused" onClick={choose} disabled={scanning}>
-            {scanning ? "Klasör hazırlanıyor…" : "Klasör seç"}
+          <button className="btn primary focused" onClick={useDefault} disabled={scanning}>
+            {scanning ? "Klasör hazırlanıyor…" : "Masaüstünde oluştur"}
+          </button>
+          <button className="btn" onClick={choose} disabled={scanning}>
+            Başka klasör seç
           </button>
         </div>
       </div>
       <HintBar
         hints={[
-          { action: "a", label: "Klasör seç" },
+          { action: "a", label: "Masaüstünde oluştur" },
+          { action: "x", label: "Başka klasör seç" },
           { action: "b", label: "Geri" },
         ]}
       />

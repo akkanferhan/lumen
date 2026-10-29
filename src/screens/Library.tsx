@@ -275,8 +275,9 @@ export function Library({
             ) : (
               <>
             <p>
-              Oyun dosyalarını sistem klasörlerine koy, örneğin <b>snes</b>, <b>ps2</b> veya <b>gc</b>. Ardından
-              kütüphaneyi yenile.
+              Oyun dosyalarını oyun klasöründeki sistem klasörlerine bırak, örneğin <b>ps1</b>, <b>snes</b> veya{" "}
+              <b>gba</b>. Lumen her açılışta klasörü tarar; hemen görmek için menüden kütüphaneyi yenile. Menüdeki
+              "Oyunlarını içe aktar" da dosyaları senin yerine doğru klasöre koyar.
             </p>
             {root && <div className="path-chip">{root}</div>}
               </>

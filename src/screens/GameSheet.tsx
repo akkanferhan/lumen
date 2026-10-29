@@ -189,10 +189,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
           )}
           {fallback && (
             <div className="callout info">
-              <span>i</span>
+              <span>✓</span>
               <div>
-                BIOS bulunamadı; oyun açık kaynak yerleşik BIOS ile çalışacak. Daha iyi uyumluluk için{" "}
-                <b>{missingAll.map((m) => m.label).join(", ")}</b> dosyasını <code>{bios}</code> klasörüne koyabilirsin.
+                Ek dosya gerekmez: oyun Lumen'in yerleşik BIOS'uyla çalışır. İstersen kendi konsolundan aldığın{" "}
+                <b>{missingAll.map((m) => m.label).join(", ")}</b> dosyasını <code>{bios}</code> klasörüne koyabilirsin;
+                bazı oyunlarda uyumluluk artar.
               </div>
             </div>
           )}
