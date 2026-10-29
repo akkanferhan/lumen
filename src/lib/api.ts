@@ -64,6 +64,9 @@ export interface Api {
   setSounds(enabled: boolean): Promise<void>;
   setGraphics(graphics: GraphicsSetting): Promise<void>;
   setFilter(filter: FilterSetting): Promise<void>;
+  /** Checks and saves the key; resolves to the number of owned games. "" signs out. */
+  setSteamKey(key: string): Promise<number>;
+  setGamePass(enabled: boolean): Promise<void>;
   createCollection(name: string): Promise<Collection[]>;
   /** Local midnights come from the UI, which knows the time zone. */
   playStats(today: number, year: number, yearStart: number): Promise<PlayStats>;
@@ -140,6 +143,8 @@ const tauriApi: Api = {
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   setFilter: (filter) => invoke("set_filter", { filter }),
+  setSteamKey: (key) => invoke("set_steam_key", { key }),
+  setGamePass: (enabled) => invoke("set_game_pass", { enabled }),
   createCollection: (name) => invoke("create_collection", { name }),
   playStats: (today, year, yearStart) => invoke("play_stats", { today, year, yearStart }),
   deleteCollection: (id) => invoke("delete_collection", { id }),

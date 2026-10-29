@@ -20,6 +20,10 @@ pub struct Game {
     /// File stem in the form thumbnails.libretro.com expects.
     pub thumb_name: String,
     pub path: PathBuf,
+    /// Owned in a store (or in its catalog) but not installed: `path` is
+    /// the store's install link.
+    #[serde(default)]
+    pub not_installed: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -165,6 +169,7 @@ pub fn make_virtual_game(system_id: &str, id_seed: &str, title: &str, uri: Strin
         title: title.trim().to_string(),
         thumb_name: String::new(),
         path: PathBuf::from(uri),
+        not_installed: false,
     }
 }
 
@@ -192,6 +197,7 @@ fn make_game(system: &System, path: &Path) -> Game {
             "_",
         ),
         path: path.to_path_buf(),
+        not_installed: false,
     }
 }
 

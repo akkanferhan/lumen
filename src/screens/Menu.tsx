@@ -47,6 +47,7 @@ export function Menu({
   onOpenImport,
   onOpenStats,
   onOpenTour,
+  onOpenSteam,
   onOpenRaLogin,
 }: {
   onClose: () => void;
@@ -55,6 +56,7 @@ export function Menu({
   onOpenImport: () => void;
   onOpenStats: () => void;
   onOpenTour: () => void;
+  onOpenSteam: () => void;
   onOpenRaLogin: () => void;
 }) {
   const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems">("main");
@@ -117,6 +119,22 @@ export function Menu({
       sub: "USB bellek veya klasördeki dökümlerin doğru sisteme yerleşir",
       value: "›",
       run: onOpenImport,
+    },
+    {
+      id: "steam",
+      title: "Steam kütüphanesi",
+      sub: overview?.steamLinked
+        ? "Bağlı · yüklü olmayan oyunların Steam sekmesinde"
+        : "Yüklü olmayan Steam oyunlarını göster ve buradan kur",
+      value: overview?.steamLinked ? <span className="pill ok">Bağlı</span> : "›",
+      run: onOpenSteam,
+    },
+    {
+      id: "gamepass",
+      title: "PC Game Pass kataloğu",
+      sub: "Game Pass oyunları kendi sekmesinde; seçince Microsoft Store'da açılır",
+      value: overview?.settings.gamePass ? "Açık" : "Kapalı",
+      run: () => actions.setGamePass(!overview?.settings.gamePass),
     },
     {
       id: "stats",

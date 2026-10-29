@@ -1299,6 +1299,44 @@ button {
   }
 }
 
+/* ---------- Store games that aren't installed ---------- */
+
+.card.not-installed .cover-img,
+.card.not-installed .cover-fallback {
+  filter: grayscale(0.85) brightness(0.75);
+}
+
+.card.not-installed.focused .cover-img,
+.card.not-installed.focused .cover-fallback {
+  filter: none;
+}
+
+.install-badge {
+  position: absolute;
+  left: 0.45rem;
+  bottom: 0.45rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: var(--scrim-strong);
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.steam-steps {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.steam-steps .path-chip {
+  margin: 0.3rem 0 0;
+}
+
 /* ---------- Tour ---------- */
 
 .tour {

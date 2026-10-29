@@ -36,6 +36,10 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     // Store games start through their launcher; Lumen can't follow their process.
     if crate::pc::is_pc(&game.system_id) {
         crate::pc::launch(game)?;
+        // Opening a store's install page isn't playing.
+        if game.not_installed {
+            return Ok(());
+        }
         let mut user = state.user.lock().unwrap();
         user.entry(game.id.clone()).or_default().last_played = SystemTime::now()
             .duration_since(UNIX_EPOCH)

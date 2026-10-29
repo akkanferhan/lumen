@@ -8,6 +8,7 @@ use crate::{
     state::{AppState, Settings},
 };
 use serde::Serialize;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 
@@ -37,6 +38,10 @@ pub struct Overview {
     /// Emulator downloads are Windows builds; on other OSes the UI runs in preview mode.
     pub platform_supported: bool,
     pub collections: Vec<crate::state::Collection>,
+    /// A Steam account is signed in to the Steam client on this PC.
+    pub steam_account: bool,
+    /// A Steam Web API key is saved, so owned games are listed.
+    pub steam_linked: bool,
 }
 
 #[derive(Serialize)]
@@ -135,6 +140,10 @@ fn overview(state: &AppState, autostart: bool) -> Overview {
         running_game_id,
         platform_supported: cfg!(target_os = "windows"),
         collections: state.collections.lock().unwrap().clone(),
+        steam_account: crate::pc::steam_root()
+            .and_then(|r| crate::store_library::steam_user(&r))
+            .is_some(),
+        steam_linked: state.steam_key.lock().unwrap().is_some(),
     }
 }
 
@@ -213,8 +222,46 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     })
     .await
     .map_err(err)?;
-    // Xbox games carry their Store id; swap it for the Store's poster URL.
     let mut games = games;
+    // Owned-but-not-installed store games, in their own tabs.
+    let installed_steam: HashSet<String> = games
+        .iter()
+        .filter(|g| g.system_id == crate::pc::STEAM)
+        .map(|g| g.thumb_name.clone())
+        .collect();
+    let installed_xbox: HashSet<String> = games
+        .iter()
+        .filter(|g| g.system_id == crate::xbox::XBOX_APP)
+        .map(|g| g.thumb_name.to_uppercase())
+        .collect();
+    let steam_key = state.steam_key.lock().unwrap().clone();
+    let steam_user = crate::pc::steam_root().and_then(|r| crate::store_library::steam_user(&r));
+    if let (Some(key), Some(user)) = (steam_key, steam_user) {
+        let cache = state.dirs.data.join("steam-owned.json");
+        let owned = match crate::store_library::steam_owned(&key, &user).await {
+            Ok(owned) => {
+                let _ = std::fs::write(&cache, serde_json::to_vec(&owned).unwrap_or_default());
+                owned
+            }
+            // Offline: the last list.
+            Err(_) => std::fs::read(&cache)
+                .ok()
+                .and_then(|b| serde_json::from_slice(&b).ok())
+                .unwrap_or_default(),
+        };
+        games.extend(crate::store_library::steam_uninstalled(
+            &owned,
+            &installed_steam,
+        ));
+    }
+    if state.settings.lock().unwrap().game_pass {
+        let catalog = crate::store_library::gamepass(&state.dirs.data.join("gamepass.json")).await;
+        games.extend(crate::store_library::gamepass_uninstalled(
+            &catalog,
+            &installed_xbox,
+        ));
+    }
+    // Xbox games carry their Store id; swap it for the Store's poster URL.
     let store_ids: Vec<String> = games
         .iter()
         .filter(|g| g.system_id == crate::xbox::XBOX_APP && !g.thumb_name.is_empty())
@@ -380,6 +427,37 @@ pub fn set_sounds(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
 #[tauri::command]
 pub fn set_graphics(state: State<'_, AppState>, graphics: TierSetting) -> CmdResult<()> {
     state.settings.lock().unwrap().graphics = graphics;
+    state.save_settings().map_err(err)
+}
+
+/// Saves a Steam Web API key after checking it lists this PC's Steam account's
+/// games; returns how many it lists. An empty key signs out.
+#[tauri::command]
+pub async fn set_steam_key(app: AppHandle, key: String) -> CmdResult<usize> {
+    let state = app.state::<AppState>();
+    let key = key.trim().to_string();
+    if key.is_empty() {
+        *state.steam_key.lock().unwrap() = None;
+        state.save_steam_key().map_err(err)?;
+        return Ok(0);
+    }
+    let user = crate::pc::steam_root()
+        .and_then(|r| crate::store_library::steam_user(&r))
+        .ok_or("Bu bilgisayarda Steam'e giriş yapılmış bir hesap bulunamadı")?;
+    let owned = crate::store_library::steam_owned(&key, &user)
+        .await
+        .map_err(err)?;
+    if owned.is_empty() {
+        return Err("Steam oyun listesini boş döndürdü. Steam profilinde Gizlilik → Oyun ayrıntıları'nı \"Herkese açık\" yap ve tekrar dene.".into());
+    }
+    *state.steam_key.lock().unwrap() = Some(key);
+    state.save_steam_key().map_err(err)?;
+    Ok(owned.len())
+}
+
+#[tauri::command]
+pub fn set_game_pass(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().game_pass = enabled;
     state.save_settings().map_err(err)
 }
 

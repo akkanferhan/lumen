@@ -37,13 +37,18 @@ function useTabs(games: Game[], collections: Collection[]): Tab[] {
     // store launchers (Steam, Epic) only once they have games.
     const bySystem = systems
       .map((s) => {
-        const list = games.filter((g) => g.systemId === s.id);
+        // Installed first, then the ones that only install.
+        const list = games
+          .filter((g) => g.systemId === s.id)
+          .sort((a, b) => Number(!!a.notInstalled) - Number(!!b.notInstalled));
         return { id: s.id, label: s.short, games: list, empty: list.length === 0 };
       })
       .filter((t) => !t.empty || !isPcSystem(t.id));
 
+    // Store games that aren't installed live only in their store's tab.
+    const installed = games.filter((g) => !g.notInstalled);
     return [
-      { id: "all", label: "Tümü", games },
+      { id: "all", label: "Tümü", games: installed },
       ...(recent.length ? [{ id: "recent", label: "Son oynanan", games: recent }] : []),
       ...(favorites.length ? [{ id: "fav", label: "Favoriler", games: favorites }] : []),
       // The user's collections, each in the order its games were added.
@@ -412,7 +417,7 @@ function GameCard({
   const system = systemOf(game.systemId);
   return (
     <button
-      className={`card${focused ? " focused" : ""}`}
+      className={`card${focused ? " focused" : ""}${game.notInstalled ? " not-installed" : ""}`}
       style={{ "--card-accent": system?.accent } as CSSProperties}
       onClick={onClick}
       tabIndex={-1}
@@ -420,6 +425,7 @@ function GameCard({
       <div className="card-art">
         <Cover game={game} />
         {game.favorite && <span className="fav-badge">★</span>}
+        {game.notInstalled && <span className="install-badge">Yüklü değil</span>}
       </div>
       <span className="card-title">{game.title}</span>
       {showSystem && <span className="card-sub">{system?.short}</span>}
