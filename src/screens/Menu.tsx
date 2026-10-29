@@ -130,13 +130,6 @@ export function Menu({
       run: onOpenSteam,
     },
     {
-      id: "gamepass",
-      title: "PC Game Pass kataloğu",
-      sub: "Game Pass oyunları kendi sekmesinde; seçince Microsoft Store'da açılır",
-      value: overview?.settings.gamePass ? "Açık" : "Kapalı",
-      run: () => actions.setGamePass(!overview?.settings.gamePass),
-    },
-    {
       id: "stats",
       title: "İstatistikler",
       sub: "Haftalık oynama süresi, en çok oynanan oyunlar ve sistemler",

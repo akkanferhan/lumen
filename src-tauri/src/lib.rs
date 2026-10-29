@@ -75,7 +75,6 @@ pub fn run() {
             commands::toggle_collection,
             commands::play_stats,
             commands::set_steam_key,
-            commands::set_game_pass,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,

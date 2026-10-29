@@ -566,12 +566,6 @@ export const actions = {
     }
   },
 
-  async setGamePass(enabled: boolean) {
-    await api.setGamePass(enabled);
-    await refreshOverview();
-    await actions.rescan(true);
-  },
-
   async setFilter(filter: FilterSetting) {
     await api.setFilter(filter);
     await refreshOverview();

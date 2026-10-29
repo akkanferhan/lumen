@@ -53,7 +53,6 @@ export interface Settings {
   raHardcore: boolean;
   theme: string;
   filter: FilterSetting;
-  gamePass: boolean;
 }
 
 export interface RaUser {

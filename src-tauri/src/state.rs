@@ -31,8 +31,6 @@ pub struct Settings {
     pub theme: String,
     /// Display filter for RetroArch systems.
     pub filter: crate::filters::FilterSetting,
-    /// List the PC Game Pass catalog in its own tab.
-    pub game_pass: bool,
 }
 
 impl Default for Settings {
@@ -46,7 +44,6 @@ impl Default for Settings {
             ra_hardcore: false,
             theme: "lumen".into(),
             filter: crate::filters::FilterSetting::Original,
-            game_pass: true,
         }
     }
 }
