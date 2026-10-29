@@ -1,0 +1,34 @@
+src/components/SystemGuide.tsx
+  s_c69bab437f7e12::t_0bd9afd2b2f1b7 27-37
+src/lib/types.ts
+  s_c69bab437f7e12::t_0bd9afd2b2f1b7 73-76
+src/screens/GameSheet.tsx
+  s_c69bab437f7e12::t_0bd9afd2b2f1b7 190-203
+src/lib/mock.ts
+  s_c69bab437f7e12::t_b3d308b587d305 165-174
+src-tauri/src/bios_check.rs
+  s_c69bab437f7e12::t_ed97fa392fc522 1-71,76-95,97-126,131-133
+  s_c69bab437f7e12::t_ef0fd445747219 72-75,127-130
+  s_c69bab437f7e12::t_c3841143a19978 96
+src-tauri/src/lib.rs
+  s_c69bab437f7e12::t_ef0fd445747219 5
+src-tauri/src/library.rs
+  s_c69bab437f7e12::t_ef0fd445747219 30,32-35,305-323,328-341
+  s_c69bab437f7e12::t_07c6d966b90d20 342-343
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cebc8e08c512ae1b9b008dc21de863cfa5cebf02",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
