@@ -1,0 +1,31 @@
+src/components/SystemGuide.tsx
+  s_c69bab437f7e12::t_090e74ad7848fa 1-72
+src/screens/Library.tsx
+  s_c69bab437f7e12::t_7c04e9a863237a 6-7,23-24,34-35,37-41,55-56,61-62,100-102,226-228,235-237,290-294,366-371
+  s_c69bab437f7e12::t_8786318f6d3188 279
+src/App.tsx
+  s_c69bab437f7e12::t_2697b5d3a1e48d 53-54
+src/lib/themes.ts
+  s_c69bab437f7e12::t_b8d36bb26833bf 56-73
+src/themes.css
+  s_c69bab437f7e12::t_b8d36bb26833bf 890-1086
+src/styles.css
+  s_c69bab437f7e12::t_8786318f6d3188 1304
+  s_c69bab437f7e12::t_2697b5d3a1e48d 1302-1303,1305-1360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d4847e595d45ff004d2f7851eb20debab07d4f12",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
