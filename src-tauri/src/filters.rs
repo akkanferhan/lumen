@@ -39,8 +39,10 @@ impl FilterSetting {
             FilterSetting::Crt => Filter::Crt,
             FilterSetting::Lcd => Filter::Lcd,
             FilterSetting::Auto => match system_id {
-                "gb" | "gbc" | "gba" => Filter::Lcd,
-                "nes" | "snes" | "sms" | "genesis" | "arcade" => Filter::Crt,
+                "gb" | "gbc" | "gba" | "ngp" | "ngpc" | "ws" | "wsc" => Filter::Lcd,
+                "nes" | "snes" | "sms" | "genesis" | "arcade" | "pce" | "a2600" | "a7800" => {
+                    Filter::Crt
+                }
                 _ => Filter::Original,
             },
         }

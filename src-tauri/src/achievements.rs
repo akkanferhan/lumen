@@ -18,7 +18,20 @@ const BADGES: &str = "https://media.retroachievements.org/Badge";
 pub fn supported(system_id: &str) -> bool {
     matches!(
         system_id,
-        "nes" | "snes" | "n64" | "gb" | "gbc" | "gba" | "genesis" | "sms" | "arcade"
+        "nes"
+            | "snes"
+            | "n64"
+            | "gb"
+            | "gbc"
+            | "gba"
+            | "genesis"
+            | "sms"
+            | "arcade"
+            | "ngp"
+            | "ngpc"
+            | "ws"
+            | "wsc"
+            | "a2600"
     )
 }
 
