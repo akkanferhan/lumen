@@ -1,3 +1,4 @@
+mod achievements;
 mod art;
 mod autofix;
 mod backup;
@@ -86,6 +87,7 @@ pub fn run() {
             commands::import_games,
             commands::auto_fix,
             commands::state_slots,
+            commands::game_achievements,
             commands::save_state,
             commands::load_state,
             commands::check_app_update,

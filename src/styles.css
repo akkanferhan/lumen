@@ -1299,6 +1299,51 @@ button {
   }
 }
 
+/* ---------- Achievements (game sheet) ---------- */
+
+.achievements {
+  margin-top: 1.4rem;
+}
+
+.achievements-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  max-height: 7.6rem;
+  overflow: hidden;
+}
+
+.badge {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  background: var(--surface-strong);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.badge img {
+  width: 100%;
+  height: 100%;
+}
+
+.badge.locked {
+  opacity: 0.45;
+}
+
 /* ---------- Quick menu save slots ---------- */
 
 .slot-row {
