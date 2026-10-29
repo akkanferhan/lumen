@@ -96,6 +96,17 @@ pub struct AppState {
     pub launch_fix: Mutex<Option<(String, crate::launch_check::Fix)>>,
     /// Fixes already tried per game since its last good launch (no loops).
     pub fixes_tried: Mutex<HashSet<(String, crate::launch_check::Fix)>>,
+    /// The user's own game lists, as tabs in the library.
+    pub collections: Mutex<Vec<Collection>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Collection {
+    pub id: String,
+    pub name: String,
+    /// Game ids, in the order they were added.
+    pub games: Vec<String>,
 }
 
 impl AppState {
@@ -123,6 +134,9 @@ impl AppState {
             ra: Mutex::new(read_json(&dirs.data.join("secrets.json"))),
             launch_fix: Mutex::new(None),
             fixes_tried: Mutex::new(HashSet::new()),
+            collections: Mutex::new(
+                read_json(&dirs.data.join("collections.json")).unwrap_or_default(),
+            ),
             dirs,
         })
     }
@@ -150,6 +164,13 @@ impl AppState {
                 Ok(())
             }
         }
+    }
+
+    pub fn save_collections(&self) -> anyhow::Result<()> {
+        write_json(
+            &self.dirs.data.join("collections.json"),
+            &*self.collections.lock().unwrap(),
+        )
     }
 
     pub fn save_user(&self) -> anyhow::Result<()> {

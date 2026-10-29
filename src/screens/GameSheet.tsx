@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { CollectionPicker } from "../components/CollectionPicker";
 import { Cover } from "../components/Cover";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
@@ -52,8 +53,9 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   const canPlay = missing.length === 0 && !busy;
 
   const buttons = resumable
-    ? (["play", "fresh", "fav", "remove"] as const)
-    : (["play", "fav", "remove"] as const);
+    ? (["play", "fresh", "fav", "lists", "remove"] as const)
+    : (["play", "fav", "lists", "remove"] as const);
+  const [picking, setPicking] = useState(false);
 
   // Removing needs a second press; the first shows what will happen.
   const [plan, setPlan] = useState<UninstallPlan | null>(null);
@@ -107,7 +109,10 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         if (buttons[focus] === "play") play(game);
         else if (buttons[focus] === "fresh") play(game, true);
         else if (buttons[focus] === "remove") remove();
-        else {
+        else if (buttons[focus] === "lists") {
+          sfx.confirm();
+          setPicking(true);
+        } else {
           sfx.confirm();
           actions.toggleFavorite(game.id);
         }
@@ -136,6 +141,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         ? "Devam et"
         : "Oyna";
   const focusOf = (id: (typeof buttons)[number]) => (buttons as readonly string[]).indexOf(id) === focus;
+  const inLists = (overview?.collections ?? []).filter((c) => c.games.includes(game.id)).length;
 
   return (
     <>
@@ -234,6 +240,9 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             >
               {game.favorite ? "★ Favorilerde" : "☆ Favorilere ekle"}
             </button>
+            <button className={`btn${focusOf("lists") ? " focused" : ""}`} onClick={() => setPicking(true)}>
+              {inLists ? `☰ ${inLists} listede` : "☰ Koleksiyona ekle"}
+            </button>
             <button
               className={`btn danger${focusOf("remove") ? " focused" : ""}${confirmRemove ? " armed" : ""}`}
               onClick={remove}
@@ -249,13 +258,17 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         </div>
       </section>
 
-      <HintBar
-        hints={[
-          { action: "a", label: "Seç" },
-          { action: "y", label: "Favori" },
-          { action: "b", label: "Geri" },
-        ]}
-      />
+      {picking ? (
+        <CollectionPicker gameId={game.id} title={game.title} onClose={() => setPicking(false)} />
+      ) : (
+        <HintBar
+          hints={[
+            { action: "a", label: "Seç" },
+            { action: "y", label: "Favori" },
+            { action: "b", label: "Geri" },
+          ]}
+        />
+      )}
     </>
   );
 }

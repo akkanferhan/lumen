@@ -8,7 +8,9 @@ import { boxArtUrl, homebrew, isPcSystem, systemOf, systems } from "../lib/catal
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";
-import type { Game } from "../lib/types";
+import type { Collection, Game } from "../lib/types";
+
+const EMPTY_COLLECTIONS: Collection[] = [];
 import { useColumns } from "../lib/useColumns";
 import { fold, groupLetter } from "../lib/format";
 import { SearchKeyboard } from "../components/SearchKeyboard";
@@ -24,7 +26,7 @@ interface Tab {
   empty?: boolean;
 }
 
-function useTabs(games: Game[]): Tab[] {
+function useTabs(games: Game[], collections: Collection[]): Tab[] {
   return useMemo(() => {
     const recent = games
       .filter((g) => g.lastPlayed)
@@ -44,9 +46,17 @@ function useTabs(games: Game[]): Tab[] {
       { id: "all", label: "Tümü", games },
       ...(recent.length ? [{ id: "recent", label: "Son oynanan", games: recent }] : []),
       ...(favorites.length ? [{ id: "fav", label: "Favoriler", games: favorites }] : []),
+      // The user's collections, each in the order its games were added.
+      ...collections
+        .map((c) => ({
+          id: `collection:${c.id}`,
+          label: c.name,
+          games: c.games.map((id) => games.find((g) => g.id === id)).filter((g): g is Game => !!g),
+        }))
+        .filter((t) => t.games.length > 0),
       ...bySystem,
     ];
-  }, [games]);
+  }, [games, collections]);
 }
 
 export function Library({
@@ -67,7 +77,7 @@ export function Library({
   const overview = useStore((s) => s.overview);
   const layout = themeOf(overview?.settings.theme).layout;
   const scanning = useStore((s) => s.scanning);
-  const tabs = useTabs(games);
+  const tabs = useTabs(games, overview?.collections ?? EMPTY_COLLECTIONS);
 
   const [tabId, setTabId] = useState("all");
   const tabIndex = Math.max(0, tabs.findIndex((t) => t.id === tabId));

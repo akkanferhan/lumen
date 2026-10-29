@@ -9,6 +9,7 @@ import type {
   Game,
   GameExited,
   GameInfo,
+  Collection,
   FilterSetting,
   FixResult,
   GraphicsSetting,
@@ -62,6 +63,10 @@ export interface Api {
   setSounds(enabled: boolean): Promise<void>;
   setGraphics(graphics: GraphicsSetting): Promise<void>;
   setFilter(filter: FilterSetting): Promise<void>;
+  createCollection(name: string): Promise<Collection[]>;
+  deleteCollection(id: string): Promise<Collection[]>;
+  /** Adds the game, or removes it if it's already in the collection. */
+  toggleCollection(id: string, gameId: string): Promise<Collection[]>;
   setTheme(theme: string): Promise<void>;
   checkUpdates(): Promise<EmulatorUpdate[]>;
   checkAppUpdate(): Promise<AppUpdate | null>;
@@ -132,6 +137,9 @@ const tauriApi: Api = {
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   setFilter: (filter) => invoke("set_filter", { filter }),
+  createCollection: (name) => invoke("create_collection", { name }),
+  deleteCollection: (id) => invoke("delete_collection", { id }),
+  toggleCollection: (id, gameId) => invoke("toggle_collection", { id, gameId }),
   setTheme: (theme) => invoke("set_theme", { theme }),
   checkUpdates: () => invoke("check_updates"),
   checkAppUpdate: () => invoke("check_app_update"),
