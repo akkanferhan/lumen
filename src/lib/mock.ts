@@ -374,6 +374,22 @@ export const mockApi: Api = {
   setFilter: async (value) => {
     filter = value;
   },
+  playStats: async (today, year) => {
+    const list = games();
+    const days = [0.6, 0, 1.4, 2.1, 0.4, 3.2, 1.1].map((h, i) => ({ start: today - (6 - i) * 86_400, seconds: Math.round(h * 3600) }));
+    const week = days.reduce((s, d) => s + d.seconds, 0);
+    return {
+      days,
+      weekSeconds: week,
+      previousWeekSeconds: Math.round(week * 0.8),
+      year,
+      yearSeconds: 41 * 3600,
+      yearSessions: 96,
+      yearGames: 14,
+      topGames: list.slice(0, 5).map((g, i) => ({ id: g.id, seconds: (5 - i) * 4200 })),
+      topSystems: ["snes", "gba", "ps1"].map((id, i) => ({ id, seconds: (3 - i) * 9000 })),
+    };
+  },
   createCollection: async (name) => {
     if (collections.some((c) => c.name.toLowerCase() === name.trim().toLowerCase())) throw "Bu adda bir koleksiyon var";
     collections = [...collections, { id: `c${Date.now()}`, name: name.trim(), games: [] }];

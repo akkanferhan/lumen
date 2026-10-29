@@ -10,6 +10,7 @@ import type {
   GameExited,
   GameInfo,
   Collection,
+  PlayStats,
   FilterSetting,
   FixResult,
   GraphicsSetting,
@@ -64,6 +65,8 @@ export interface Api {
   setGraphics(graphics: GraphicsSetting): Promise<void>;
   setFilter(filter: FilterSetting): Promise<void>;
   createCollection(name: string): Promise<Collection[]>;
+  /** Local midnights come from the UI, which knows the time zone. */
+  playStats(today: number, year: number, yearStart: number): Promise<PlayStats>;
   deleteCollection(id: string): Promise<Collection[]>;
   /** Adds the game, or removes it if it's already in the collection. */
   toggleCollection(id: string, gameId: string): Promise<Collection[]>;
@@ -138,6 +141,7 @@ const tauriApi: Api = {
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   setFilter: (filter) => invoke("set_filter", { filter }),
   createCollection: (name) => invoke("create_collection", { name }),
+  playStats: (today, year, yearStart) => invoke("play_stats", { today, year, yearStart }),
   deleteCollection: (id) => invoke("delete_collection", { id }),
   toggleCollection: (id, gameId) => invoke("toggle_collection", { id, gameId }),
   setTheme: (theme) => invoke("set_theme", { theme }),
