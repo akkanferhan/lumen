@@ -80,6 +80,41 @@
       "bios": [{ "label": "Dreamcast BIOS (dc/dc_boot.bin)", "anyOf": ["dc/dc_boot.bin"], "optional": true }]
     },
     {
+      "id": "pce", "power": "silent", "name": "PC Engine / TurboGrafx-16", "short": "PCE", "maker": "NEC", "year": 1987, "accent": "#e8833a",
+      "extensions": ["pce", "zip", "7z"], "folders": ["pce", "pcengine", "tg16"],
+      "emulator": "retroarch", "core": "mednafen_pce_fast", "thumbnails": "NEC - PC Engine - TurboGrafx 16"
+    },
+    {
+      "id": "ngp", "power": "silent", "name": "Neo Geo Pocket", "short": "NGP", "maker": "SNK", "year": 1998, "accent": "#8a8f99",
+      "extensions": ["ngp", "zip", "7z"], "folders": ["ngp", "neogeopocket"],
+      "emulator": "retroarch", "core": "mednafen_ngp", "thumbnails": "SNK - Neo Geo Pocket"
+    },
+    {
+      "id": "ngpc", "power": "silent", "name": "Neo Geo Pocket Color", "short": "NGPC", "maker": "SNK", "year": 1999, "accent": "#3fa7d6",
+      "extensions": ["ngc", "zip", "7z"], "folders": ["ngpc", "neogeopocketcolor"],
+      "emulator": "retroarch", "core": "mednafen_ngp", "thumbnails": "SNK - Neo Geo Pocket Color"
+    },
+    {
+      "id": "ws", "power": "silent", "name": "WonderSwan", "short": "WS", "maker": "Bandai", "year": 1999, "accent": "#9aa37a",
+      "extensions": ["ws", "zip", "7z"], "folders": ["ws", "wonderswan"],
+      "emulator": "retroarch", "core": "mednafen_wswan", "thumbnails": "Bandai - WonderSwan"
+    },
+    {
+      "id": "wsc", "power": "silent", "name": "WonderSwan Color", "short": "WSC", "maker": "Bandai", "year": 2000, "accent": "#5b7fd6",
+      "extensions": ["wsc", "zip", "7z"], "folders": ["wsc", "wonderswancolor"],
+      "emulator": "retroarch", "core": "mednafen_wswan", "thumbnails": "Bandai - WonderSwan Color"
+    },
+    {
+      "id": "a2600", "power": "silent", "name": "Atari 2600", "short": "2600", "maker": "Atari", "year": 1977, "accent": "#c8803a",
+      "extensions": ["a26", "bin", "zip", "7z"], "folders": ["atari2600", "a2600"],
+      "emulator": "retroarch", "core": "stella", "thumbnails": "Atari - 2600"
+    },
+    {
+      "id": "a7800", "power": "silent", "name": "Atari 7800", "short": "7800", "maker": "Atari", "year": 1986, "accent": "#d0573a",
+      "extensions": ["a78", "zip", "7z"], "folders": ["atari7800", "a7800"],
+      "emulator": "retroarch", "core": "prosystem", "thumbnails": "Atari - 7800"
+    },
+    {
       "id": "arcade", "power": "silent", "name": "Arcade", "short": "Arcade", "maker": "FinalBurn Neo", "year": 1980, "accent": "#f2c230",
       "extensions": ["zip", "7z"], "folders": ["arcade", "fbneo"],
       "emulator": "retroarch", "core": "fbneo", "thumbnails": "FBNeo - Arcade Games"

@@ -88,6 +88,8 @@ Also **Işık** (the default cover grid), **Raf** (a shelf per system) and **Kâ
 | | PS3 · PS4 (experimental) · PS Vita | RPCS3 · shadPS4 · Vita3K |
 | | PS5 (experimental) | SharpEmu |
 | Microsoft | Xbox · Xbox 360 | xemu · Xenia Canary |
+| NEC · SNK · Bandai | PC Engine, Neo Geo Pocket / Color, WonderSwan / Color | RetroArch |
+| Atari | 2600, 7800 | RetroArch |
 | Arcade | FinalBurn Neo | RetroArch |
 | PC | Steam, Epic Games, Xbox app | their own launchers |
 
