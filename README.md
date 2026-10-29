@@ -91,7 +91,7 @@ Also **Işık** (the default cover grid), **Raf** (a shelf per system) and **Kâ
 | NEC · SNK · Bandai | PC Engine, Neo Geo Pocket / Color, WonderSwan / Color | RetroArch |
 | Atari | 2600, 7800 | RetroArch |
 | Arcade | FinalBurn Neo | RetroArch |
-| PC | Steam, Epic Games, Xbox app | their own launchers |
+| PC | Steam, Epic Games, Xbox app, GOG, itch.io | their own launchers (GOG and itch.io games start directly) |
 
 PS5 runs on SharpEmu, which is in early development: expect most games not to boot yet.
 PS4 and PS5 games are installed folders (the one that holds `sce_sys/` and `eboot.bin`).

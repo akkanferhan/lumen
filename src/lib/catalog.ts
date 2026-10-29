@@ -8,9 +8,11 @@ const PC_SYSTEMS: SystemDef[] = [
   { id: "epic", name: "Epic Games", short: "Epic", maker: "Epic Games", year: 2018, accent: "#c8c8c8", extensions: [], folders: [], emulator: "epic", thumbnails: "" },
   // Games installed by the Xbox app (Game Pass, purchases). Not the original Xbox system.
   { id: "xboxapp", name: "Xbox uygulaması", short: "Xbox PC", maker: "Microsoft", year: 2020, accent: "#3fa142", extensions: [], folders: [], emulator: "xboxapp", thumbnails: "" },
+  { id: "gog", name: "GOG", short: "GOG", maker: "GOG.com", year: 2008, accent: "#a855f7", extensions: [], folders: [], emulator: "gog", thumbnails: "" },
+  { id: "itch", name: "itch.io", short: "itch", maker: "itch.io", year: 2013, accent: "#fa5c5c", extensions: [], folders: [], emulator: "itch", thumbnails: "" },
 ];
 
-export const isPcSystem = (id: string) => id === "steam" || id === "epic" || id === "xboxapp";
+export const isPcSystem = (id: string) => PC_SYSTEMS.some((s) => s.id === id);
 
 export const systems = [...PC_SYSTEMS, ...(manifestJson.systems as unknown as SystemDef[])];
 export const emulators = manifestJson.emulators as unknown as EmulatorDef[];
@@ -66,8 +68,8 @@ function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKin
       : null;
   }
   if (game.systemId === "epic") return null;
-  if (game.systemId === "xboxapp") {
-    // thumbName is the Microsoft Store poster URL (resolved during the scan).
+  // Resolved during the scan: the Store poster, GOG product art, itch cover.
+  if (game.systemId === "xboxapp" || game.systemId === "gog" || game.systemId === "itch") {
     return kind === "Named_Boxarts" && game.thumbName.startsWith("https://") ? game.thumbName : null;
   }
   const system = systemOf(game.systemId);
