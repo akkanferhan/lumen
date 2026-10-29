@@ -179,7 +179,16 @@ export interface EmulatorUpdate {
   updateAvailable: boolean;
 }
 
+/** What Lumen did about a failed launch. */
+export interface FixResult {
+  fix: { kind: "reinstallEmulator" | "reinstallCore" | "vcRedist" | "smartAppControl" | "defender"; id?: string };
+  /** "fixed": launching again should work; "openedSettings": the user decides in Windows. */
+  outcome: "fixed" | "openedSettings";
+}
+
 export interface GameExited {
   gameId: string;
   sessionSeconds: number;
+  /** Why the emulator closed right after starting, if it did. */
+  error: string | null;
 }

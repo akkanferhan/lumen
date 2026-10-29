@@ -22,6 +22,8 @@ pub const EXITED_EVENT: &str = "game-exited";
 pub struct Exited {
     pub game_id: String,
     pub session_seconds: u64,
+    /// Why the emulator closed right after starting, if it did.
+    pub error: Option<String>,
 }
 
 /// `fresh` starts from the beginning instead of the last resume state.
@@ -115,8 +117,23 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     } else {
         vec![rom.to_string()]
     };
+    // RetroArch only logs its errors with -v; the log explains early exits.
+    let log = (emu.id == "retroarch").then(|| crate::launch_check::retroarch_log(exe_dir));
+    let log_args = match &log {
+        Some(path) => {
+            let _ = std::fs::create_dir_all(path.parent().unwrap_or(exe_dir));
+            let _ = std::fs::remove_file(path);
+            vec![
+                "-v".to_string(),
+                "--log-file".to_string(),
+                path.to_string_lossy().into_owned(),
+            ]
+        }
+        None => Vec::new(),
+    };
     let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier(), fresh)
         .into_iter()
+        .chain(log_args)
         .chain(resume_args)
         .chain(emu.args.iter().flat_map(|a| {
             if a == "{rom}" {
@@ -131,7 +148,20 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         .args(&args)
         .envs(crate::presets::launch_env(emu).iter().copied())
         .current_dir(exe_dir)
-        .spawn()?;
+        .spawn()
+        .map_err(|e| {
+            let launch = crate::launch_check::Launch {
+                emulator_id: &emu.id,
+                emulator: &emu.name,
+                core: runner.core,
+            };
+            let diagnosis = crate::launch_check::spawn_error(&launch, &e);
+            *state.launch_fix.lock().unwrap() = diagnosis.fix.map(|f| (game.id.clone(), f));
+            anyhow!(diagnosis.message)
+        })?;
+    if let Some(pid) = child.id() {
+        bring_up_when_shown(pid);
+    }
     let (stop_tx, stop_rx) = oneshot::channel();
     *state.running.lock().unwrap() = Some(RunningGame {
         game_id: game.id.clone(),
@@ -151,17 +181,44 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     let game_id = game.id.clone();
     let emu_id = emu.id.clone();
     let emu_dir = exe_dir.to_path_buf();
+    let emu_name = emu.name.clone();
+    let core = runner.core.map(String::from);
     tauri::async_runtime::spawn(async move {
         let started = Instant::now();
-        tokio::select! {
-            _ = child.wait() => {}
-            _ = stop_rx => close_gracefully(&mut child).await,
-        }
-        let session_seconds = started.elapsed().as_secs();
+        // None when Lumen closed it (quick menu, home combo).
+        let exit = tokio::select! {
+            status = child.wait() => Some(status.ok().and_then(|s| s.code())),
+            _ = stop_rx => {
+                close_gracefully(&mut child).await;
+                None
+            }
+        };
+        let ran = started.elapsed();
+        let launch = crate::launch_check::Launch {
+            emulator_id: &emu_id,
+            emulator: &emu_name,
+            core: core.as_deref(),
+        };
+        let diagnosis = exit
+            .and_then(|code| crate::launch_check::early_exit(&launch, code, ran, log.as_deref()));
+        let session_seconds = ran.as_secs();
 
         let state = app.state::<AppState>();
+        match &diagnosis {
+            Some(d) => {
+                *state.launch_fix.lock().unwrap() = d.fix.clone().map(|f| (game_id.clone(), f));
+            }
+            // A good session: problems later may be fixed again.
+            None => state
+                .fixes_tried
+                .lock()
+                .unwrap()
+                .retain(|(g, _)| g != &game_id),
+        }
+        let error = diagnosis.map(|d| d.message);
         *state.running.lock().unwrap() = None;
-        {
+        // A launch that failed isn't a session: no play time, no "last played".
+        if error.is_none() {
             let mut user = state.user.lock().unwrap();
             let entry = user.entry(game_id.clone()).or_default();
             entry.play_seconds += session_seconds;
@@ -206,6 +263,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
             Exited {
                 game_id,
                 session_seconds,
+                error,
             },
         );
     });
@@ -354,6 +412,19 @@ pub fn is_resumable(state: &AppState, game: &Game) -> bool {
         &format!("**/states/**/{}.state.auto", glob::Pattern::escape(&stem)),
     )
     .is_some()
+}
+
+/// Brings the emulator's window to the front once it appears, so it never
+/// opens hidden behind Lumen's fullscreen window.
+fn bring_up_when_shown(pid: u32) {
+    tauri::async_runtime::spawn(async move {
+        for _ in 0..60 {
+            tokio::time::sleep(Duration::from_millis(250)).await;
+            if crate::windows::focus_process(pid) {
+                return;
+            }
+        }
+    });
 }
 
 /// Shows Lumen above the emulator. `on_top` keeps it there for the quick menu.

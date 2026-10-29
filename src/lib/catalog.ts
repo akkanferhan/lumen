@@ -32,6 +32,7 @@ export const homebrew = homebrewJson as HomebrewGame[];
 export function installLabel(id: string): string {
   if (id.startsWith("homebrew:")) return homebrew.find((g) => `homebrew:${g.slug}` === id)?.title ?? "Homebrew";
   if (id === "import") return "Oyunlar içe aktarılıyor";
+  if (id === "fix:vcredist") return "Microsoft Visual C++ çalışma zamanı";
   if (id === "firmware:ps3") return "PS3 firmware (Sony)";
   if (id === "hdd:xbox") return "Xbox HDD imajı";
   if (id === "firmware:vita") return "PS Vita firmware (Sony)";
@@ -45,6 +46,16 @@ export function installLabel(id: string): string {
 }
 
 type ThumbKind = "Named_Boxarts" | "Named_Snaps" | "Named_Titles";
+
+/** Same file-stem cleanup the library scan applies to `thumbName`. */
+const thumbOf = (fileName: string) => fileName.replace(/\.[^.]+$/, "").replace(/[&*/:`<>?\\|"]/g, "_");
+
+/** Free-store games by `<system>/<thumbName>`: libretro has no art for them. */
+const storeCovers = new Map(
+  homebrewJson
+    .filter((g) => g.cover)
+    .map((g) => [`${g.system}/${thumbOf(g.fileName)}`, g.cover as string]),
+);
 
 function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKind): string | null {
   if (game.systemId === "steam") {
@@ -60,6 +71,9 @@ function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKin
   }
   const system = systemOf(game.systemId);
   if (!system) return null;
+  // The store's art is a screenshot: it stands in for every kind.
+  const storeCover = storeCovers.get(`${game.systemId}/${game.thumbName}`);
+  if (storeCover) return kind === "Named_Titles" ? null : storeCover;
   return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/${kind}/${encodeURIComponent(game.thumbName)}.png`;
 }
 

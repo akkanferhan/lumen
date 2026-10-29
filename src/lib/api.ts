@@ -9,6 +9,7 @@ import type {
   Game,
   GameExited,
   GameInfo,
+  FixResult,
   GraphicsSetting,
   ImportCandidate,
   ImportMode,
@@ -30,6 +31,8 @@ export interface Api {
   installSystems(systemIds: string[]): Promise<void>;
   /** `fresh` starts over instead of continuing from the last session. */
   launchGame(gameId: string, fresh?: boolean): Promise<void>;
+  /** Repairs what made this game's last launch fail; null when there's nothing to try. */
+  autoFix(gameId: string): Promise<FixResult | null>;
   isResumable(gameId: string): Promise<boolean>;
   gameInfo(gameId: string): Promise<GameInfo | null>;
   uninstallPlan(gameId: string): Promise<UninstallPlan>;
@@ -96,6 +99,7 @@ const tauriApi: Api = {
   scanLibrary: () => invoke("scan_library"),
   installSystems: (systemIds) => invoke("install_systems", { systemIds }),
   launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
+  autoFix: (gameId) => invoke("auto_fix", { gameId }),
   isResumable: (gameId) => invoke("is_resumable", { gameId }),
   gameInfo: (gameId) => invoke("game_info", { gameId }),
   uninstallPlan: (gameId) => invoke("uninstall_plan", { gameId }),

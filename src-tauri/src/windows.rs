@@ -194,6 +194,39 @@ pub fn set_process_suspended(_pid: u32, _suspend: bool) -> bool {
     false
 }
 
+/// Whether Smart App Control is enforcing: it blocks unsigned executables
+/// and DLLs without cloud reputation, which includes most emulator builds.
+#[cfg(windows)]
+pub fn smart_app_control_enforced() -> bool {
+    use windows_sys::Win32::System::Registry::{
+        RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD,
+    };
+    let wide = |s: &str| s.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
+    let key = wide(r"SYSTEM\CurrentControlSet\Control\CI\Policy");
+    let value = wide("VerifiedAndReputablePolicyState");
+    let mut data = 0u32;
+    let mut size = std::mem::size_of::<u32>() as u32;
+    // SAFETY: wide strings are NUL-terminated; `data` is a DWORD of `size` bytes.
+    let status = unsafe {
+        RegGetValueW(
+            HKEY_LOCAL_MACHINE,
+            key.as_ptr(),
+            value.as_ptr(),
+            RRF_RT_REG_DWORD,
+            std::ptr::null_mut(),
+            &mut data as *mut u32 as _,
+            &mut size,
+        )
+    };
+    // 0 off, 1 on, 2 evaluation (only logs).
+    status == 0 && data == 1
+}
+
+#[cfg(not(windows))]
+pub fn smart_app_control_enforced() -> bool {
+    false
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

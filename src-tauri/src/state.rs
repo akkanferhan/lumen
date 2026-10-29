@@ -89,6 +89,10 @@ pub struct AppState {
     pub metadata: Mutex<HashMap<String, Arc<crate::metadata::SystemInfo>>>,
     /// RetroAchievements login. Kept in secrets.json, which isn't backed up.
     pub ra: Mutex<Option<crate::retroachievements::Account>>,
+    /// The fix found for the last failed launch, with its game id.
+    pub launch_fix: Mutex<Option<(String, crate::launch_check::Fix)>>,
+    /// Fixes already tried per game since its last good launch (no loops).
+    pub fixes_tried: Mutex<HashSet<(String, crate::launch_check::Fix)>>,
 }
 
 impl AppState {
@@ -114,6 +118,8 @@ impl AppState {
             installing: Mutex::new(HashSet::new()),
             metadata: Mutex::new(HashMap::new()),
             ra: Mutex::new(read_json(&dirs.data.join("secrets.json"))),
+            launch_fix: Mutex::new(None),
+            fixes_tried: Mutex::new(HashSet::new()),
             dirs,
         })
     }

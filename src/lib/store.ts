@@ -10,6 +10,7 @@ import { applyTheme } from "./themes";
 import type {
   AppUpdate,
   Game,
+  FixResult,
   GraphicsSetting,
   ImportMode,
   ImportReport,
@@ -91,6 +92,30 @@ function errorText(e: unknown): string {
   return typeof e === "string" ? e : e instanceof Error ? e.message : "Beklenmeyen bir hata oluştu";
 }
 
+const FIXED: Record<string, string> = {
+  reinstallEmulator: "Emülatör yeniden kuruldu",
+  reinstallCore: "Çekirdek yeniden indirildi",
+  vcRedist: "Visual C++ çalışma zamanı kuruldu",
+};
+
+/** After a failed launch: let Lumen repair what it can, then try once more. */
+async function tryAutoFix(game: Game, fresh: boolean) {
+  let result: FixResult | null;
+  try {
+    result = await api.autoFix(game.id);
+  } catch (e) {
+    notify(`Otomatik onarım başarısız: ${errorText(e)}`, "error", 8000);
+    return;
+  }
+  if (!result) return;
+  if (result.outcome === "fixed") {
+    notify(`${FIXED[result.fix.kind] ?? "Sorun giderildi"} · oyun yeniden açılıyor`, "success", 5000);
+    await actions.play(game, fresh);
+  } else {
+    notify("Windows Güvenliği açıldı: ayarı değiştirirsen oyunu yeniden başlat.", "info", 10000);
+  }
+}
+
 async function refreshOverview() {
   const overview = await api.getOverview();
   setSoundsEnabled(overview.settings.sounds);
@@ -118,9 +143,14 @@ export const actions = {
       set({ quickMenu: true });
     });
     api.onSystemResumed(() => notify("Uykudan döndün · oyun duraklatıldı, hazır olunca devam et", "info", 6000));
-    api.onGameExited(async () => {
+    api.onGameExited(async (exited) => {
       set({ runningGameId: null, quickMenu: false });
-      sfx.back();
+      if (exited.error) {
+        sfx.error();
+        notify(exited.error, "error", 15000);
+        const game = state.games.find((g) => g.id === exited.gameId);
+        if (game) await tryAutoFix(game, false);
+      } else sfx.back();
       set({ games: await api.getLibrary() });
     });
 
@@ -240,7 +270,8 @@ export const actions = {
       set({ runningGameId: game.id });
     } catch (e) {
       sfx.error();
-      notify(errorText(e), "error", 6000);
+      notify(errorText(e), "error", 12000);
+      await tryAutoFix(game, fresh);
     }
   },
 

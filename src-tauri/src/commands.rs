@@ -480,6 +480,15 @@ pub async fn game_info(app: AppHandle, game_id: String) -> Option<crate::metadat
         .iter()
         .find(|g| g.id == game_id)
         .cloned()?;
+    // Free-store games aren't in libretro's databases; the catalog knows them.
+    if let Some(entry) = crate::homebrew::for_game(&game.system_id, &game.path) {
+        return Some(crate::metadata::GameInfo {
+            year: entry.year.clone(),
+            developer: Some(entry.developer.clone()).filter(|d| !d.is_empty()),
+            description: Some(entry.description.clone()).filter(|d| !d.is_empty()),
+            ..Default::default()
+        });
+    }
     let system = manifest::system(&game.system_id)?;
     let cached = state.metadata.lock().unwrap().get(&system.id).cloned();
     let info = match cached {
@@ -669,6 +678,40 @@ pub async fn import_games(
     installer::emit(&app, ID, "done", 1.0, Some(summary));
     let games = scan_library(app.clone()).await?;
     Ok(ImportResult { report, games })
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixResult {
+    fix: crate::launch_check::Fix,
+    outcome: crate::autofix::Outcome,
+}
+
+/// Applies the fix found when this game last failed to launch, once per fix
+/// until the game runs again. None when there's nothing (left) to try.
+#[tauri::command]
+pub async fn auto_fix(app: AppHandle, game_id: String) -> CmdResult<Option<FixResult>> {
+    let state = app.state::<AppState>();
+    let fix = {
+        let mut pending = state.launch_fix.lock().unwrap();
+        match pending.take() {
+            Some((game, fix)) if game == game_id => fix,
+            other => {
+                *pending = other;
+                return Ok(None);
+            }
+        }
+    };
+    if !state
+        .fixes_tried
+        .lock()
+        .unwrap()
+        .insert((game_id, fix.clone()))
+    {
+        return Ok(None);
+    }
+    let outcome = crate::autofix::apply(&app, &fix).await.map_err(err)?;
+    Ok(Some(FixResult { fix, outcome }))
 }
 
 /// Backs up every installed emulator's saves and Lumen's play data now.
