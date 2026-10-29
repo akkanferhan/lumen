@@ -1,0 +1,40 @@
+src-tauri/src/commands.rs
+  s_c69bab437f7e12::t_d058d144b87bb9 703-754
+src-tauri/src/presets.rs
+  s_c69bab437f7e12::t_d058d144b87bb9 427-433
+src/lib/api.ts
+  s_c69bab437f7e12::t_c56611cc1f7746 17,52-55,121-123
+src/lib/types.ts
+  s_c69bab437f7e12::t_c56611cc1f7746 182-190
+src-tauri/src/states.rs
+  s_c69bab437f7e12::t_60040c715b885a 1-65,71-101,106-116,121-130
+  s_c69bab437f7e12::t_d058d144b87bb9 66-70,102-105,117-120
+src/screens/Running.tsx
+  s_c69bab437f7e12::t_2de2e81ce6d804 13-19,165
+  s_c69bab437f7e12::t_708c498003033a 5,9-11,31-34,38-40,43-72,83,86,106-115,117,120-122,147-164,166-181,206-216
+  s_c69bab437f7e12::t_75c74e3a3f0a22 12
+src-tauri/src/lib.rs
+  s_c69bab437f7e12::t_d058d144b87bb9 24,88-90
+src/lib/mock.ts
+  s_c69bab437f7e12::t_c56611cc1f7746 7,92-96,266-271
+  s_c69bab437f7e12::t_2de2e81ce6d804 272-274
+src/styles.css
+  s_c69bab437f7e12::t_708c498003033a 1302-1304,1307-1365
+  s_c69bab437f7e12::t_65e7caa5ebbce4 1305-1306
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bf7ace1681945dd6bbd8f0a325c75327a1379964",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
