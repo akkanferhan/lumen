@@ -162,7 +162,16 @@ function overview(): Overview {
       coreInstalled: !s.core || store.installed.includes(`core:${s.core}`),
       // Demo: PS1 has no BIOS (runs on the fallback), PS2 lacks one (blocked).
       usingFallback: s.id === "ps1",
-      bios: (s.bios ?? []).map((b) => ({ label: b.label, optional: !!b.optional, found: s.id !== "ps2" && s.id !== "ps1" })),
+      bios: (s.bios ?? []).map((b) => {
+        const found = s.id !== "ps2" && s.id !== "ps1";
+        return {
+          label: b.label,
+          optional: !!b.optional,
+          found,
+          verdict: found ? ("verified" as const) : null,
+          file: found ? b.anyOf[0].split("/").pop() ?? null : null,
+        };
+      }),
       gameCount: list.filter((g) => g.systemId === s.id).length,
     })),
   };
