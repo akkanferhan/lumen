@@ -39,7 +39,10 @@ export function Running({ gameId }: { gameId: string }) {
 
   useInput((action) => {
     if (!quickMenu) {
-      if (action === "a" || action === "b") stop();
+      // Lumen only shows this while the emulator isn't in front: a press
+      // here meant "play", so it returns to the game. Quitting takes X.
+      if (action === "a") actions.resume();
+      else if (action === "x") stop();
       return;
     }
     switch (action) {
@@ -101,9 +104,14 @@ export function Running({ gameId }: { gameId: string }) {
               menüyü açar, basılı tutmak kaydedip çıkar.
               {!isTauri && " (Tarayıcı önizlemesi: menü için Q + E'ye birlikte bas.)"}
             </p>
-            <button className="btn primary focused" onClick={stop} disabled={stopping}>
-              {stopping ? "Kaydediliyor…" : "Kaydet ve çık"}
-            </button>
+            <div className="quick-list">
+              <button className="btn primary focused" onClick={() => actions.resume()} disabled={stopping}>
+                Oyuna dön
+              </button>
+              <button className="btn" onClick={stop} disabled={stopping}>
+                {stopping ? "Kaydediliyor…" : "Kaydet ve çık"}
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -114,7 +122,10 @@ export function Running({ gameId }: { gameId: string }) {
                 { action: "a", label: "Seç" },
                 { action: "b", label: "Oyuna dön" },
               ]
-            : [{ action: "a", label: "Kaydet ve çık" }]
+            : [
+                { action: "a", label: "Oyuna dön" },
+                { action: "x", label: "Kaydet ve çık" },
+              ]
         }
       />
     </div>
