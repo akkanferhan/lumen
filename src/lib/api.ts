@@ -14,6 +14,7 @@ import type {
   ImportCandidate,
   ImportMode,
   ImportReport,
+  StateSlot,
   InstallProgress,
   Overview,
   PowerSetting,
@@ -48,6 +49,10 @@ export interface Api {
     mode: ImportMode,
   ): Promise<{ report: ImportReport; games: Game[] }>;
   resumeGame(): Promise<void>;
+  /** Slots of the running game; null when its emulator has none. */
+  stateSlots(): Promise<StateSlot[] | null>;
+  saveState(slot: number): Promise<StateSlot[]>;
+  loadState(slot: number): Promise<void>;
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
   setSounds(enabled: boolean): Promise<void>;
@@ -113,6 +118,9 @@ const tauriApi: Api = {
   importScan: (path) => invoke("import_scan", { path }),
   importGames: (items, mode) => invoke("import_games", { items, mode }),
   resumeGame: () => invoke("resume_game"),
+  stateSlots: () => invoke("state_slots"),
+  saveState: (slot) => invoke("save_state", { slot }),
+  loadState: (slot) => invoke("load_state", { slot }),
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),
   setSounds: (enabled) => invoke("set_sounds", { enabled }),

@@ -2,11 +2,21 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { Cover } from "../components/Cover";
 import { Glyph } from "../components/Glyph";
 import { HintBar } from "../components/HintBar";
-import { isTauri } from "../lib/api";
+import { api, isTauri } from "../lib/api";
 import { systemOf } from "../lib/catalog";
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
-import { actions, useStore } from "../lib/store";
+import { actions, notify, useStore } from "../lib/store";
+import { formatLastPlayed } from "../lib/format";
+import type { StateSlot } from "../lib/types";
+
+/** Today's saves by time (slots are often minutes apart), older ones by day. */
+function savedWhen(unixSeconds: number): string {
+  const day = formatLastPlayed(unixSeconds);
+  return day === "Bugün"
+    ? new Date(unixSeconds * 1000).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+    : day;
+}
 
 /**
  * While a game runs Lumen sits behind the emulator showing this screen.
@@ -18,11 +28,47 @@ export function Running({ gameId }: { gameId: string }) {
   const quickMenu = useStore((s) => s.quickMenu);
   const [stopping, setStopping] = useState(false);
   const [focus, setFocus] = useState(0);
+  // Save-state slots (RetroArch systems); null hides the row.
+  const [slots, setSlots] = useState<StateSlot[] | null>(null);
+  const [slot, setSlot] = useState(0);
+  const [slotBusy, setSlotBusy] = useState(false);
   const system = game && systemOf(game.systemId);
 
   useEffect(() => {
-    if (quickMenu) setFocus(0);
+    if (!quickMenu) return;
+    setFocus(0);
+    api.stateSlots().then(setSlots).catch(() => setSlots(null));
   }, [quickMenu]);
+
+  const saveSlot = async () => {
+    if (slotBusy || !slots) return;
+    setSlotBusy(true);
+    try {
+      setSlots(await api.saveState(slots[slot].slot));
+      sfx.confirm();
+      notify(`Slot ${slots[slot].slot}'e kaydedildi`, "success");
+    } catch (e) {
+      sfx.error();
+      notify(String(e), "error");
+    } finally {
+      setSlotBusy(false);
+    }
+  };
+
+  const loadSlot = async () => {
+    if (slotBusy || !slots?.[slot]?.savedAt) return;
+    setSlotBusy(true);
+    try {
+      await api.loadState(slots[slot].slot);
+      notify(`Slot ${slots[slot].slot} yüklendi`, "success");
+      actions.resume();
+    } catch (e) {
+      sfx.error();
+      notify(String(e), "error");
+    } finally {
+      setSlotBusy(false);
+    }
+  };
 
   const stop = () => {
     if (stopping) return;
@@ -34,8 +80,10 @@ export function Running({ gameId }: { gameId: string }) {
 
   const items = [
     { id: "resume", label: "Oyuna dön", run: () => actions.resume() },
+    ...(slots ? [{ id: "slots", label: "Kayıt slotları", run: saveSlot }] : []),
     { id: "quit", label: stopping ? "Kaydediliyor…" : "Kaydet ve çık", run: stop },
   ];
+  const onSlots = items[focus]?.id === "slots";
 
   useInput((action) => {
     if (!quickMenu) {
@@ -55,9 +103,22 @@ export function Running({ gameId }: { gameId: string }) {
         }
         break;
       }
+      case "left":
+      case "right":
+        if (onSlots && slots) {
+          const next = Math.min(slots.length - 1, Math.max(0, slot + (action === "left" ? -1 : 1)));
+          if (next !== slot) {
+            sfx.move();
+            setSlot(next);
+          }
+        }
+        break;
       case "a":
-        sfx.confirm();
+        if (!onSlots) sfx.confirm();
         items[focus].run();
+        break;
+      case "x":
+        if (onSlots) loadSlot();
         break;
       case "b":
         actions.resume();
@@ -83,17 +144,41 @@ export function Running({ gameId }: { gameId: string }) {
 
         {quickMenu ? (
           <div className="quick-list">
-            {items.map((item, i) => (
-              <button
-                key={item.id}
-                className={`btn${i === 0 ? " primary" : ""}${i === focus ? " focused" : ""}`}
-                onClick={item.run}
-                disabled={stopping}
-                tabIndex={-1}
-              >
-                {item.label}
-              </button>
-            ))}
+            {items.map((item, i) =>
+              item.id === "slots" && slots ? (
+                <div key="slots" className={`slot-row${i === focus ? " focused" : ""}`}>
+                  {slots.map((s, j) => (
+                    <button
+                      key={s.slot}
+                      className={`slot${j === slot ? " selected" : ""}`}
+                      onClick={() => {
+                        setFocus(i);
+                        setSlot(j);
+                      }}
+                      tabIndex={-1}
+                    >
+                      <span className="slot-shot">
+                        {s.thumbnail ? <img src={s.thumbnail} alt="" draggable={false} /> : <span>{s.savedAt ? "✓" : "Boş"}</span>}
+                      </span>
+                      <span className="slot-label">
+                        Slot {s.slot}
+                        {s.savedAt && <small>{savedWhen(s.savedAt)}</small>}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  key={item.id}
+                  className={`btn${i === 0 ? " primary" : ""}${i === focus ? " focused" : ""}`}
+                  onClick={item.run}
+                  disabled={stopping}
+                  tabIndex={-1}
+                >
+                  {item.label}
+                </button>
+              ),
+            )}
           </div>
         ) : (
           <>
@@ -118,10 +203,17 @@ export function Running({ gameId }: { gameId: string }) {
       <HintBar
         hints={
           quickMenu
-            ? [
-                { action: "a", label: "Seç" },
-                { action: "b", label: "Oyuna dön" },
-              ]
+            ? onSlots
+              ? [
+                  { action: "left", label: "Slot" },
+                  { action: "a", label: slotBusy ? "Kaydediliyor…" : "Kaydet" },
+                  ...(slots?.[slot]?.savedAt ? [{ action: "x" as const, label: "Yükle" }] : []),
+                  { action: "b", label: "Oyuna dön" },
+                ]
+              : [
+                  { action: "a", label: "Seç" },
+                  { action: "b", label: "Oyuna dön" },
+                ]
             : [
                 { action: "a", label: "Oyuna dön" },
                 { action: "x", label: "Kaydet ve çık" },

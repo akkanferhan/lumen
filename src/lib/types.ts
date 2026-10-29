@@ -179,6 +179,15 @@ export interface EmulatorUpdate {
   updateAvailable: boolean;
 }
 
+/** A save-state slot of the running game (RetroArch systems). */
+export interface StateSlot {
+  slot: number;
+  /** Unix seconds; null when the slot is empty. */
+  savedAt: number | null;
+  /** Screenshot taken with the state, as a data URL. */
+  thumbnail: string | null;
+}
+
 /** What Lumen did about a failed launch. */
 export interface FixResult {
   fix: { kind: "reinstallEmulator" | "reinstallCore" | "vcRedist" | "smartAppControl" | "defender"; id?: string };

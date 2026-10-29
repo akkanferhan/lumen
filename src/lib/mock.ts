@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -89,6 +89,11 @@ const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
 const homebrewInstalled = new Set<string>();
+let mockSlots: StateSlot[] = [1, 2, 3, 4].map((slot) => ({
+  slot,
+  savedAt: slot === 1 ? Math.floor(Date.now() / 1000) - 3600 : null,
+  thumbnail: null,
+}));
 const removed = new Set<string>();
 let power: PowerSetting = "auto";
 let autostart = false;
@@ -258,6 +263,15 @@ export const mockApi: Api = {
   },
   isResumable: async (gameId) => (store.user[gameId]?.playSeconds ?? 0) > 0,
   resumeGame: async () => {},
+  stateSlots: async () => mockSlots,
+  saveState: async (slot) => {
+    await sleep(300);
+    mockSlots = mockSlots.map((s) => (s.slot === slot ? { ...s, savedAt: Math.floor(Date.now() / 1000) } : s));
+    return mockSlots;
+  },
+  loadState: async () => {
+    await sleep(300);
+  },
   launchGame: async (gameId) => {
     if (/^mock-(steam|epic|xboxapp)-/.test(gameId)) {
       touchUser(gameId).lastPlayed = Math.floor(Date.now() / 1000);

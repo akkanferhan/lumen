@@ -424,6 +424,13 @@ fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             // Resume where you left off.
             ("savestate_auto_save", on(true)),
             ("savestate_auto_load", on(true)),
+            // Quick menu slots: Lumen sends SAVE/LOAD_STATE_SLOT on the local
+            // command port; each state gets a screenshot to show there.
+            ("network_cmd_enable", on(true)),
+            ("network_cmd_port", crate::states::PORT.to_string()),
+            ("savestate_thumbnail_enable", on(true)),
+            ("sort_savestates_enable", on(false)),
+            ("sort_savestates_by_content_enable", on(false)),
             // Core options below apply everywhere; stale per-game files can't override them.
             ("global_core_options", on(true)),
             ("game_specific_options", on(false)),
