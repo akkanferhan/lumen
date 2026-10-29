@@ -46,6 +46,7 @@ export function Menu({
   onOpenStore,
   onOpenImport,
   onOpenStats,
+  onOpenTour,
   onOpenRaLogin,
 }: {
   onClose: () => void;
@@ -53,6 +54,7 @@ export function Menu({
   onOpenStore: () => void;
   onOpenImport: () => void;
   onOpenStats: () => void;
+  onOpenTour: () => void;
   onOpenRaLogin: () => void;
 }) {
   const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems">("main");
@@ -202,6 +204,7 @@ export function Menu({
           },
         ]
       : []),
+    { id: "tour", title: "Kısa tur", sub: "Nerede ne var, önemli kısayollar", value: "›", run: onOpenTour },
     { id: "sounds", title: "Arayüz sesleri", value: sounds ? "Açık" : "Kapalı", run: () => actions.setSounds(!sounds) },
     {
       id: "root",

@@ -1299,6 +1299,98 @@ button {
   }
 }
 
+/* ---------- Tour ---------- */
+
+.tour {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter) var(--gutter) 5rem;
+  background: var(--scrim-strong);
+  animation: fade-in 240ms var(--ease-out);
+}
+
+.onboarding .tour {
+  background: none;
+}
+
+.tour-card {
+  width: min(46rem, 100%);
+}
+
+.tour-card h1 {
+  margin: 0.4rem 0 0.6rem;
+}
+
+.tour-card .lead {
+  margin: 0 0 1.4rem;
+}
+
+.tour-path {
+  display: table;
+  margin-top: 0.8rem;
+}
+
+.tour-keys {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.tour-keys li {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-dim);
+}
+
+.tour-keys b {
+  color: var(--text);
+}
+
+.tour-combo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tour-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tour-join {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 1.4rem;
+}
+
+.tour-dots span {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.tour-dots .active {
+  width: 1.4rem;
+  background: var(--brand);
+}
+
 /* ---------- Stats ---------- */
 
 .stats-main {

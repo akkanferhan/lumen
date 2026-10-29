@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { BrandMark } from "../components/BrandMark";
 import { HintBar } from "../components/HintBar";
+import { Tour } from "../components/Tour";
 import { ProgressBar } from "../components/Toasts";
 import { emulatorOf, installLabel, isPcSystem, systemOf, systems as allSystems } from "../lib/catalog";
 
@@ -13,7 +14,7 @@ import { actions, useStore } from "../lib/store";
 import type { InstallProgress } from "../lib/types";
 import { useColumns } from "../lib/useColumns";
 
-type Step = "welcome" | "folder" | "systems" | "install";
+type Step = "welcome" | "folder" | "systems" | "install" | "tour";
 
 export function Onboarding({ onDone, startAt = "welcome" }: { onDone: () => void; startAt?: Step }) {
   const [step, setStep] = useState<Step>(startAt);
@@ -40,8 +41,9 @@ export function Onboarding({ onDone, startAt = "welcome" }: { onDone: () => void
     <div className="onboarding">
       {step === "welcome" && <Welcome onNext={next} />}
       {step === "folder" && <Folder onNext={next} onBack={() => setStep("welcome")} />}
-      {step === "systems" && <Systems onInstall={install} onSkip={onDone} />}
-      {step === "install" && <Install finished={finished} onDone={onDone} />}
+      {step === "systems" && <Systems onInstall={install} onSkip={() => setStep("tour")} />}
+      {step === "install" && <Install finished={finished} onDone={() => setStep("tour")} />}
+      {step === "tour" && <Tour layer={Layer.screen} onDone={onDone} />}
     </div>
   );
 }
