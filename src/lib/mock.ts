@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -88,6 +88,7 @@ const progressListeners = new Set<(p: InstallProgress) => void>();
 const exitListeners = new Set<(e: GameExited) => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
+let filter: FilterSetting = "original";
 const homebrewInstalled = new Set<string>();
 let mockSlots: StateSlot[] = [1, 2, 3, 4].map((slot) => ({
   slot,
@@ -144,7 +145,7 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter },
     raUser,
     backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
@@ -367,6 +368,9 @@ export const mockApi: Api = {
   },
   setGraphics: async (value) => {
     graphics = value;
+  },
+  setFilter: async (value) => {
+    filter = value;
   },
   onInstallProgress: (cb) => {
     progressListeners.add(cb);

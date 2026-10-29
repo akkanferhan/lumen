@@ -117,6 +117,23 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     } else {
         vec![rom.to_string()]
     };
+    // The display filter: a config layer plus the shader preset.
+    let filter_args = if emu.id == "retroarch" {
+        let setting = state.settings.lock().unwrap().filter;
+        let filter = setting.resolve(&system.id);
+        // No shaders (offline): play unfiltered rather than not at all.
+        let preset = crate::filters::ensure_preset(app, filter, exe_dir, &state.dirs.downloads)
+            .await
+            .unwrap_or_default();
+        let filter = if preset.is_none() && filter.needs_shader() {
+            crate::filters::Filter::Original
+        } else {
+            filter
+        };
+        crate::filters::apply(exe_dir, filter, preset.as_deref())?
+    } else {
+        Vec::new()
+    };
     // RetroArch only logs its errors with -v; the log explains early exits.
     let log = (emu.id == "retroarch").then(|| crate::launch_check::retroarch_log(exe_dir));
     let log_args = match &log {
@@ -134,6 +151,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier(), fresh)
         .into_iter()
         .chain(log_args)
+        .chain(filter_args)
         .chain(resume_args)
         .chain(emu.args.iter().flat_map(|a| {
             if a == "{rom}" {

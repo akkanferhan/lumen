@@ -30,6 +30,8 @@ export interface EmulatorDef {
 export type Tier = "standard" | "high";
 export type PowerSetting = "auto" | "off" | "silent" | "performance" | "turbo";
 export type GraphicsSetting = "auto" | Tier;
+/** Display filter for RetroArch systems. */
+export type FilterSetting = "auto" | "original" | "smooth" | "crt" | "lcd";
 
 export interface BackupSettings {
   enabled: boolean;
@@ -50,6 +52,7 @@ export interface Settings {
   power: PowerSetting;
   raHardcore: boolean;
   theme: string;
+  filter: FilterSetting;
 }
 
 export interface RaUser {

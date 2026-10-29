@@ -9,6 +9,7 @@ import type {
   Game,
   GameExited,
   GameInfo,
+  FilterSetting,
   FixResult,
   GraphicsSetting,
   ImportCandidate,
@@ -60,6 +61,7 @@ export interface Api {
   toggleFavorite(gameId: string): Promise<boolean>;
   setSounds(enabled: boolean): Promise<void>;
   setGraphics(graphics: GraphicsSetting): Promise<void>;
+  setFilter(filter: FilterSetting): Promise<void>;
   setTheme(theme: string): Promise<void>;
   checkUpdates(): Promise<EmulatorUpdate[]>;
   checkAppUpdate(): Promise<AppUpdate | null>;
@@ -129,6 +131,7 @@ const tauriApi: Api = {
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
+  setFilter: (filter) => invoke("set_filter", { filter }),
   setTheme: (theme) => invoke("set_theme", { theme }),
   checkUpdates: () => invoke("check_updates"),
   checkAppUpdate: () => invoke("check_app_update"),
