@@ -162,6 +162,9 @@ export const actions = {
       return;
     }
 
+    // Games added or removed while Lumen was closed show up on their own.
+    if (state.overview?.settings.romRoot) actions.rescan(true);
+
     // The previous run crashed: say so instead of failing silently again.
     api
       .takeCrashReport()
@@ -187,8 +190,9 @@ export const actions = {
     }, 5000);
   },
 
-  async chooseRomRoot(): Promise<boolean> {
-    const path = await api.pickFolder();
+  /** `path` defaults to asking the user; `useDefaultRomRoot` passes the desktop folder. */
+  async chooseRomRoot(path?: string | null): Promise<boolean> {
+    path ??= await api.pickFolder();
     if (!path) return false;
     set({ scanning: true });
     try {
@@ -204,7 +208,18 @@ export const actions = {
     }
   },
 
-  async rescan() {
+  /** Creates "Lumen Oyunlar" on the desktop and uses it. */
+  async useDefaultRomRoot(): Promise<boolean> {
+    try {
+      return await actions.chooseRomRoot(await api.defaultRomRoot());
+    } catch (e) {
+      notify(errorText(e), "error");
+      return false;
+    }
+  },
+
+  /** `quiet`: the automatic scan at start only speaks up when it finds games. */
+  async rescan(quiet = false) {
     if (state.scanning) return;
     set({ scanning: true });
     try {
@@ -213,7 +228,8 @@ export const actions = {
       set({ games });
       await refreshOverview();
       const added = games.length - before;
-      notify(added > 0 ? `${added} yeni oyun bulundu` : `Kütüphane güncel · ${games.length} oyun`, "success");
+      if (added > 0) notify(`${added} yeni oyun bulundu`, "success");
+      else if (!quiet) notify(`Kütüphane güncel · ${games.length} oyun`, "success");
     } catch (e) {
       notify(errorText(e), "error");
     } finally {

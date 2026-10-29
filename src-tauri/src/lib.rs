@@ -1,3 +1,4 @@
+mod art;
 mod autofix;
 mod backup;
 mod commands;
@@ -52,6 +53,7 @@ pub fn run() {
             commands::get_overview,
             commands::get_library,
             commands::set_rom_root,
+            commands::default_rom_root,
             commands::scan_library,
             commands::install_systems,
             commands::launch_game,

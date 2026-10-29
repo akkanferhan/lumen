@@ -184,6 +184,7 @@ export const mockApi: Api = {
   getLibrary: async () => games(),
   takeCrashReport: async () => null,
   pickFolder: async () => "C:\\Users\\Oyuncu\\Oyunlar",
+  defaultRomRoot: async () => "C:\\Users\\Oyuncu\\Desktop\\Lumen Oyunlar",
   setRomRoot: async (path) => {
     store.romRoot = path;
     save();

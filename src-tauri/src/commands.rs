@@ -163,26 +163,44 @@ fn library_view(state: &AppState) -> Vec<GameView> {
 /// Sets the ROM root, creates one folder per system plus the BIOS folders, then scans.
 #[tauri::command]
 pub async fn set_rom_root(app: AppHandle, path: PathBuf) -> CmdResult<Vec<GameView>> {
-    for system in &manifest().systems {
-        let existing = system.folders.iter().any(|f| path.join(f).is_dir());
-        if !existing {
-            std::fs::create_dir_all(path.join(&system.folders[0])).map_err(err)?;
-        }
-    }
-    for sub in BIOS_SUBDIRS {
-        std::fs::create_dir_all(path.join("bios").join(sub)).map_err(err)?;
-    }
-
+    prepare_root(&path).map_err(err)?;
     let state = app.state::<AppState>();
     state.settings.lock().unwrap().rom_root = Some(path);
     state.save_settings().map_err(err)?;
     scan_library(app.clone()).await
 }
 
+/// One folder per system (unless one of its names already exists) and the
+/// BIOS folders, so users only have to drop files in.
+fn prepare_root(path: &Path) -> std::io::Result<()> {
+    for system in &manifest().systems {
+        let existing = system.folders.iter().any(|f| path.join(f).is_dir());
+        if !existing {
+            std::fs::create_dir_all(path.join(&system.folders[0]))?;
+        }
+    }
+    for sub in BIOS_SUBDIRS {
+        std::fs::create_dir_all(path.join("bios").join(sub))?;
+    }
+    Ok(())
+}
+
+/// Where Lumen keeps games unless the user picks another folder:
+/// "Lumen Oyunlar" on the desktop, easy to find and drop files into.
+#[tauri::command]
+pub fn default_rom_root(app: AppHandle) -> CmdResult<PathBuf> {
+    let desktop = app.path().desktop_dir().map_err(err)?;
+    Ok(desktop.join("Lumen Oyunlar"))
+}
+
 #[tauri::command]
 pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     let state = app.state::<AppState>();
     let root = state.rom_root();
+    // The folder may have been deleted or moved since: set it up again.
+    if let Some(root) = &root {
+        let _ = prepare_root(root);
+    }
     // Emulated games from the ROM folder plus installed Steam / Epic games.
     let games = tauri::async_runtime::spawn_blocking(move || {
         let mut games = root.map(|r| library::scan(&r)).unwrap_or_default();
@@ -210,6 +228,8 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
             game.thumb_name = posters.get(&game.thumb_name).cloned().unwrap_or_default();
         }
     }
+    // Loosely named files ("Spiderman.cue") get the closest box art name.
+    crate::art::resolve(&mut games, &state.dirs.data.join("art")).await;
     *state.library.lock().unwrap() = games;
     state.save_library().map_err(err)?;
     Ok(library_view(&state))

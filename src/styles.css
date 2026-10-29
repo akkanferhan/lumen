@@ -528,6 +528,10 @@ button {
   word-break: break-all;
 }
 
+.step .path-chip + .actions {
+  margin-top: 1.4rem;
+}
+
 /* ---------- Sheet (game detail) ---------- */
 
 .scrim {

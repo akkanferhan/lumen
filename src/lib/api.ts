@@ -27,6 +27,8 @@ export interface Api {
   takeCrashReport(): Promise<string | null>;
   pickFolder(title?: string): Promise<string | null>;
   setRomRoot(path: string): Promise<Game[]>;
+  /** "Lumen Oyunlar" on the desktop. */
+  defaultRomRoot(): Promise<string>;
   scanLibrary(): Promise<Game[]>;
   installSystems(systemIds: string[]): Promise<void>;
   /** `fresh` starts over instead of continuing from the last session. */
@@ -96,6 +98,7 @@ const tauriApi: Api = {
     return typeof picked === "string" ? picked : null;
   },
   setRomRoot: (path) => invoke("set_rom_root", { path }),
+  defaultRomRoot: () => invoke("default_rom_root"),
   scanLibrary: () => invoke("scan_library"),
   installSystems: (systemIds) => invoke("install_systems", { systemIds }),
   launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
