@@ -1,0 +1,57 @@
+src-tauri/src/state.rs
+  s_c69bab437f7e12::t_03b3ba726d7e65 34-37,51-52
+src-tauri/src/overlay.rs
+  s_c69bab437f7e12::t_4b7e6389919a2b 10-11,13,59,64-65
+  s_c69bab437f7e12::t_9c561897fe9278 22-34,41-42
+  s_c69bab437f7e12::t_03b3ba726d7e65 1-9,12,14-21,35-40,43-58,60-63,66-72
+src-tauri/src/input.rs
+  s_c69bab437f7e12::t_9c561897fe9278 8,27-33
+src-tauri/src/commands.rs
+  s_c69bab437f7e12::t_9c561897fe9278 542-564
+  s_c69bab437f7e12::t_844a3b90f7f07e 541
+src/lib/types.ts
+  s_c69bab437f7e12::t_3de00455a5585b 56-59
+src/lib/api.ts
+  s_c69bab437f7e12::t_3de00455a5585b 69-70,148-149
+src/screens/Menu.tsx
+  s_c69bab437f7e12::t_3de00455a5585b 183-196
+src/styles.css
+  s_c69bab437f7e12::t_3de00455a5585b 2141-2170
+src/main.tsx
+  s_c69bab437f7e12::t_3de00455a5585b 4,8-13,18
+  s_c69bab437f7e12::t_27bbbf2fe2a424 14-16
+src-tauri/capabilities/default.json
+  s_c69bab437f7e12::t_9c561897fe9278 6-7
+src/lib/mock.ts
+  s_c69bab437f7e12::t_3de00455a5585b 94-95,164,403-408
+src-tauri/src/windows.rs
+  s_c69bab437f7e12::t_03b3ba726d7e65 197-220
+src/screens/Running.tsx
+  s_c69bab437f7e12::t_3b109917310f07 189-190
+src/lib/store.ts
+  s_c69bab437f7e12::t_3de00455a5585b 569-578
+src/components/OverlayButton.tsx
+  s_c69bab437f7e12::t_3de00455a5585b 1-23
+src-tauri/src/launcher.rs
+  s_c69bab437f7e12::t_9c561897fe9278 298,476,518,583
+src-tauri/src/lib.rs
+  s_c69bab437f7e12::t_9c561897fe9278 23,59,80-82
+src/components/Tour.tsx
+  s_c69bab437f7e12::t_3b109917310f07 47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cb7928c9e1bfd5b47fc88059c4af4d925f232cd8",
+  "prompts": {},
+  "sessions": {
+    "s_c69bab437f7e12": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d68a8dc4-b5d2-4814-b9a0-78e9023b6d94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
