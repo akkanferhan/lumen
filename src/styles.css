@@ -1692,7 +1692,27 @@ button {
 /* ---------- System guide (empty system tab) ---------- */
 
 .tab.tab-empty:not(.active) {
-  opacity: 0.55;
+  opacity: 0.5;
+  font-weight: 500;
+  outline: 1px dashed var(--text-faint);
+  outline-offset: -1px;
+}
+
+/* Empty systems sit after a divider at the end of the tab row. */
+.tab.tab-empty-first {
+  position: relative;
+  margin-left: 1.4rem;
+}
+
+.tab.tab-empty-first::before {
+  content: "";
+  position: absolute;
+  left: -0.9rem;
+  top: 20%;
+  bottom: 20%;
+  width: 1px;
+  background: var(--text-faint);
+  opacity: 0.6;
 }
 
 .system-guide {
