@@ -21,6 +21,7 @@ mod presets;
 mod retroachievements;
 mod sleep;
 mod state;
+mod states;
 mod uninstall;
 mod vita;
 mod windows;
@@ -84,6 +85,9 @@ pub fn run() {
             commands::import_scan,
             commands::import_games,
             commands::auto_fix,
+            commands::state_slots,
+            commands::save_state,
+            commands::load_state,
             commands::check_app_update,
             commands::install_app_update,
             commands::set_autostart,

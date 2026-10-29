@@ -700,6 +700,58 @@ pub async fn import_games(
     Ok(ImportResult { report, games })
 }
 
+/// The running game's RetroArch states folder and content file, or None when
+/// its emulator has no slots.
+fn running_states(state: &AppState) -> Option<(PathBuf, PathBuf)> {
+    let (game_id, emulator) = {
+        let running = state.running.lock().unwrap();
+        let game = running.as_ref()?;
+        (game.game_id.clone(), game.emulator.clone())
+    };
+    if emulator != "retroarch" {
+        return None;
+    }
+    let rom = state
+        .library
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|g| g.id == game_id)?
+        .path
+        .clone();
+    let retroarch = manifest::emulator("retroarch")?;
+    let exe = installer::find_exe(retroarch, &state.dirs.emulators.join("retroarch"))?;
+    Some((exe.parent()?.join("states"), rom))
+}
+
+/// Save-state slots of the running game; None when its emulator has none.
+#[tauri::command]
+pub fn state_slots(state: State<'_, AppState>) -> Option<Vec<crate::states::Slot>> {
+    let (dir, rom) = running_states(&state)?;
+    Some(crate::states::slots(&dir, &rom))
+}
+
+#[tauri::command]
+pub async fn save_state(app: AppHandle, slot: u8) -> CmdResult<Vec<crate::states::Slot>> {
+    let state = app.state::<AppState>();
+    let (dir, rom) = running_states(&state).ok_or("Bu oyunda kayıt slotu yok")?;
+    tauri::async_runtime::spawn_blocking(move || crate::states::command(false, slot))
+        .await
+        .map_err(err)?
+        .map_err(err)?;
+    Ok(crate::states::slots(&dir, &rom))
+}
+
+#[tauri::command]
+pub async fn load_state(app: AppHandle, slot: u8) -> CmdResult<()> {
+    let state = app.state::<AppState>();
+    running_states(&state).ok_or("Bu oyunda kayıt slotu yok")?;
+    tauri::async_runtime::spawn_blocking(move || crate::states::command(true, slot))
+        .await
+        .map_err(err)?
+        .map_err(err)
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FixResult {
