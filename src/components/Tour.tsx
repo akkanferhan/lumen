@@ -44,6 +44,7 @@ export function Tour({ layer, onDone }: { layer: number; onDone: () => void }) {
       title: "Oyun oynarken",
       lead: "Oyun bıraktığın yerden devam eder; çıkarken kaydetmeyi unutmana gerek yok.",
       shortcuts: [
+        { keys: [], label: <>Sağ üst köşedeki <b>☰</b> düğmesine dokun: hızlı menü (oyuna hiçbir tuş gitmez)</> },
         { keys: ["select", "start"], join: "+", label: "Hızlı menü: oyun duraklar" },
         { keys: ["select", "start"], join: "+", label: <>Basılı tut: <b>kaydet ve çık</b></> },
         { keys: ["left"], label: "Hızlı menüde kayıt slotu seç (RetroArch sistemleri)" },

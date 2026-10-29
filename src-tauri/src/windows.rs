@@ -194,6 +194,30 @@ pub fn set_process_suspended(_pid: u32, _suspend: bool) -> bool {
     false
 }
 
+/// Shows a window above everything without taking focus from the game
+/// (the in-game menu button).
+#[cfg(windows)]
+pub fn show_topmost_no_activate(hwnd: isize) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, ShowWindow, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+        SW_SHOWNOACTIVATE,
+    };
+    let hwnd = hwnd as windows_sys::Win32::Foundation::HWND;
+    // SAFETY: plain Win32 calls on a window handle; an invalid one just fails.
+    unsafe {
+        ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+        SetWindowPos(
+            hwnd,
+            HWND_TOPMOST,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+        );
+    }
+}
+
 /// Whether Smart App Control is enforcing: it blocks unsigned executables
 /// and DLLs without cloud reputation, which includes most emulator builds.
 #[cfg(windows)]

@@ -2138,3 +2138,33 @@ button {
     transition-duration: 1ms !important;
   }
 }
+
+/* ---------- In-game menu button (its own transparent window) ---------- */
+
+html.overlay-window,
+html.overlay-window body,
+html.overlay-window #root {
+  background: transparent !important;
+  overflow: hidden;
+}
+
+.overlay-button {
+  position: fixed;
+  inset: 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(10, 12, 17, 0.45);
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 160ms, transform 160ms;
+  touch-action: manipulation;
+}
+
+.overlay-button:hover,
+.overlay-button:active {
+  opacity: 1;
+  transform: scale(0.94);
+}

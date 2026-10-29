@@ -186,7 +186,8 @@ export function Running({ gameId }: { gameId: string }) {
               Oyun içinde <span className="combo">
                 <Glyph action="select" /> + <Glyph action="start" />
               </span>{" "}
-              menüyü açar, basılı tutmak kaydedip çıkar.
+              menüyü açar, basılı tutmak kaydedip çıkar. Ekranın sağ üst köşesindeki ☰ düğmesine dokunmak da menüyü
+              açar ve oyuna hiçbir tuş göndermez.
               {!isTauri && " (Tarayıcı önizlemesi: menü için Q + E'ye birlikte bas.)"}
             </p>
             <div className="quick-list">

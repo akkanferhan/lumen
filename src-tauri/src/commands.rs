@@ -539,6 +539,30 @@ pub fn toggle_collection(
     Ok(list)
 }
 
+/// The touch button over the game was tapped.
+#[tauri::command]
+pub fn overlay_pressed(app: AppHandle) {
+    if app.state::<AppState>().running.lock().unwrap().is_some() {
+        launcher::open_quick_menu(&app);
+    }
+}
+
+#[tauri::command]
+pub fn set_quick_combo(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().quick_combo = enabled;
+    state.save_settings().map_err(err)
+}
+
+#[tauri::command]
+pub fn set_overlay_button(app: AppHandle, enabled: bool) -> CmdResult<()> {
+    let state = app.state::<AppState>();
+    state.settings.lock().unwrap().overlay_button = enabled;
+    if !enabled {
+        crate::overlay::hide(&app);
+    }
+    state.save_settings().map_err(err)
+}
+
 #[tauri::command]
 pub fn set_filter(
     state: State<'_, AppState>,

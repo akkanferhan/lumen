@@ -295,6 +295,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         }
 
         let _ = std::fs::remove_file(frozen_marker(&state.dirs.data));
+        crate::overlay::hide(&app);
         focus_lumen(&app, false);
         let _ = app.emit(
             EXITED_EVENT,
@@ -472,6 +473,7 @@ fn bring_up_when_shown(app: AppHandle, pid: u32) {
             }
             if crate::windows::focus_process(pid) {
                 hide_lumen(&app);
+                crate::overlay::show(&app);
                 return;
             }
         }
@@ -513,6 +515,7 @@ fn frozen_marker(data_dir: &Path) -> std::path::PathBuf {
 /// Opens the in-game quick menu: Lumen on top, the game paused (by focus loss,
 /// or by freezing emulators that can't pause themselves).
 pub fn open_quick_menu(app: &AppHandle) {
+    crate::overlay::hide(app);
     let _ = app.emit(crate::input::QUICK_MENU_EVENT, ());
     let frozen = {
         let state = app.state::<AppState>();
@@ -577,6 +580,7 @@ pub fn resume_game(app: &AppHandle) {
     if let Some(pid) = pid {
         if crate::windows::focus_process(pid) {
             hide_lumen(app);
+            crate::overlay::show(app);
         }
     }
 }

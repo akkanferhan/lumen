@@ -566,6 +566,16 @@ export const actions = {
     }
   },
 
+  async setQuickCombo(enabled: boolean) {
+    await api.setQuickCombo(enabled);
+    await refreshOverview();
+  },
+
+  async setOverlayButton(enabled: boolean) {
+    await api.setOverlayButton(enabled);
+    await refreshOverview();
+  },
+
   async setFilter(filter: FilterSetting) {
     await api.setFilter(filter);
     await refreshOverview();

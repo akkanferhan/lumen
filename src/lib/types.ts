@@ -53,6 +53,10 @@ export interface Settings {
   raHardcore: boolean;
   theme: string;
   filter: FilterSetting;
+  /** Select + Start in game opens the quick menu. */
+  quickCombo: boolean;
+  /** Touch button over the game opens the quick menu. */
+  overlayButton: boolean;
 }
 
 export interface RaUser {
