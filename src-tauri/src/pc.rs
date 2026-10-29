@@ -1,5 +1,5 @@
-//! Installed PC games from Steam and the Epic Games Launcher, so Lumen is the
-//! one library on the device. Read from the launchers' own files; games are
+//! Installed PC games from Steam and the Epic Games Launcher (plus GOG and
+//! itch.io, see `gog` and `itch`), so Lumen is the one library on the device. Read from the launchers' own files; games are
 //! started through the launcher's URL scheme (DRM, overlays and cloud saves
 //! keep working).
 
@@ -15,7 +15,11 @@ pub const STEAM: &str = "steam";
 pub const EPIC: &str = "epic";
 
 pub fn is_pc(system_id: &str) -> bool {
-    system_id == STEAM || system_id == EPIC || system_id == crate::xbox::XBOX_APP
+    system_id == STEAM
+        || system_id == EPIC
+        || system_id == crate::xbox::XBOX_APP
+        || system_id == crate::gog::GOG
+        || system_id == crate::itch::ITCH
 }
 
 /// Steam tools that show up as installed apps but aren't games.
@@ -30,6 +34,10 @@ pub fn scan() -> Vec<Game> {
     }
     games.extend(scan_epic(&epic_manifests()));
     games.extend(crate::xbox::scan());
+    games.extend(crate::gog::scan());
+    if let Some(apps) = crate::itch::apps_dir() {
+        games.extend(crate::itch::scan(&apps));
+    }
     games
 }
 
@@ -163,6 +171,13 @@ fn pc_game(store: &str, id: &str, name: &str, uri: String) -> Game {
 
 /// Hands the launcher URI to Windows; the store client starts the game.
 pub fn launch(game: &Game) -> anyhow::Result<()> {
+    // DRM-free stores: `path` is the game's executable.
+    if game.system_id == crate::gog::GOG {
+        return crate::gog::launch(&game.path);
+    }
+    if game.system_id == crate::itch::ITCH {
+        return crate::itch::launch(&game.path);
+    }
     std::process::Command::new("explorer.exe")
         .arg(&game.path)
         .spawn()?;

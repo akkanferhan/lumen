@@ -230,6 +230,18 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
             game.thumb_name = posters.get(&game.thumb_name).cloned().unwrap_or_default();
         }
     }
+    // GOG games carry their product id; swap it for the product's art URL.
+    let gog_ids: Vec<String> = games
+        .iter()
+        .filter(|g| g.system_id == crate::gog::GOG)
+        .map(|g| g.thumb_name.clone())
+        .collect();
+    if !gog_ids.is_empty() {
+        let art = crate::gog::art(&gog_ids, &state.dirs.data.join("gog-art.json")).await;
+        for game in games.iter_mut().filter(|g| g.system_id == crate::gog::GOG) {
+            game.thumb_name = art.get(&game.thumb_name).cloned().unwrap_or_default();
+        }
+    }
     // Loosely named files ("Spiderman.cue") get the closest box art name.
     crate::art::resolve(&mut games, &state.dirs.data.join("art")).await;
     *state.library.lock().unwrap() = games;
