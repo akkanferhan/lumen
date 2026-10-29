@@ -53,6 +53,24 @@ export const THEMES: Theme[] = [
     description: "Siyah-beyaz, daktilo yazısı; kapaklar seçilince renklenir. Fanzin sayfası gibi.",
     layout: "grid",
   },
+  {
+    id: "gece",
+    name: "Gece",
+    description: "Saf siyah zemin, ince çizgiler, renk yalnızca kapaklarda. OLED ekranlarda pil dostu.",
+    layout: "grid",
+  },
+  {
+    id: "pastel",
+    name: "Pastel",
+    description: "Açık lavanta ve şeftali tonları, yumuşak köşeler, yuvarlak yazı. Gündüz oyunları için.",
+    layout: "grid",
+  },
+  {
+    id: "terminal",
+    name: "Terminal",
+    description: "Yeşil fosforlu monitör: tek renk, monospace yazı ve hızlı liste görünümü.",
+    layout: "list",
+  },
 ];
 
 export function themeOf(id: string | undefined): Theme {

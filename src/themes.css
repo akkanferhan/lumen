@@ -887,3 +887,200 @@
 [data-theme="kagit"] .cover-fallback-system {
   color: var(--text-dim);
 }
+
+
+/* ======================= Gece: true black for OLED ======================= */
+
+:root[data-theme="gece"] {
+  --bg: #000000;
+  --bg-elev: #0a0a0a;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.1);
+  --text: #f2f2f2;
+  --text-dim: #9a9a9a;
+  --text-faint: #5e5e5e;
+  --brand: #ffffff;
+  --brand-soft: rgba(255, 255, 255, 0.1);
+  --on-text: #000000;
+  --chrome: rgba(0, 0, 0, 0.9);
+  --panel: rgba(8, 8, 8, 0.98);
+  --scrim: rgba(0, 0, 0, 0.7);
+  --scrim-strong: rgba(0, 0, 0, 0.95);
+  --radius-s: 0.3rem;
+  --radius-m: 0.45rem;
+  --radius-l: 0.7rem;
+}
+
+/* No glow or blurred art: black pixels stay off on OLED. */
+[data-theme="gece"] .ambient-art {
+  display: none;
+}
+
+[data-theme="gece"] .ambient {
+  background: #000;
+}
+
+[data-theme="gece"] .card .cover-blur {
+  display: none;
+}
+
+[data-theme="gece"] .card.focused .card-art {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+[data-theme="gece"] .tab.active {
+  background: none;
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 #fff;
+  border-radius: 0;
+}
+
+[data-theme="gece"] .tab.active .count {
+  color: var(--text-dim);
+}
+
+/* ======================= Pastel: soft and light ======================= */
+
+:root[data-theme="pastel"] {
+  --bg: #f6f1fb;
+  --bg-elev: #ffffff;
+  --surface: rgba(96, 72, 140, 0.06);
+  --surface-strong: rgba(96, 72, 140, 0.12);
+  --line: rgba(96, 72, 140, 0.14);
+  --text: #2d2340;
+  --text-dim: #5d5274;
+  --text-faint: #9a90ad;
+  --brand: #e2789a;
+  --brand-soft: rgba(226, 120, 154, 0.16);
+  --success: #3e9e78;
+  --danger: #d0506a;
+  --on-text: #ffffff;
+  --chrome: rgba(246, 241, 251, 0.9);
+  --panel: rgba(255, 255, 255, 0.97);
+  --scrim: rgba(246, 241, 251, 0.55);
+  --scrim-strong: rgba(246, 241, 251, 0.94);
+  --radius-s: 0.8rem;
+  --radius-m: 1.2rem;
+  --radius-l: 1.8rem;
+  --font-display: "Outfit Variable", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+
+[data-theme="pastel"] .ambient-art {
+  display: none;
+}
+
+[data-theme="pastel"] .ambient {
+  background:
+    radial-gradient(60% 50% at 10% 0%, rgba(255, 205, 178, 0.55), transparent 70%),
+    radial-gradient(50% 45% at 95% 10%, rgba(196, 178, 255, 0.5), transparent 70%),
+    var(--bg);
+}
+
+[data-theme="pastel"] h1,
+[data-theme="pastel"] h2,
+[data-theme="pastel"] h3,
+[data-theme="pastel"] .brand,
+[data-theme="pastel"] .tab,
+[data-theme="pastel"] .btn {
+  font-family: var(--font-display);
+}
+
+[data-theme="pastel"] .card-art,
+[data-theme="pastel"] .sheet-art,
+[data-theme="pastel"] .menu,
+[data-theme="pastel"] .toast {
+  box-shadow: 0 0.6rem 1.6rem rgba(96, 72, 140, 0.14);
+}
+
+[data-theme="pastel"] .tab.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+[data-theme="pastel"] .tab.active .count {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="pastel"] .glyph.key,
+[data-theme="pastel"] .glyph.pill {
+  color: var(--text);
+}
+
+[data-theme="pastel"] .callout.info {
+  color: #3d2f8a;
+}
+
+[data-theme="pastel"] .callout {
+  color: #8a2440;
+}
+
+[data-theme="pastel"] .fav-badge {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* ======================= Terminal: green phosphor ======================= */
+
+:root[data-theme="terminal"] {
+  --bg: #020a04;
+  --bg-elev: #06130a;
+  --surface: rgba(80, 255, 140, 0.05);
+  --surface-strong: rgba(80, 255, 140, 0.12);
+  --line: rgba(80, 255, 140, 0.22);
+  --text: #7dffa8;
+  --text-dim: #45c573;
+  --text-faint: #2a7d48;
+  --brand: #7dffa8;
+  --brand-soft: rgba(125, 255, 168, 0.14);
+  --success: #7dffa8;
+  --danger: #ff6b5a;
+  --on-text: #020a04;
+  --chrome: rgba(2, 10, 4, 0.94);
+  --panel: rgba(4, 16, 8, 0.98);
+  --scrim: rgba(2, 10, 4, 0.7);
+  --scrim-strong: rgba(2, 10, 4, 0.95);
+  --radius-s: 0;
+  --radius-m: 0;
+  --radius-l: 0;
+  --font-display: "VT323", "Cascadia Code", Consolas, monospace;
+}
+
+:root[data-theme="terminal"] {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 1.4vw, 27px);
+}
+
+[data-theme="terminal"] .ambient-art {
+  display: none;
+}
+
+/* Faint scanlines and a soft glow on text. */
+[data-theme="terminal"] .ambient {
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
+    radial-gradient(90% 70% at 50% 40%, rgba(40, 140, 70, 0.18), transparent 70%),
+    var(--bg);
+}
+
+[data-theme="terminal"] h1,
+[data-theme="terminal"] h2,
+[data-theme="terminal"] h3,
+[data-theme="terminal"] .brand {
+  text-shadow: 0 0 0.5rem rgba(125, 255, 168, 0.45);
+  letter-spacing: 0.02em;
+}
+
+[data-theme="terminal"] .tab.active,
+[data-theme="terminal"] .btn.primary {
+  background: var(--text);
+  color: var(--on-text);
+}
+
+[data-theme="terminal"] .tab.active .count {
+  color: var(--on-text);
+}
+
+[data-theme="terminal"] .cover-img {
+  filter: grayscale(1) sepia(1) hue-rotate(80deg) saturate(2.4) brightness(0.9);
+}

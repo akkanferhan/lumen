@@ -50,6 +50,8 @@ export function App() {
           <Library
             onOpen={(g) => setOpenGameId(g.id)}
             onMenu={() => setMenuOpen(true)}
+            onImport={() => setImportOpen(true)}
+            onStore={() => setStoreOpen(true)}
             covered={!!openGameId || menuOpen || storeOpen || importOpen || raLoginOpen}
           />
           {storeOpen && <HomebrewStore onClose={() => setStoreOpen(false)} />}
