@@ -24,6 +24,8 @@ interface Tab {
   games: Game[];
   /** A supported system with no games yet: its tab shows how to add some. */
   empty?: boolean;
+  /** The first empty system: a divider sets the empty ones apart. */
+  firstEmpty?: boolean;
 }
 
 function useTabs(games: Game[], collections: Collection[]): Tab[] {
@@ -44,6 +46,10 @@ function useTabs(games: Game[], collections: Collection[]): Tab[] {
         return { id: s.id, label: s.short, games: list, empty: list.length === 0 };
       })
       .filter((t) => !t.empty || !isPcSystem(t.id));
+    // Systems with games come first; empty ones wait at the end so LB/RB
+    // doesn't have to step through them to reach your games.
+    const filled = bySystem.filter((t) => !t.empty);
+    const empty = bySystem.filter((t) => t.empty).map((t, i) => ({ ...t, firstEmpty: i === 0 }));
 
     // Store games that aren't installed live only in their store's tab.
     const installed = games.filter((g) => !g.notInstalled);
@@ -59,7 +65,8 @@ function useTabs(games: Game[], collections: Collection[]): Tab[] {
           games: c.games.map((id) => games.find((g) => g.id === id)).filter((g): g is Game => !!g),
         }))
         .filter((t) => t.games.length > 0),
-      ...bySystem,
+      ...filled,
+      ...empty,
     ];
   }, [games, collections]);
 }
@@ -298,11 +305,11 @@ export function Library({
           {tabs.map((t, i) => (
             <button
               key={t.id}
-              className={`tab${i === tabIndex ? " active" : ""}${t.empty ? " tab-empty" : ""}`}
+              className={`tab${i === tabIndex ? " active" : ""}${t.empty ? " tab-empty" : ""}${t.firstEmpty ? " tab-empty-first" : ""}`}
               onClick={() => switchTab(i - tabIndex)}
             >
               {t.label}
-              <span className="count">{t.games.length}</span>
+              <span className="count">{t.empty ? "+" : t.games.length}</span>
             </button>
           ))}
         </div>
