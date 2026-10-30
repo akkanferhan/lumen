@@ -1,0 +1,21 @@
+src-tauri/src/ally.rs
+  s_e07464b85ba926::t_7b07c81d94c3a8 4,6-42,46,49-74,80-81,83,89-97,99-100,105-111,113-119,122-141
+src-tauri/src/lib.rs
+  s_e07464b85ba926::t_7b07c81d94c3a8 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aef40e81173d1d1b5e78f68fcadcfc0a3c06ffea",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
