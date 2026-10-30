@@ -32,6 +32,8 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     if state.running.lock().unwrap().is_some() {
         bail!("Zaten bir oyun çalışıyor");
     }
+    // Games need the Ally's controller as a gamepad, not keyboard and mouse.
+    crate::ally::force_gamepad_mode();
 
     // Store games start through their launcher; Lumen can't follow their process.
     if crate::pc::is_pc(&game.system_id) {
@@ -474,10 +476,38 @@ fn bring_up_when_shown(app: AppHandle, pid: u32) {
             if crate::windows::focus_process(pid) {
                 hide_lumen(&app);
                 crate::overlay::show(&app);
+                keep_game_in_front(&app, pid).await;
                 return;
             }
         }
     });
+}
+
+/// Emulators often swap windows while starting (DuckStation shows its main
+/// window, then the fullscreen game window), and Windows may hand focus back
+/// to Lumen in between, leaving the game behind. For a few seconds, put the
+/// game back in front whenever it loses focus, unless the player opened the
+/// quick menu (Lumen restored).
+async fn keep_game_in_front(app: &AppHandle, pid: u32) {
+    for _ in 0..16 {
+        tokio::time::sleep(Duration::from_millis(250)).await;
+        let state = app.state::<AppState>();
+        let still_running = state
+            .running
+            .lock()
+            .unwrap()
+            .as_ref()
+            .is_some_and(|g| g.pid == Some(pid));
+        let menu_open = app
+            .get_webview_window("main")
+            .is_some_and(|w| !w.is_minimized().unwrap_or(true));
+        if !still_running || menu_open {
+            return;
+        }
+        if !crate::windows::is_foreground(pid) {
+            crate::windows::focus_process(pid);
+        }
+    }
 }
 
 /// Steps Lumen out of the way while the game plays; `focus_lumen` brings it

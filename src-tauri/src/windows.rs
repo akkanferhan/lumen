@@ -128,13 +128,41 @@ pub fn bring_to_front(hwnd: isize) {
 /// Focuses the main visible window of `pid` (back to the game).
 #[cfg(windows)]
 pub fn focus_process(pid: u32) -> bool {
-    match process_windows(pid).first() {
+    match main_window(pid) {
         Some(hwnd) => {
-            bring_to_front(*hwnd as isize);
+            bring_to_front(hwnd as isize);
             true
         }
         None => false,
     }
+}
+
+/// The largest visible window of `pid`: the game, not a splash or progress
+/// window that some emulators (DuckStation) show first and then hide.
+#[cfg(windows)]
+fn main_window(pid: u32) -> Option<windows_sys::Win32::Foundation::HWND> {
+    use windows_sys::Win32::Foundation::RECT;
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetWindowRect;
+    process_windows(pid).into_iter().max_by_key(|&hwnd| {
+        let mut rect: RECT = unsafe { std::mem::zeroed() };
+        // SAFETY: `hwnd` was just enumerated; a stale one leaves `rect` zeroed.
+        unsafe { GetWindowRect(hwnd, &mut rect) };
+        (rect.right - rect.left) as i64 * (rect.bottom - rect.top) as i64
+    })
+}
+
+/// Whether the foreground window belongs to `pid` or one of its children.
+#[cfg(windows)]
+pub fn is_foreground(pid: u32) -> bool {
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+    // SAFETY: no arguments; returns null when nothing has focus.
+    let foreground = unsafe { GetForegroundWindow() };
+    process_windows(pid).contains(&foreground)
+}
+
+#[cfg(not(windows))]
+pub fn is_foreground(_pid: u32) -> bool {
+    false
 }
 
 #[cfg(not(windows))]
@@ -194,26 +222,44 @@ pub fn set_process_suspended(_pid: u32, _suspend: bool) -> bool {
     false
 }
 
-/// Shows a window above everything without taking focus from the game
-/// (the in-game menu button).
+/// Turns a window into one that never takes focus, even when tapped, and
+/// stays out of Alt+Tab (the in-game menu button).
 #[cfg(windows)]
-pub fn show_topmost_no_activate(hwnd: isize) {
+pub fn make_no_activate(hwnd: isize) {
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        SetWindowPos, ShowWindow, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
-        SW_SHOWNOACTIVATE,
+        GetWindowLongPtrW, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     };
     let hwnd = hwnd as windows_sys::Win32::Foundation::HWND;
     // SAFETY: plain Win32 calls on a window handle; an invalid one just fails.
     unsafe {
-        ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+        let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        SetWindowLongPtrW(
+            hwnd,
+            GWL_EXSTYLE,
+            style | (WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW) as isize,
+        );
+    }
+}
+
+/// Places a window at the given physical rect and shows it above everything
+/// in one step, without taking focus from the game: it is never on screen at
+/// a stale size or position (the in-game menu button).
+#[cfg(windows)]
+pub fn show_topmost_no_activate(hwnd: isize, x: i32, y: i32, width: i32, height: i32) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_SHOWWINDOW,
+    };
+    let hwnd = hwnd as windows_sys::Win32::Foundation::HWND;
+    // SAFETY: plain Win32 call on a window handle; an invalid one just fails.
+    unsafe {
         SetWindowPos(
             hwnd,
             HWND_TOPMOST,
-            0,
-            0,
-            0,
-            0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+            x,
+            y,
+            width,
+            height,
+            SWP_NOACTIVATE | SWP_SHOWWINDOW,
         );
     }
 }
