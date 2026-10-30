@@ -11,15 +11,14 @@
 pub fn force_gamepad_mode() {
     // Only on a recognised Ally-family handheld, so no other ASUS device
     // (a laptop keyboard shares the vendor collection) gets the command.
-    if crate::device::device().model.is_none() {
-        return;
-    }
     #[cfg(windows)]
-    std::thread::spawn(|| {
-        if let Err(e) = send_gamepad_mode() {
-            eprintln!("ally: gamepad mode not set: {e}");
-        }
-    });
+    if crate::device::device().model.is_some() {
+        std::thread::spawn(|| {
+            if let Err(e) = send_gamepad_mode() {
+                eprintln!("ally: gamepad mode not set: {e}");
+            }
+        });
+    }
 }
 
 #[cfg(windows)]
