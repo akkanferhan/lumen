@@ -1,0 +1,41 @@
+src-tauri/src/sleep.rs
+  s_e07464b85ba926::t_194b75d82c1a6b 33-36
+src-tauri/src/windows.rs
+  s_e07464b85ba926::t_e9659944b193e5 131,133,140-167,225-226,228,230,235-254,258-262
+src-tauri/src/overlay.rs
+  s_e07464b85ba926::t_526515e9d6d3fa 4-5,17-18,24,39-40,56-65
+src-tauri/src/launcher.rs
+  s_e07464b85ba926::t_fa27a451720c28 35-36
+  s_e07464b85ba926::t_2330f1b8fdf4cf 479,486-510
+  s_e07464b85ba926::t_14d408323e8917 511-512
+src/main.tsx
+  s_e07464b85ba926::t_2330f1b8fdf4cf 10-11,13
+src/styles.css
+  s_e07464b85ba926::t_2330f1b8fdf4cf 2171-2172,2175-2178
+src-tauri/Cargo.toml
+  s_e07464b85ba926::t_194b75d82c1a6b 44-45
+src-tauri/src/ally.rs
+  s_e07464b85ba926::t_40b76d53c0bdef 1-47,52-61
+  s_e07464b85ba926::t_af8d99d4674069 48-51
+src-tauri/src/lib.rs
+  s_e07464b85ba926::t_194b75d82c1a6b 2,61,64-69
+  s_e07464b85ba926::t_6397c511808784 70
+src-tauri/Cargo.lock
+  s_e07464b85ba926::t_fd7516dbc42650 1488-1500,2168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "91a1f5b4c14493968d6336a6a621759306d81a9a",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
