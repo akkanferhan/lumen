@@ -51,6 +51,7 @@ pub fn run() {
         .setup(|app| {
             let state = state::AppState::load(app.handle())?;
             crash::install(&state.dirs.data);
+            ally::init(&state.dirs.data);
             launcher::thaw_leftover(&state.dirs.data);
             // Manage state before starting anything that may call app.state().
             app.manage(state);
