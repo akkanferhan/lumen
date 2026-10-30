@@ -2168,9 +2168,14 @@ html.overlay-window #root {
   overflow: hidden;
 }
 
+/* Fixed size in the top-right corner, so it stays a small button even if
+   the window is ever larger than the 64px it is shown at. */
 .overlay-button {
   position: fixed;
-  inset: 6px;
+  top: 6px;
+  right: 6px;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
   border-radius: 999px;

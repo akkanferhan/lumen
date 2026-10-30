@@ -1,8 +1,8 @@
 //! A small touch button over the running game that opens the quick menu.
 //! Unlike Select + Start it can't reach the game: a tap on the screen is
 //! never a controller input. It is its own transparent, always-on-top
-//! window, shown without taking focus once the game's window is up, and
-//! hidden while Lumen is in front.
+//! window that never takes focus (not even when tapped), shown once the
+//! game's window is up and hidden while Lumen is in front.
 
 use tauri::{AppHandle, Manager};
 
@@ -14,13 +14,14 @@ const SIZE: f64 = 64.0;
 const MARGIN: f64 = 16.0;
 
 /// Creates the (hidden) button window. Windows only: elsewhere Lumen runs as
-/// a UI preview without emulators.
+/// a UI preview without emulators. It is placed and sized each time it is
+/// shown (see `show`), so it never flashes up at a default size.
 pub fn create(app: &AppHandle) {
     #[cfg(windows)]
     {
         use tauri::{WebviewUrl, WebviewWindowBuilder};
         let Ok(window) =
-            WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html".into()))
+            WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html?overlay".into()))
                 .title("Lumen")
                 .inner_size(SIZE, SIZE)
                 .decorations(false)
@@ -35,13 +36,8 @@ pub fn create(app: &AppHandle) {
         else {
             return;
         };
-        // Top-right corner of the screen the game is on (the built-in one).
-        if let Ok(Some(monitor)) = window.primary_monitor() {
-            let scale = monitor.scale_factor();
-            let x =
-                monitor.position().x as f64 + monitor.size().width as f64 - (SIZE + MARGIN) * scale;
-            let y = monitor.position().y as f64 + MARGIN * scale;
-            let _ = window.set_position(tauri::PhysicalPosition::new(x as i32, y as i32));
+        if let Ok(hwnd) = window.hwnd() {
+            crate::windows::make_no_activate(hwnd.0 as isize);
         }
     }
     #[cfg(not(windows))]
@@ -57,9 +53,16 @@ pub fn show(app: &AppHandle) {
         .overlay_button;
     #[cfg(windows)]
     if let (true, Some(window)) = (enabled, app.get_webview_window(LABEL)) {
-        if let Ok(hwnd) = window.hwnd() {
-            crate::windows::show_topmost_no_activate(hwnd.0 as isize);
-        }
+        // Top-right corner of the screen the game is on (the built-in one).
+        let (Ok(hwnd), Ok(Some(monitor))) = (window.hwnd(), window.primary_monitor()) else {
+            return;
+        };
+        let scale = monitor.scale_factor();
+        let size = (SIZE * scale).round() as i32;
+        let margin = (MARGIN * scale).round() as i32;
+        let x = monitor.position().x + monitor.size().width as i32 - size - margin;
+        let y = monitor.position().y + margin;
+        crate::windows::show_topmost_no_activate(hwnd.0 as isize, x, y, size, size);
     }
     #[cfg(not(windows))]
     let _ = enabled;

@@ -1,4 +1,5 @@
 mod achievements;
+mod ally;
 mod art;
 mod autofix;
 mod backup;
@@ -57,7 +58,15 @@ pub fn run() {
             input::spawn(app.handle().clone(), running);
             sleep::watch(app.handle().clone());
             overlay::create(app.handle());
+            ally::force_gamepad_mode();
             Ok(())
+        })
+        // Armoury Crate may switch the Ally to desktop (keyboard/mouse) mode
+        // while Lumen is in the background; take gamepad mode back on return.
+        .on_window_event(|window, event| {
+            if window.label() == "main" && matches!(event, tauri::WindowEvent::Focused(true)) {
+                ally::force_gamepad_mode();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_overview,

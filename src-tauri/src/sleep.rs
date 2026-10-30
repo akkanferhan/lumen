@@ -30,6 +30,10 @@ pub fn watch(app: AppHandle) {
         _setting: *const core::ffi::c_void,
     ) -> u32 {
         let Some(app) = APP.get() else { return 0 };
+        // The controller may wake up in its default (desktop) mode.
+        if matches!(kind, PBT_APMRESUMEAUTOMATIC | PBT_APMRESUMESUSPEND) {
+            crate::ally::force_gamepad_mode();
+        }
         let in_game = app
             .state::<crate::state::AppState>()
             .running
