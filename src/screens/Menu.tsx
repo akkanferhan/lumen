@@ -198,6 +198,17 @@ export function Menu({
       value: overview?.settings.overlayButton ? "Açık" : "Kapalı",
       run: () => actions.setOverlayButton(!overview?.settings.overlayButton),
     },
+    ...(overview?.settings.overlayButton
+      ? [
+          {
+            id: "overlay-status",
+            title: "Oyun içi pil ve saat",
+            sub: "Menü düğmesinin yanında pil yüzdesi ve saat; pil azalınca kırmızıya döner",
+            value: overview.settings.overlayStatus ? "Açık" : "Kapalı",
+            run: () => actions.setOverlayStatus(!overview.settings.overlayStatus),
+          },
+        ]
+      : []),
     {
       id: "combo",
       title: "Select + Start kısayolu",

@@ -626,6 +626,11 @@ export const actions = {
     await refreshOverview();
   },
 
+  async setOverlayStatus(enabled: boolean) {
+    await api.setOverlayStatus(enabled);
+    await refreshOverview();
+  },
+
   async setOverlayButton(enabled: boolean) {
     await api.setOverlayButton(enabled);
     await refreshOverview();

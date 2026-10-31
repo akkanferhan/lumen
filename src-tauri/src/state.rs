@@ -35,6 +35,8 @@ pub struct Settings {
     pub quick_combo: bool,
     /// A small touch button over the game opens the quick menu.
     pub overlay_button: bool,
+    /// Battery and clock beside the in-game menu button.
+    pub overlay_status: bool,
 }
 
 impl Default for Settings {
@@ -50,6 +52,7 @@ impl Default for Settings {
             filter: crate::filters::FilterSetting::Original,
             quick_combo: true,
             overlay_button: true,
+            overlay_status: true,
         }
     }
 }

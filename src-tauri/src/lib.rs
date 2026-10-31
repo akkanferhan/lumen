@@ -95,6 +95,7 @@ pub fn run() {
             commands::overlay_pressed,
             commands::set_quick_combo,
             commands::set_overlay_button,
+            commands::set_overlay_status,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,
