@@ -112,7 +112,7 @@
   position: absolute;
   z-index: 1;
   left: var(--gutter);
-  top: 18%;
+  top: calc(18% + var(--continue-h, 0rem));
   max-width: min(46rem, 60%);
   animation: rise 500ms var(--ease-out);
 }
@@ -237,7 +237,7 @@
 
 .plain {
   position: absolute;
-  inset: 8.6rem 0 4.2rem;
+  inset: calc(8.6rem + var(--continue-h, 0rem)) 0 4.2rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
   gap: 2.4rem;
@@ -540,7 +540,7 @@
 
 .shelves {
   position: absolute;
-  inset: 8.2rem 0 4.2rem;
+  inset: calc(8.2rem + var(--continue-h, 0rem)) 0 4.2rem;
   overflow-y: auto;
   scrollbar-width: none;
   padding: 0.6rem 0 30vh;
@@ -694,7 +694,7 @@
 
 .flow {
   position: absolute;
-  inset: 8.2rem 0 4.2rem;
+  inset: calc(8.2rem + var(--continue-h, 0rem)) 0 4.2rem;
   overflow: hidden;
   perspective: 1100px;
 }
