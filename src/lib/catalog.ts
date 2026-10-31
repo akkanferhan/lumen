@@ -14,7 +14,24 @@ const PC_SYSTEMS: SystemDef[] = [
 
 export const isPcSystem = (id: string) => PC_SYSTEMS.some((s) => s.id === id);
 
-export const systems = [...PC_SYSTEMS, ...(manifestJson.systems as unknown as SystemDef[])];
+/** Platforms listed first, in this order; the rest keep their own order. */
+const LEADING: ((s: SystemDef) => boolean)[] = [
+  (s) => s.id === "steam",
+  // The Xbox app's PC games, then the Xbox consoles.
+  (s) => s.id === "xboxapp" || s.maker === "Microsoft",
+  (s) => s.id === "epic",
+  (s) => s.maker === "Sony",
+  (s) => s.maker === "Nintendo",
+];
+const rank = (s: SystemDef) => {
+  const i = LEADING.findIndex((matches) => matches(s));
+  return i === -1 ? LEADING.length : i;
+};
+
+/** Every platform, Steam, Xbox, Epic, PlayStation and Nintendo first (a stable sort). */
+export const systems = [...PC_SYSTEMS, ...(manifestJson.systems as unknown as SystemDef[])].sort(
+  (a, b) => rank(a) - rank(b),
+);
 export const emulators = manifestJson.emulators as unknown as EmulatorDef[];
 
 const systemsById = new Map(systems.map((s) => [s.id, s]));
