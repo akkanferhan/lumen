@@ -542,6 +542,18 @@ export const actions = {
     await refreshOverview();
   },
 
+  /** Back up into a cloud drive's folder (one of `api.cloudFolders`). */
+  async setBackupDir(dir: string) {
+    await api.setBackup(true, dir);
+    await refreshOverview();
+  },
+
+  async setBackupSync(enabled: boolean) {
+    await api.setBackupSync(enabled);
+    await refreshOverview();
+    if (enabled) notify("Her oyundan önce buluttaki daha yeni kayıtlar alınacak", "success");
+  },
+
   async setPower(power: PowerSetting) {
     await api.setPower(power);
     await refreshOverview();

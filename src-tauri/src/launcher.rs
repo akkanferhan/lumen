@@ -83,6 +83,7 @@ pub async fn launch(
         .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
 
     config::configure(emu, exe_dir, bios.as_deref(), state.tier())?;
+    pull_synced_saves(&state, &emu.id).await;
     {
         let account = state.ra.lock().unwrap().clone();
         let hardcore = state.settings.lock().unwrap().ra_hardcore;
@@ -490,6 +491,26 @@ pub fn is_resumable(state: &AppState, game: &Game) -> bool {
         &format!("**/states/**/{}.state.auto", glob::Pattern::escape(&stem)),
     )
     .is_some()
+}
+
+/// Cross-device sync: newer saves for this emulator from the backup folder
+/// (another PC or handheld wrote them there), before the game starts. A
+/// cloud folder that is slow to answer can't hold the launch up for long.
+async fn pull_synced_saves(state: &AppState, emulator: &str) {
+    let backup = state.settings.lock().unwrap().backup.clone();
+    if !backup.enabled || !backup.sync {
+        return;
+    }
+    let target = backup.target();
+    if !target.is_dir() {
+        return;
+    }
+    let install = state.dirs.emulators.join(emulator);
+    let emulator = emulator.to_string();
+    let pull = tauri::async_runtime::spawn_blocking(move || {
+        crate::backup::restore_emulator(&emulator, &install, &target)
+    });
+    let _ = tokio::time::timeout(Duration::from_secs(20), pull).await;
 }
 
 /// Brings the emulator's window to the front once it appears and minimizes

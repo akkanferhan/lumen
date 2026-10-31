@@ -39,6 +39,14 @@ export interface BackupSettings {
   enabled: boolean;
   dir: string | null;
   lastBackup: number | null;
+  /** Newer saves are pulled from the backup folder before each game. */
+  sync: boolean;
+}
+
+/** A cloud drive's synced folder on this PC (backup goes inside it). */
+export interface CloudFolder {
+  name: string;
+  path: string;
 }
 
 export interface BackupReport {

@@ -111,7 +111,7 @@ let mockSlots: StateSlot[] = [1, 2, 3, 4].map((slot) => ({
 const removed = new Set<string>();
 let power: PowerSetting = "auto";
 let autostart = false;
-let backup: BackupSettings = { enabled: true, dir: null, lastBackup: null };
+let backup: BackupSettings = { enabled: true, dir: null, lastBackup: null, sync: false };
 let raUser: { username: string; score: number | null } | null = null;
 let raHardcore = false;
 let theme = (() => {
@@ -408,6 +408,13 @@ export const mockApi: Api = {
   setBackup: async (enabled, dir) => {
     backup = { ...backup, enabled, dir: dir ?? backup.dir };
   },
+  setBackupSync: async (enabled) => {
+    backup = { ...backup, sync: enabled };
+  },
+  cloudFolders: async () => [
+    { name: "OneDrive", path: "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek" },
+    { name: "Google Drive", path: "G:\\My Drive\\Lumen Yedek" },
+  ],
   setPower: async (value) => {
     power = value;
   },

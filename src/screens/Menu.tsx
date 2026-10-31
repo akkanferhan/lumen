@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { HintBar } from "../components/HintBar";
 import { TextKeyboard } from "../components/TextKeyboard";
 import { ProgressBar } from "../components/Toasts";
-import { isTauri } from "../lib/api";
+import { api, isTauri } from "../lib/api";
 import { emulatorOf, emulators, installLabel, isPcSystem, systems } from "../lib/catalog";
 import { EXPERIMENTAL } from "../components/SystemGuide";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
-import type { FilterSetting, GraphicsSetting, PowerSetting, Tier } from "../lib/types";
+import type { CloudFolder, FilterSetting, GraphicsSetting, PowerSetting, Tier } from "../lib/types";
 import { formatLastPlayed } from "../lib/format";
 import { THEMES, themeOf } from "../lib/themes";
 
@@ -434,6 +434,12 @@ export function Menu({
   })];
 
   const backup = overview?.settings.backup;
+  // Cloud drives found on this PC, offered as backup folders.
+  const [clouds, setClouds] = useState<CloudFolder[]>([]);
+  useEffect(() => {
+    if (page === "backup") api.cloudFolders().then(setClouds).catch(() => setClouds([]));
+  }, [page]);
+  const cloudNow = clouds.find((c) => c.path === overview?.backupDir);
   const backupItems: Item[] = [
     {
       id: "auto",
@@ -442,12 +448,35 @@ export function Menu({
       value: backup?.enabled ? "Açık" : "Kapalı",
       run: () => actions.setBackup(!backup?.enabled),
     },
+    ...(clouds.length
+      ? [
+          {
+            id: "cloud",
+            title: "Bulut klasörü",
+            sub: cloudNow
+              ? "Kayıtlar bu bulut hesabına da gider"
+              : `Bu bilgisayarda bulunan: ${clouds.map((c) => c.name).join(", ")}`,
+            value: cloudNow?.name ?? "Seç",
+            run: () => {
+              const next = clouds[(clouds.findIndex((c) => c.path === overview?.backupDir) + 1) % clouds.length];
+              actions.setBackupDir(next.path);
+            },
+          },
+        ]
+      : []),
     {
       id: "folder",
       title: "Yedek klasörü",
       sub: overview?.backupDir,
       value: "Değiştir",
       run: () => actions.setBackup(!!backup?.enabled, true),
+    },
+    {
+      id: "sync",
+      title: "Cihazlar arası senkron",
+      sub: "Oyun açılmadan önce yedek klasöründeki daha yeni kayıtlar alınır; başka cihazda kaldığın yerden devam edersin",
+      value: backup?.sync ? "Açık" : "Kapalı",
+      run: () => actions.setBackupSync(!backup?.sync),
     },
     {
       id: "now",
@@ -666,7 +695,7 @@ export function Menu({
             : page === "kids"
               ? "Kütüphanede sadece seçtiğin oyunlar görünür; ayarlar, mağazalar ve oyun silme gizlenir."
             : page === "backup"
-              ? "Kayıtlar ve save state'ler seçtiğin klasöre kopyalanır; OneDrive klasörü buluta da taşır."
+              ? "Kayıtlar ve save state'ler seçtiğin klasöre kopyalanır; OneDrive, Google Drive veya Dropbox klasörü buluta da taşır."
               : page === "ra"
                 ? "Tek giriş tüm emülatörlere yazılır. Şifren saklanmaz, sadece oturum anahtarı tutulur."
                 : page === "theme"
