@@ -273,7 +273,7 @@ button {
 
 .grid-scroll {
   position: absolute;
-  inset: 8.6rem 0 4.2rem;
+  inset: calc(8.6rem + var(--continue-h, 0rem)) 0 4.2rem;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
@@ -492,7 +492,7 @@ button {
 
 .empty {
   position: absolute;
-  inset: 8.6rem 0 4.2rem;
+  inset: calc(8.6rem + var(--continue-h, 0rem)) 0 4.2rem;
   display: grid;
   place-items: center;
   padding: var(--gutter);
@@ -2168,6 +2168,95 @@ button {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
   }
+}
+
+/* ---------- "Devam et" card above Tümü ---------- */
+
+/* Layouts below start lower by --continue-h while the card is shown. */
+.library.has-continue {
+  --continue-h: 5.4rem;
+}
+
+.continue-card {
+  position: absolute;
+  z-index: 5;
+  top: 8rem;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 4.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.75rem 1.4rem 0.75rem 0.75rem;
+  border-radius: var(--radius-m);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--card-accent, var(--brand)) 22%, transparent), rgba(255, 255, 255, 0.03));
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out), box-shadow 160ms;
+}
+
+.continue-card.focused {
+  box-shadow: 0 0 0 3px var(--card-accent, var(--brand)), 0 1rem 2.4rem rgba(0, 0, 0, 0.45);
+  transform: scale(1.01);
+}
+
+.continue-art {
+  position: relative;
+  flex: none;
+  height: 3.6rem;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+}
+
+.continue-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.continue-eyebrow {
+  color: var(--card-accent, var(--brand));
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.continue-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.continue-meta {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.continue-play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 1rem;
+  opacity: 0.35;
+  transition: opacity 160ms;
+}
+
+.continue-card.focused .continue-play {
+  opacity: 1;
 }
 
 /* ---------- Loading screen while an emulator starts ---------- */

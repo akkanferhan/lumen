@@ -125,7 +125,21 @@ export function Library({
     return () => clearTimeout(id);
   }, [jumpLetter]);
   const index = Math.min(focus, Math.max(0, list.length - 1));
-  const focused = list[index];
+  // "Devam et": the last game played, above "Tümü". Lumen opens on it, so
+  // one press of A continues where you left off; up from the top row
+  // reaches it again.
+  const heroGame = useMemo(
+    () =>
+      tab?.id === "all" && !searching
+        ? games
+            .filter((g) => g.lastPlayed && !g.notInstalled)
+            .sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))[0]
+        : undefined,
+    [games, tab?.id, searching],
+  );
+  const [heroFocus, setHeroFocus] = useState(true);
+  const onHero = heroFocus && !!heroGame;
+  const focused = onHero ? undefined : list[index];
   // An empty system tab shows that system's guide instead of a blank page.
   const guide = !searching && tab?.empty ? tab.id : null;
   const freeGames = guide ? homebrew.filter((g) => g.system === guide).length : 0;
@@ -165,8 +179,23 @@ export function Library({
     if (!next || next.id === tab?.id) return;
     sfx.tab();
     focusByTab.current.set(tab.id, index);
+    setHeroFocus(false);
     setTabId(next.id);
     setFocus(focusByTab.current.get(next.id) ?? 0);
+  };
+
+  /** Up from the top: onto the "Devam et" card, when there is one. */
+  const toHero = () => {
+    if (!heroGame) return;
+    sfx.move();
+    setHeroFocus(true);
+  };
+
+  const continueHero = () => {
+    if (!heroGame) return;
+    sfx.confirm();
+    rumble(0.6, 60);
+    actions.play(heroGame);
   };
 
   /** Select: a random playable game from this list. Focus hops across a
@@ -233,10 +262,23 @@ export function Library({
     if (action === "up" || action === "down") {
       const next = shelves[row + (action === "up" ? -1 : 1)];
       if (next) move(next.start + Math.min(col, next.games.length - 1));
+      else if (action === "up") toHero();
     }
   };
 
   useInput((action) => {
+    if (onHero && heroGame) {
+      if (action === "a") return continueHero();
+      if (action === "y") {
+        sfx.confirm();
+        return onOpen(heroGame);
+      }
+      if (action === "down") {
+        sfx.move();
+        return setHeroFocus(false);
+      }
+      if (action === "up" || action === "left" || action === "right" || action === "lt" || action === "rt") return;
+    }
     if (shelves && (action === "up" || action === "down" || action === "left" || action === "right")) {
       moveShelf(action);
       return;
@@ -262,7 +304,8 @@ export function Library({
         if (index % columns !== columns - 1) move(index + 1);
         break;
       case "up":
-        move(index - columns);
+        if (index - columns < 0) toHero();
+        else move(index - columns);
         break;
       case "down":
         // From a partial last row's gap, land on the last game instead of doing nothing.
@@ -309,12 +352,16 @@ export function Library({
     }
   }, Layer.screen, !keyboard);
 
-  const accent = (focused && systemOf(focused.systemId)?.accent) || "var(--brand)";
-  const art = focused ? boxArtUrl(focused) : null;
+  // Grids drop their focus ring while the card has focus; the gallery,
+  // coverflow and list layouts always preview a game, so they keep theirs.
+  const shownIndex = onHero ? -1 : index;
+  const lit = onHero ? heroGame : focused;
+  const accent = (lit && systemOf(lit.systemId)?.accent) || "var(--brand)";
+  const art = lit ? boxArtUrl(lit) : null;
   const root = overview?.settings.romRoot ?? "";
 
   return (
-    <div className="library" style={{ "--accent": accent } as CSSProperties}>
+    <div className={`library${heroGame && !guide ? " has-continue" : ""}`} style={{ "--accent": accent } as CSSProperties}>
       <Ambient art={art} />
 
       <header className="topbar">
@@ -347,6 +394,14 @@ export function Library({
         <span className="glyph pill" hidden={searching}>RB</span>
       </nav>
 
+      {heroGame && !guide && (
+        <ContinueCard
+          game={heroGame}
+          focused={onHero}
+          onPlay={() => (onHero ? continueHero() : setHeroFocus(true))}
+        />
+      )}
+
       {guide ? (
         <div className="empty">
           <SystemGuide systemId={guide} onImport={onImport} onStore={onStore} />
@@ -372,7 +427,7 @@ export function Library({
       ) : layout === "rail" ? (
         <GalleryView list={list} index={index} railRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
       ) : layout === "shelves" && shelves ? (
-        <ShelvesView shelves={shelves} index={index} scrollRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
+        <ShelvesView shelves={shelves} index={shownIndex} scrollRef={gridRef} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
       ) : layout === "coverflow" ? (
         <CoverflowView list={list} index={index} onPick={(i) => (i === index ? onOpen(list[i]) : move(i))} />
       ) : layout === "list" ? (
@@ -385,14 +440,14 @@ export function Library({
                 <CartridgeCard
                   key={game.id}
                   game={game}
-                  focused={i === index}
+                  focused={i === shownIndex}
                   onClick={() => (i === index ? onOpen(game) : move(i))}
                 />
               ) : (
                 <GameCard
                   key={game.id}
                   game={game}
-                  focused={i === index}
+                  focused={i === shownIndex}
                   showSystem={searching || tab.id === "all" || tab.id === "recent" || tab.id === "fav"}
                   onClick={() => (i === index ? onOpen(game) : move(i))}
                 />
@@ -427,6 +482,11 @@ export function Library({
             { action: "a", label: "İçe aktar" },
             ...(freeGames > 0 ? [{ action: "y" as const, label: "Ücretsiz oyunlar" }] : []),
             { action: "x", label: "Ara" },
+            { action: "start", label: "Menü" },
+          ] : onHero ? [
+            { action: "a", label: "Devam et" },
+            { action: "y", label: "Ayrıntılar" },
+            { action: "down", label: "Kütüphane" },
             { action: "start", label: "Menü" },
           ] : [
             { action: "a", label: "Aç" },
@@ -473,6 +533,34 @@ function GameCard({
 }
 
 /** Blurred box art of the focused game, cross-faded. */
+/** The last game played, one press away (see `heroGame`). */
+function ContinueCard({ game, focused, onPlay }: { game: Game; focused: boolean; onPlay: () => void }) {
+  const system = systemOf(game.systemId);
+  return (
+    <button
+      className={`continue-card${focused ? " focused" : ""}`}
+      style={{ "--card-accent": system?.accent } as CSSProperties}
+      onClick={onPlay}
+      tabIndex={-1}
+    >
+      <span className="continue-art">
+        <Cover game={game} />
+      </span>
+      <span className="continue-text">
+        <span className="continue-eyebrow">Kaldığın yerden devam et</span>
+        <span className="continue-title">{game.title}</span>
+        <span className="continue-meta">
+          <span lang="en">{system?.short}</span> · {formatLastPlayed(game.lastPlayed)}
+          {game.playSeconds > 0 && <> · {formatPlaytime(game.playSeconds)}</>}
+        </span>
+      </span>
+      <span className="continue-play" aria-hidden>
+        ▶
+      </span>
+    </button>
+  );
+}
+
 export function Ambient({ art }: { art: string | null }) {
   const [layers, setLayers] = useState<{ url: string; key: number }[]>([]);
   const key = useRef(0);

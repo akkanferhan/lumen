@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { onInputSource, type Action } from "../lib/input";
 
 const PAD: Partial<Record<Action, string>> = {
-  left: "◀▶", right: "◀▶", a: "A", b: "B", x: "X", y: "Y", lb: "LB", rb: "RB", lt: "LT", rt: "RT", start: "☰", select: "⧉",
+  up: "▲", down: "▼", left: "◀▶", right: "◀▶", a: "A", b: "B", x: "X", y: "Y", lb: "LB", rb: "RB", lt: "LT", rt: "RT", start: "☰", select: "⧉",
 };
 const KEYS: Partial<Record<Action, string>> = {
-  left: "←→", right: "←→", a: "Enter", b: "Esc", x: "X", y: "F", lb: "Q", rb: "E", lt: "PgUp", rt: "PgDn", start: "Tab", select: "S",
+  up: "↑", down: "↓", left: "←→", right: "←→", a: "Enter", b: "Esc", x: "X", y: "F", lb: "Q", rb: "E", lt: "PgUp", rt: "PgDn", start: "Tab", select: "S",
 };
 
 let current: "pad" | "keys" = "keys";
