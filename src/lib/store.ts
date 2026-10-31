@@ -597,6 +597,19 @@ export const actions = {
     }
   },
 
+  async setSgdbKey(key: string): Promise<boolean> {
+    try {
+      await api.setSgdbKey(key);
+      notify(key.trim() ? "SteamGridDB bağlandı · eksik kapaklar indiriliyor" : "SteamGridDB bağlantısı kaldırıldı", "success");
+      await refreshOverview();
+      await actions.rescan(true);
+      return true;
+    } catch (e) {
+      notify(errorText(e), "error", 9000);
+      return false;
+    }
+  },
+
   async setQuickCombo(enabled: boolean) {
     await api.setQuickCombo(enabled);
     await refreshOverview();

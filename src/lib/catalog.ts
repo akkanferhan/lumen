@@ -1,3 +1,4 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
 import manifestJson from "../../src-tauri/emulators.json";
 import homebrewJson from "../../src-tauri/homebrew.json";
 import type { EmulatorDef, Game, HomebrewGame, SystemDef } from "./types";
@@ -102,7 +103,9 @@ function thumbnailUrl(game: Pick<Game, "systemId" | "thumbName">, kind: ThumbKin
   return `https://thumbnails.libretro.com/${encodeURIComponent(system.thumbnails)}/${kind}/${encodeURIComponent(game.thumbName)}.png`;
 }
 
-export const boxArtUrl = (game: Pick<Game, "systemId" | "thumbName">) => thumbnailUrl(game, "Named_Boxarts");
+/** Box art: a downloaded cover (SteamGridDB) wins, else libretro / the store. */
+export const boxArtUrl = (game: Pick<Game, "systemId" | "thumbName"> & { cover?: string | null }) =>
+  game.cover ? convertFileSrc(game.cover) : thumbnailUrl(game, "Named_Boxarts");
 
 /** Title screen and in-game screenshot. */
 export const screenshotUrls = (game: Pick<Game, "systemId" | "thumbName">) =>

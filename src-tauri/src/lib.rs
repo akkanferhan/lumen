@@ -13,6 +13,7 @@ mod discs;
 mod filters;
 mod formats;
 mod gog;
+mod griddb;
 mod homebrew;
 mod importer;
 mod input;
@@ -89,6 +90,7 @@ pub fn run() {
             commands::toggle_collection,
             commands::play_stats,
             commands::set_steam_key,
+            commands::set_sgdb_key,
             commands::overlay_pressed,
             commands::set_quick_combo,
             commands::set_overlay_button,

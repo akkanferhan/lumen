@@ -120,7 +120,9 @@ pub fn best_match<'a>(names: &'a [String], stem: &str) -> Option<&'a String> {
 
 /// Points games whose file names have no exact art at the closest art name.
 /// Store games keep their catalog art.
-pub async fn resolve(games: &mut [Game], cache_dir: &Path) {
+/// Returns the games libretro has no box art for at all.
+pub async fn resolve(games: &mut [Game], cache_dir: &Path) -> Vec<usize> {
+    let mut missing = Vec::new();
     let systems: HashSet<String> = games.iter().map(|g| g.system_id.clone()).collect();
     for system_id in systems {
         let Some(system) = crate::manifest::system(&system_id) else {
@@ -139,17 +141,23 @@ pub async fn resolve(games: &mut [Game], cache_dir: &Path) {
             continue;
         }
         let names = boxart_names(system, cache_dir).await;
+        // No listing (offline, first start): nothing is known to be missing.
+        if names.is_empty() {
+            continue;
+        }
         let exact: HashSet<&str> = names.iter().map(String::as_str).collect();
         for i in pending {
             let game = &mut games[i];
             if exact.contains(game.thumb_name.as_str()) {
                 continue;
             }
-            if let Some(name) = best_match(&names, &game.thumb_name) {
-                game.thumb_name = name.clone();
+            match best_match(&names, &game.thumb_name) {
+                Some(name) => game.thumb_name = name.clone(),
+                None => missing.push(i),
             }
         }
     }
+    missing
 }
 
 #[cfg(test)]
