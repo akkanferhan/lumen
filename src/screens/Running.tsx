@@ -27,6 +27,7 @@ export function Running({ gameId }: { gameId: string }) {
   const game = useStore((s) => s.games.find((g) => g.id === gameId));
   const quickMenu = useStore((s) => s.quickMenu);
   const backButtons = useStore((s) => !!s.overview?.device.model && !!s.overview?.settings.backButtons);
+  const m2Action = useStore((s) => s.overview?.settings.m2Action);
   const [stopping, setStopping] = useState(false);
   const [focus, setFocus] = useState(0);
   // Save-state slots (RetroArch systems); null hides the row.
@@ -197,7 +198,7 @@ export function Running({ gameId }: { gameId: string }) {
             <p>
               {backButtons ? (
                 <>
-                  Oyun içinde <b>arka tuşa (M1/M2)</b> dokunmak menüyü açar, basılı tutmak kaydedip çıkar; oyuna hiçbir
+                  Oyun içinde <b>M1</b> arka tuşuna dokunmak menüyü açar, basılı tutmak kaydedip çıkar; oyuna hiçbir
                   tuş gitmez.
                 </>
               ) : (
@@ -223,6 +224,12 @@ export function Running({ gameId }: { gameId: string }) {
         )}
         {controls && (
           <div className="running-shortcuts">
+            {backButtons && m2Action && (m2Action === "screenshot" || (m2Action === "rewind" ? controls.rewind : controls.fastForward)) && (
+              <span>
+                <b>M2</b>{" "}
+                {m2Action === "rewind" ? "basılı tut: geri sar" : m2Action === "fastForward" ? "basılı tut: 3× hızlı" : "ekran görüntüsü"}
+              </span>
+            )}
             {controls.rewind && (
               <span>
                 <span className="combo">

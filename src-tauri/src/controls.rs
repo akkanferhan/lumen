@@ -62,6 +62,19 @@ pub const REWIND_SYSTEMS: &[&str] = &[
     "a2600", "a7800",
 ];
 
+/// What the Ally's M2 back button does in game (it never reaches the game).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum M2Action {
+    /// Rewinds while held.
+    #[default]
+    Rewind,
+    /// Runs 3× while held.
+    FastForward,
+    /// One screenshot per press.
+    Screenshot,
+}
+
 /// What the running game supports, for the in-game screen's hints.
 #[derive(Debug, Clone, Copy, Default, Serialize)]
 #[serde(rename_all = "camelCase")]

@@ -7,7 +7,7 @@ import { installLabel, isPcSystem, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
 import { formatBytes } from "./format";
 import { applyTheme } from "./themes";
-import type {
+import type { M2Action,
   AppUpdate,
   Game,
   Collection,
@@ -663,6 +663,11 @@ export const actions = {
       notify(errorText(e), "error");
       return false;
     }
+  },
+
+  async setM2Action(action: M2Action) {
+    await api.setM2Action(action);
+    await refreshOverview();
   },
 
   async setBackButtons(enabled: boolean) {

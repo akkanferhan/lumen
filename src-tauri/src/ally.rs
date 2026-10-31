@@ -14,20 +14,25 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
 
-/// The back buttons (M1/M2) open Lumen's in-game menu: they're bound to
-/// the keyboard's App-menu key, which a keyboard hook swallows while a game
-/// runs, so the game never sees the press (unlike Select + Start, which
-/// the emulator reads from the same pad).
+/// The back buttons: M1 opens Lumen's in-game menu and M2 runs a shortcut
+/// (rewind by default). They're bound to keyboard keys (App-menu, right
+/// Ctrl) that a keyboard hook swallows while a game runs, so the game never
+/// sees the press (unlike Select + Start, which the emulator reads from the
+/// same pad).
 static BACK_BUTTONS: AtomicBool = AtomicBool::new(false);
-/// A back button is held (set by the keyboard hook).
+/// M1 / M2 are held (set by the keyboard hook).
 static BACK_DOWN: AtomicBool = AtomicBool::new(false);
+static M2_DOWN: AtomicBool = AtomicBool::new(false);
 /// A game runs: the hook takes the App-menu key instead of passing it on.
 static SWALLOW: AtomicBool = AtomicBool::new(false);
 
-/// Firmware code for the App-menu key in the controller's key table
-/// (the same table G-Helper uses) and the Windows key it arrives as.
+/// Firmware codes in the controller's key table (the same table G-Helper
+/// uses): M1 sends App-menu (the in-game menu), M2 right Ctrl (its own
+/// shortcut, see `Settings::m2_action`). Both are swallowed in game.
 #[cfg(windows)]
 const APP_MENU: u8 = 0x84;
+#[cfg(windows)]
+const RIGHT_CTRL: u8 = 0x8D;
 /// ASUS's own M1 / M2 codes, restored when Lumen lets go of the buttons.
 #[cfg(windows)]
 const DEFAULT_M1: u8 = 0x8F;
@@ -45,9 +50,14 @@ pub fn back_buttons() -> bool {
     BACK_BUTTONS.load(Ordering::SeqCst) && crate::device::device().model.is_some()
 }
 
-/// A back button is held right now.
+/// M1 (the menu button) is held right now.
 pub fn back_button_down() -> bool {
     BACK_DOWN.load(Ordering::SeqCst)
+}
+
+/// M2 (the shortcut button) is held right now.
+pub fn m2_down() -> bool {
+    M2_DOWN.load(Ordering::SeqCst)
 }
 
 /// While a game runs the hook swallows the back buttons' key.
@@ -55,6 +65,7 @@ pub fn set_in_game(in_game: bool) {
     SWALLOW.store(in_game && back_buttons(), Ordering::SeqCst);
     if !in_game {
         BACK_DOWN.store(false, Ordering::SeqCst);
+        M2_DOWN.store(false, Ordering::SeqCst);
     }
 }
 
@@ -93,15 +104,20 @@ unsafe extern "system" fn keyboard_hook(
     wparam: windows_sys::Win32::Foundation::WPARAM,
     lparam: windows_sys::Win32::Foundation::LPARAM,
 ) -> windows_sys::Win32::Foundation::LRESULT {
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::VK_APPS;
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{VK_APPS, VK_RCONTROL};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         CallNextHookEx, HC_ACTION, KBDLLHOOKSTRUCT, WM_KEYDOWN, WM_SYSKEYDOWN,
     };
     if code == HC_ACTION as i32 && SWALLOW.load(Ordering::SeqCst) {
         let key = &*(lparam as *const KBDLLHOOKSTRUCT);
-        if key.vkCode == u32::from(VK_APPS) {
+        let flag = match key.vkCode {
+            k if k == u32::from(VK_APPS) => Some(&BACK_DOWN),
+            k if k == u32::from(VK_RCONTROL) => Some(&M2_DOWN),
+            _ => None,
+        };
+        if let Some(flag) = flag {
             let down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
-            BACK_DOWN.store(down, Ordering::SeqCst);
+            flag.store(down, Ordering::SeqCst);
             return 1; // never reaches the game
         }
     }
@@ -206,7 +222,7 @@ fn send_gamepad_mode() -> anyhow::Result<String> {
     let mut wake = vec![REPORT_ID];
     wake.extend_from_slice(b"ASUS Tech.Inc.");
     let binding = if back_buttons() {
-        back_button_binding(APP_MENU, APP_MENU)
+        back_button_binding(APP_MENU, RIGHT_CTRL)
     } else {
         back_button_binding(DEFAULT_M1, DEFAULT_M2)
     };

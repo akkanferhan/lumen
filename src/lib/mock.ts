@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { Collection, FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerMode, PowerSetting } from "./types";
+import type { Collection, FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, M2Action, Overview, PowerMode, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -97,6 +97,7 @@ let quickCombo = true;
 let overlayButton = true;
 let overlayStatus = true;
 let backButtons = true;
+let m2Action: M2Action = "rewind";
 let kids: { active: boolean; pinHash: string | null; collection: string | null; dailyMinutes: number | null } = {
   active: false,
   pinHash: null,
@@ -171,7 +172,7 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, quickCombo, overlayButton, overlayStatus, backButtons, kids: { ...kids, pinHash: kids.pinHash && "" } },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, quickCombo, overlayButton, overlayStatus, backButtons, m2Action, kids: { ...kids, pinHash: kids.pinHash && "" } },
     collections,
     steamAccount: true,
     steamLinked,
@@ -447,6 +448,9 @@ export const mockApi: Api = {
   },
   setBackButtons: async (enabled) => {
     backButtons = enabled;
+  },
+  setM2Action: async (action) => {
+    m2Action = action;
   },
   kidsStart: async (pin, collection, dailyMinutes) => {
     if (pin && !/^\d{4,}$/.test(pin)) throw "PIN en az 4 rakam olmalı";

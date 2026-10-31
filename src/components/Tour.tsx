@@ -50,8 +50,9 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
         { keys: [], label: <>Sağ üst köşedeki <b>☰</b> düğmesine dokun: hızlı menü (oyuna hiçbir tuş gitmez)</> },
         ...(backButtons
           ? ([
-              { keys: [], label: <>Arka tuşa (<b>M1/M2</b>) dokun: hızlı menü (oyuna hiçbir tuş gitmez)</> },
-              { keys: [], label: <>Arka tuşu basılı tut: <b>kaydet ve çık</b></> },
+              { keys: [], label: <><b>M1</b> arka tuşuna dokun: hızlı menü (oyuna hiçbir tuş gitmez)</> },
+              { keys: [], label: <><b>M1</b>'i basılı tut: <b>kaydet ve çık</b></> },
+              { keys: [], label: <><b>M2</b> arka tuşu: geri sar (menüden hızlı ileri ya da ekran görüntüsü yapabilirsin)</> },
             ] satisfies Shortcut[])
           : ([
               { keys: ["select", "start"], join: "+", label: "Hızlı menü: oyun duraklar" },
@@ -103,7 +104,8 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
       shortcuts: [
         ...(backButtons
           ? ([
-              { keys: [], label: <>Arka tuşa (<b>M1/M2</b>) dokun: hızlı menü, basılı tut: kaydet ve çık. Oyuna hiçbir tuş gitmez</> },
+              { keys: [], label: <><b>M1</b> arka tuşu: dokun menü, basılı tut kaydet ve çık. Oyuna hiçbir tuş gitmez</> },
+              { keys: [], label: <><b>M2</b> arka tuşu: basılı tut geri sar (Menü → M2 tuşu ile değiştir)</> },
             ] satisfies Shortcut[])
           : []),
         { keys: ["select", "lt"], join: "+", label: "Basılı tut: geri sar" },

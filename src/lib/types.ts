@@ -55,6 +55,8 @@ export interface BackupReport {
 }
 
 /** Kids mode (the PIN itself never reaches the UI). */
+export type M2Action = "rewind" | "fastForward" | "screenshot";
+
 export interface KidsSettings {
   active: boolean;
   /** Non-null once a PIN is set. */
@@ -83,6 +85,8 @@ export interface Settings {
   kids: KidsSettings;
   /** ROG Ally: the back buttons (M1/M2) open the in-game menu. */
   backButtons: boolean;
+  /** What the Ally's M2 back button does in game. */
+  m2Action: M2Action;
 }
 
 export interface RaUser {

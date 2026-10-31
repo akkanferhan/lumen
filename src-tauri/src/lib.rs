@@ -105,6 +105,7 @@ pub fn run() {
             commands::set_overlay_button,
             commands::set_overlay_status,
             commands::set_back_buttons,
+            commands::set_m2_action,
             commands::kids_start,
             commands::kids_stop,
             commands::played_since,
