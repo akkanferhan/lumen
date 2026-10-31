@@ -1,0 +1,34 @@
+src/lib/catalog.ts
+  s_e07464b85ba926::t_54a1f60b018770 17-21
+src-tauri/src/importer.rs
+  s_e07464b85ba926::t_45f5694697e39b 671-695
+  s_e07464b85ba926::t_c00866229603b9 56,58-64,67-84
+  s_e07464b85ba926::t_00ab1b6d9c0a84 670
+src/screens/ImportGames.tsx
+  s_e07464b85ba926::t_54a1f60b018770 76-81,105,112-115,118,128-148,206,223,252,256,283,286
+src/lib/api.ts
+  s_e07464b85ba926::t_c00866229603b9 35-36,55,127-137,152
+  s_e07464b85ba926::t_54a1f60b018770 4
+src/screens/Menu.tsx
+  s_e07464b85ba926::t_012d9b6db5841b 119
+src-tauri/src/commands.rs
+  s_e07464b85ba926::t_c00866229603b9 852-853,857,861-862,864
+src/lib/mock.ts
+  s_e07464b85ba926::t_c00866229603b9 222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "91dfaa6a5938a5352b0e24f987f1912decd7761c",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
