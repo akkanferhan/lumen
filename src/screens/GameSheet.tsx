@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { CollectionPicker } from "../components/CollectionPicker";
 import { ShotGallery } from "../components/ShotGallery";
 import { GameHistory } from "../components/GameHistory";
@@ -123,6 +123,26 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     if (gone) onClose();
   };
 
+  // The buttons wrap onto several rows: up/down moves to the closest button
+  // in the row above or below, by where they actually are on screen.
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const verticalNeighbour = (direction: "up" | "down"): number | null => {
+    const els = Array.from(actionsRef.current?.querySelectorAll<HTMLElement>(":scope > button") ?? []);
+    if (els.length !== buttons.length || !els[focus]) return null;
+    const rects = els.map((el) => el.getBoundingClientRect());
+    const here = rects[focus];
+    const centre = (r: DOMRect) => r.left + r.width / 2;
+    const rowDistance = (r: DOMRect) => (direction === "down" ? r.top - here.bottom : here.top - r.bottom);
+    const candidates = rects
+      .map((r, i) => ({ i, r, gap: rowDistance(r) }))
+      .filter((c) => c.gap > -here.height / 2);
+    if (!candidates.length) return null;
+    const nearestRow = Math.min(...candidates.map((c) => c.gap));
+    const row = candidates.filter((c) => c.gap - nearestRow < here.height / 2);
+    row.sort((a, b) => Math.abs(centre(a.r) - centre(here)) - Math.abs(centre(b.r) - centre(here)));
+    return row[0].i;
+  };
+
   const cyclePower = () => {
     if (!game) return;
     sfx.confirm();
@@ -148,6 +168,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
       case "right": {
         const next = action === "left" ? Math.max(0, focus - 1) : Math.min(buttons.length - 1, focus + 1);
         if (next !== focus) {
+          sfx.move();
+          setFocus(next);
+        }
+        break;
+      }
+      case "up":
+      case "down": {
+        const next = verticalNeighbour(action);
+        if (next !== null && next !== focus) {
           sfx.move();
           setFocus(next);
         }
@@ -309,7 +338,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             </div>
           )}
 
-          <div className="actions">
+          <div className="actions" ref={actionsRef}>
             <button
               className={`btn primary${focusOf("play") ? " focused" : ""}`}
               disabled={!canPlay}
