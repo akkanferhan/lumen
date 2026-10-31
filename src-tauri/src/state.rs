@@ -86,6 +86,8 @@ pub struct RunningGame {
     pub suspended: bool,
     /// Lumen's extra shortcuts this game supports (rewind, discs…).
     pub controls: crate::controls::Controls,
+    /// The emulator's folder (its screenshots land under it).
+    pub exe_dir: PathBuf,
 }
 
 pub type Running = Arc<Mutex<Option<RunningGame>>>;

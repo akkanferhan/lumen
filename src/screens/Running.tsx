@@ -89,6 +89,7 @@ export function Running({ gameId }: { gameId: string }) {
     { id: "resume", label: "Oyuna dön", run: () => actions.resume() },
     ...(slots ? [{ id: "slots", label: "Kayıt slotları", run: saveSlot }] : []),
     ...(controls?.discs ? [{ id: "disc", label: "Sonraki diske geç", run: () => actions.switchDisc(true) }] : []),
+    { id: "shot", label: "Ekran görüntüsü al", run: () => actions.takeScreenshot() },
     { id: "quit", label: stopping ? "Kaydediliyor…" : "Kaydet ve çık", run: stop },
   ];
   const onSlots = items[focus]?.id === "slots";
@@ -210,7 +211,7 @@ export function Running({ gameId }: { gameId: string }) {
             </div>
           </>
         )}
-        {controls && (controls.rewind || controls.fastForward) && (
+        {controls && (
           <div className="running-shortcuts">
             {controls.rewind && (
               <span>
@@ -228,6 +229,12 @@ export function Running({ gameId }: { gameId: string }) {
                 basılı tut: 3× hızlı
               </span>
             )}
+            <span>
+              <span className="combo">
+                <Glyph action="select" /> + <Glyph action="y" />
+              </span>{" "}
+              ekran görüntüsü
+            </span>
           </div>
         )}
       </div>

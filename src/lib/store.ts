@@ -278,6 +278,17 @@ export const actions = {
     await api.resumeGame();
   },
 
+  /** Leaves the quick menu and takes a screenshot of the game. */
+  async takeScreenshot() {
+    set({ quickMenu: false });
+    sfx.confirm();
+    try {
+      await api.takeScreenshot();
+    } catch (e) {
+      notify(errorText(e), "error");
+    }
+  },
+
   /** Leaves the quick menu and swaps to the next (or previous) disc. */
   async switchDisc(next: boolean) {
     set({ quickMenu: false });

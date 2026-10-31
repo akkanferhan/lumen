@@ -313,6 +313,15 @@ export const mockApi: Api = {
   stateSlots: async () => mockSlots,
   gameControls: async () => (running ? { rewind: true, fastForward: true, discs: true } : null),
   switchDisc: async () => {},
+  takeScreenshot: async () => {},
+  listScreenshots: async (gameId) =>
+    gameId.startsWith("mock-") && !gameId.includes("steam") && !gameId.includes("epic") && !gameId.includes("xbox")
+      ? [
+          { path: "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Snaps/Advance%20Wars%20(USA).png", takenAt: Math.floor(Date.now() / 1000) - 600 },
+          { path: "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Titles/Advance%20Wars%20(USA).png", takenAt: Math.floor(Date.now() / 1000) - 90_000 },
+        ]
+      : [],
+  deleteScreenshot: async () => {},
   saveState: async (slot) => {
     await sleep(300);
     mockSlots = mockSlots.map((s) => (s.slot === slot ? { ...s, savedAt: Math.floor(Date.now() / 1000) } : s));

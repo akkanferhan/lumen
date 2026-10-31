@@ -21,6 +21,8 @@ pub fn spawn(app: AppHandle, running: Running) {
         // Hotkeys Lumen is holding down in the game.
         let mut rewinding = false;
         let mut fast = false;
+        // Select + Y was down last time round (one screenshot per press).
+        let mut shot_held = false;
 
         loop {
             while gilrs.next_event().is_some() {}
@@ -78,6 +80,18 @@ pub fn spawn(app: AppHandle, running: Running) {
                     _ => (false, false),
                 }
             };
+            let shot = in_game_now(&running)
+                && gilrs
+                    .gamepads()
+                    .any(|(_, p)| p.is_pressed(Button::Select) && p.is_pressed(Button::North));
+            if shot && !shot_held {
+                let app = app.clone();
+                std::thread::spawn(move || {
+                    let _ = crate::screenshots::take(&app);
+                });
+            }
+            shot_held = shot;
+
             if want_rewind != rewinding {
                 crate::controls::press(crate::controls::Hotkey::Rewind, want_rewind);
                 rewinding = want_rewind;
@@ -90,4 +104,14 @@ pub fn spawn(app: AppHandle, running: Running) {
             std::thread::sleep(Duration::from_millis(16));
         }
     });
+}
+
+/// A game runs and its window is in front (Lumen's menu isn't).
+fn in_game_now(running: &Running) -> bool {
+    running
+        .lock()
+        .unwrap()
+        .as_ref()
+        .and_then(|g| g.pid.filter(|_| !g.suspended))
+        .is_some_and(crate::windows::is_foreground)
 }

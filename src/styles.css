@@ -2259,6 +2259,41 @@ button {
   opacity: 1;
 }
 
+/* ---------- Screenshot gallery (from the game sheet) ---------- */
+
+.shot-gallery {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem var(--gutter) 5.6rem;
+  background: var(--bg);
+  animation: fade-in 200ms var(--ease-out);
+}
+
+/* Scaled up to the screen, whatever the capture's size; small retro
+   frames stay sharp. */
+.shot-full {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: fade-in 160ms var(--ease-out);
+}
+
+.shot-caption {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.shot-caption b {
+  color: var(--danger);
+}
+
 /* ---------- Loading screen while an emulator starts ---------- */
 
 .launch-loading {

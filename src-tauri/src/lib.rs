@@ -29,6 +29,7 @@ mod pc;
 mod power;
 mod presets;
 mod retroachievements;
+mod screenshots;
 mod sleep;
 mod state;
 mod states;
@@ -121,6 +122,9 @@ pub fn run() {
             commands::game_controls,
             commands::switch_disc,
             commands::set_game_power,
+            commands::take_screenshot,
+            commands::list_screenshots,
+            commands::delete_screenshot,
             commands::game_achievements,
             commands::save_state,
             commands::load_state,

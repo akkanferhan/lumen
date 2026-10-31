@@ -198,6 +198,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         emulator: emu.id.clone(),
         suspended: false,
         controls: crate::controls::for_game(&emu.id, &system.id, &rom_path),
+        exe_dir: exe_dir.to_path_buf(),
     });
     let session_start = SystemTime::now();
 

@@ -245,6 +245,70 @@ pub fn send_key(scan: u16, down: bool) {
     unsafe { SendInput(1, &input, std::mem::size_of::<INPUT>() as i32) };
 }
 
+/// The whole primary screen as RGBA pixels (width, height, pixels), through
+/// GDI: what's on screen in a borderless window, which is how Lumen runs
+/// emulators. Some exclusive or flip-model swap chains read back black.
+#[cfg(windows)]
+pub fn capture_screen() -> Option<(u32, u32, Vec<u8>)> {
+    use windows_sys::Win32::Graphics::Gdi::{
+        BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDC,
+        GetDIBits, ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, CAPTUREBLT,
+        DIB_RGB_COLORS, SRCCOPY,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
+    // SAFETY: GDI objects are created, used and released in order; the pixel
+    // buffer is sized for the bitmap GetDIBits describes.
+    unsafe {
+        let (w, h) = (GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        if w <= 0 || h <= 0 {
+            return None;
+        }
+        let screen = GetDC(std::ptr::null_mut());
+        let memory = CreateCompatibleDC(screen);
+        let bitmap = CreateCompatibleBitmap(screen, w, h);
+        let old = SelectObject(memory, bitmap as _);
+        let copied = BitBlt(memory, 0, 0, w, h, screen, 0, 0, SRCCOPY | CAPTUREBLT) != 0;
+        let mut info: BITMAPINFO = std::mem::zeroed();
+        info.bmiHeader = BITMAPINFOHEADER {
+            biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+            biWidth: w,
+            biHeight: -h, // top-down rows
+            biPlanes: 1,
+            biBitCount: 32,
+            biCompression: BI_RGB,
+            ..std::mem::zeroed()
+        };
+        let mut pixels = vec![0u8; (w * h * 4) as usize];
+        let rows = GetDIBits(
+            memory,
+            bitmap,
+            0,
+            h as u32,
+            pixels.as_mut_ptr().cast(),
+            &mut info,
+            DIB_RGB_COLORS,
+        );
+        SelectObject(memory, old);
+        DeleteObject(bitmap as _);
+        DeleteDC(memory);
+        ReleaseDC(std::ptr::null_mut(), screen);
+        if !copied || rows == 0 {
+            return None;
+        }
+        // BGRA → RGBA, opaque.
+        for px in pixels.as_chunks_mut::<4>().0 {
+            px.swap(0, 2);
+            px[3] = 255;
+        }
+        Some((w as u32, h as u32, pixels))
+    }
+}
+
+#[cfg(not(windows))]
+pub fn capture_screen() -> Option<(u32, u32, Vec<u8>)> {
+    None
+}
+
 /// Turns a window into one that never takes focus, even when tapped, and
 /// stays out of Alt+Tab (the in-game menu button).
 #[cfg(windows)]

@@ -1092,6 +1092,31 @@ pub fn switch_disc(app: AppHandle, next: bool) -> CmdResult<()> {
     Ok(())
 }
 
+/// Back to the game, then a screenshot of it.
+#[tauri::command]
+pub async fn take_screenshot(app: AppHandle) -> CmdResult<()> {
+    crate::launcher::resume_game(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        // Let the game draw a frame or two again.
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        let _ = crate::screenshots::take(&app);
+    });
+    Ok(())
+}
+
+#[tauri::command]
+pub fn list_screenshots(
+    state: State<'_, AppState>,
+    game_id: String,
+) -> Vec<crate::screenshots::Shot> {
+    crate::screenshots::list(&state.dirs.data, &game_id)
+}
+
+#[tauri::command]
+pub fn delete_screenshot(state: State<'_, AppState>, path: PathBuf) -> CmdResult<()> {
+    crate::screenshots::delete(&state.dirs.data, &path).map_err(err)
+}
+
 /// Save-state slots of the running game; None when its emulator has none.
 #[tauri::command]
 pub fn state_slots(state: State<'_, AppState>) -> Option<Vec<crate::states::Slot>> {

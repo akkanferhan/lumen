@@ -249,6 +249,13 @@ export interface GameControls {
   discs: boolean;
 }
 
+/** A screenshot of a game, on disk. */
+export interface Shot {
+  path: string;
+  /** Unix seconds. */
+  takenAt: number;
+}
+
 export interface StateSlot {
   slot: number;
   /** Unix seconds; null when the slot is empty. */

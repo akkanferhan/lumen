@@ -1,6 +1,6 @@
 //! In-game shortcuts Lumen adds on top of the emulators: hold Select + LT to
-//! rewind, Select + RT to fast-forward; the quick menu switches discs and
-//! takes screenshots. The webview can't see the pad while a game runs, so
+//! rewind, Select + RT to fast-forward, Select + Y for a screenshot; the
+//! quick menu switches discs and takes screenshots too. The webview can't see the pad while a game runs, so
 //! `input.rs` reads it and Lumen presses a keyboard key the emulator has
 //! bound to the action (see `presets.rs`), delivered to the game window.
 //! Only RetroArch and DuckStation get keys: other emulators bind F-keys to
@@ -15,6 +15,7 @@ pub enum Hotkey {
     FastForward,
     NextDisc,
     PreviousDisc,
+    Screenshot,
 }
 
 impl Hotkey {
@@ -26,6 +27,7 @@ impl Hotkey {
             Hotkey::FastForward => 0x40,
             Hotkey::NextDisc => 0x41,
             Hotkey::PreviousDisc => 0x42,
+            Hotkey::Screenshot => 0x43,
         }
     }
 }
