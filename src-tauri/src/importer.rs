@@ -53,27 +53,36 @@ pub struct Report {
 }
 
 /// Lists the games under `source`. Unrelated files (saves, readmes) are left out.
+#[cfg(test)]
 pub fn scan(source: &Path) -> Vec<Candidate> {
+    scan_all(&[source.to_path_buf()])
+}
+
+/// Lists the games in the picked folders and files. A picked file is a game
+/// on its own (with its cue tracks or playlist discs); a picked folder is
+/// searched. Unrelated files (saves, readmes) are left out.
+pub fn scan_all(sources: &[PathBuf]) -> Vec<Candidate> {
     let mut files = Vec::new();
     let mut out = Vec::new();
-    let mut walker = WalkDir::new(source).max_depth(6).into_iter();
-
-    while let Some(entry) = walker.next() {
-        let Ok(entry) = entry else { continue };
-        let path = entry.path();
-        if entry.file_type().is_dir() {
-            if let Some(system) = folder_system(path) {
-                out.push(candidate(
-                    path,
-                    Some(system.to_string()),
-                    vec![system.to_string()],
-                ));
-                walker.skip_current_dir();
+    for source in sources {
+        let mut walker = WalkDir::new(source).max_depth(6).into_iter();
+        while let Some(entry) = walker.next() {
+            let Ok(entry) = entry else { continue };
+            let path = entry.path();
+            if entry.file_type().is_dir() {
+                if let Some(system) = folder_system(path) {
+                    out.push(candidate(
+                        path,
+                        Some(system.to_string()),
+                        vec![system.to_string()],
+                    ));
+                    walker.skip_current_dir();
+                }
+                continue;
             }
-            continue;
-        }
-        if !choices(path).is_empty() {
-            files.push(path.to_path_buf());
+            if !choices(path).is_empty() && !files.iter().any(|f| f == path) {
+                files.push(path.to_path_buf());
+            }
         }
     }
 
@@ -655,6 +664,32 @@ mod tests {
             chd.choices.contains(&"ps2".to_string())
                 && chd.choices.contains(&"dreamcast".to_string())
         );
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn picked_files_are_games_with_their_tracks() {
+        let dir = temp_dir("picked");
+        fs::write(dir.join("game.cue"), "FILE \"game.bin\" BINARY\n").unwrap();
+        fs::write(dir.join("game.bin"), vec![0u8; 4_000]).unwrap();
+        fs::write(dir.join("zelda.sfc"), b"rom").unwrap();
+        fs::write(dir.join("other.sfc"), b"rom").unwrap();
+
+        // The cue and its track picked together are one game; unpicked
+        // files next to them stay out.
+        let picked = [
+            dir.join("game.cue"),
+            dir.join("game.bin"),
+            dir.join("zelda.sfc"),
+        ];
+        let found = scan_all(&picked);
+        let names: Vec<_> = found.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(names, ["game.cue", "zelda.sfc"]);
+        assert_eq!(
+            found[0].size,
+            4_000 + fs::metadata(dir.join("game.cue")).unwrap().len()
+        );
+        assert_eq!(found[1].system_id.as_deref(), Some("snes"));
         fs::remove_dir_all(&dir).unwrap();
     }
 

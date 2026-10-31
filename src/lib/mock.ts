@@ -219,6 +219,7 @@ export const mockApi: Api = {
   getLibrary: async () => games(),
   takeCrashReport: async () => null,
   pickFolder: async () => "C:\\Users\\Oyuncu\\Oyunlar",
+  pickGameFiles: async () => ["C:\\Users\\Oyuncu\\Downloads\\Chrono Trigger (USA).sfc"],
   defaultRomRoot: async () => "C:\\Users\\Oyuncu\\Desktop\\Lumen Oyunlar",
   setRomRoot: async (path) => {
     store.romRoot = path;

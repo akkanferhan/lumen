@@ -14,6 +14,11 @@ const PC_SYSTEMS: SystemDef[] = [
 
 export const isPcSystem = (id: string) => PC_SYSTEMS.some((s) => s.id === id);
 
+/** Every file extension an emulator opens, for the file picker's filter. */
+export const gameExtensions = () => [
+  ...new Set((manifestJson.systems as unknown as SystemDef[]).flatMap((s) => s.extensions)),
+];
+
 /** Platforms listed first, in this order; the rest keep their own order. */
 const LEADING: ((s: SystemDef) => boolean)[] = [
   (s) => s.id === "steam",

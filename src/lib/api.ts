@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
+import { gameExtensions } from "./catalog";
 import { mockApi } from "./mock";
 import type {
   AppUpdate,
@@ -31,6 +32,8 @@ export interface Api {
   getLibrary(): Promise<Game[]>;
   takeCrashReport(): Promise<string | null>;
   pickFolder(title?: string): Promise<string | null>;
+  /** Game files picked by the user; empty when cancelled. */
+  pickGameFiles(title: string): Promise<string[]>;
   setRomRoot(path: string): Promise<Game[]>;
   /** "Lumen Oyunlar" on the desktop. */
   defaultRomRoot(): Promise<string>;
@@ -49,7 +52,7 @@ export interface Api {
   uninstallEmulator(id: string): Promise<void>;
   homebrewInstalled(): Promise<string[]>;
   installHomebrew(slug: string): Promise<Game[]>;
-  importScan(path: string): Promise<ImportCandidate[]>;
+  importScan(paths: string[]): Promise<ImportCandidate[]>;
   importGames(
     items: { path: string; systemId: string }[],
     mode: ImportMode,
@@ -121,6 +124,17 @@ const tauriApi: Api = {
     const picked = await open({ directory: true, title });
     return typeof picked === "string" ? picked : null;
   },
+  pickGameFiles: async (title) => {
+    const picked = await open({
+      multiple: true,
+      title,
+      filters: [
+        { name: "Oyun dosyaları", extensions: gameExtensions() },
+        { name: "Tüm dosyalar", extensions: ["*"] },
+      ],
+    });
+    return Array.isArray(picked) ? picked : typeof picked === "string" ? [picked] : [];
+  },
   setRomRoot: (path) => invoke("set_rom_root", { path }),
   defaultRomRoot: () => invoke("default_rom_root"),
   scanLibrary: () => invoke("scan_library"),
@@ -135,7 +149,7 @@ const tauriApi: Api = {
   uninstallEmulator: (id) => invoke("uninstall_emulator", { id }),
   homebrewInstalled: () => invoke("homebrew_installed"),
   installHomebrew: (slug) => invoke("install_homebrew", { slug }),
-  importScan: (path) => invoke("import_scan", { path }),
+  importScan: (paths) => invoke("import_scan", { paths }),
   importGames: (items, mode) => invoke("import_games", { items, mode }),
   resumeGame: () => invoke("resume_game"),
   stateSlots: () => invoke("state_slots"),
