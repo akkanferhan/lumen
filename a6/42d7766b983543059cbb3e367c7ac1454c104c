@@ -1,0 +1,25 @@
+src-tauri/src/launcher.rs
+  s_e07464b85ba926::t_e1926eba42c2ec 289-290
+src-tauri/src/overlay.rs
+  s_e07464b85ba926::t_e1926eba42c2ec 75-76,79-83
+src-tauri/src/screenshots.rs
+  s_e07464b85ba926::t_e1926eba42c2ec 104-105
+src-tauri/src/windows.rs
+  s_e07464b85ba926::t_e1926eba42c2ec 331-338
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a642d7766b983543059cbb3e367c7ac1454c104c",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
