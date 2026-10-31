@@ -665,6 +665,11 @@ export const actions = {
     }
   },
 
+  async setBackButtons(enabled: boolean) {
+    await api.setBackButtons(enabled);
+    await refreshOverview();
+  },
+
   async setOverlayStatus(enabled: boolean) {
     await api.setOverlayStatus(enabled);
     await refreshOverview();

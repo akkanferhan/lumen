@@ -1,6 +1,7 @@
 //! Background controller listener. While an emulator owns the screen the
 //! webview cannot see the gamepad, so the in-game combo is detected here:
-//! tap Select + Start for Lumen's quick menu, hold it to save and quit.
+//! tap a back button (Ally) or Select + Start for Lumen's quick menu, hold
+//! it to save and quit.
 //! Holding Select + LT rewinds and Select + RT fast-forwards (see `controls`).
 
 use crate::state::Running;
@@ -27,16 +28,21 @@ pub fn spawn(app: AppHandle, running: Running) {
         loop {
             while gilrs.next_event().is_some() {}
 
-            let combo = gilrs
-                .gamepads()
-                .any(|(_, pad)| pad.is_pressed(Button::Select) && pad.is_pressed(Button::Start));
-            let in_game = running.lock().unwrap().is_some()
-                && app
-                    .state::<crate::state::AppState>()
-                    .settings
-                    .lock()
-                    .unwrap()
-                    .quick_combo;
+            let quick_combo = app
+                .state::<crate::state::AppState>()
+                .settings
+                .lock()
+                .unwrap()
+                .quick_combo;
+            let playing = running.lock().unwrap().is_some();
+            crate::ally::set_in_game(playing);
+            // Ally back buttons (never seen by the game), or Select + Start.
+            let combo = crate::ally::back_button_down()
+                || (quick_combo
+                    && gilrs.gamepads().any(|(_, pad)| {
+                        pad.is_pressed(Button::Select) && pad.is_pressed(Button::Start)
+                    }));
+            let in_game = playing;
 
             match (combo && in_game, held) {
                 (true, None) => held = Some((Instant::now(), false)),

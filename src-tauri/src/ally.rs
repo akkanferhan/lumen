@@ -11,7 +11,126 @@
 //! seconds, and the last word is Lumen's.
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
+
+/// The back buttons (M1/M2) open Lumen's in-game menu: they're bound to
+/// the keyboard's App-menu key, which a keyboard hook swallows while a game
+/// runs, so the game never sees the press (unlike Select + Start, which
+/// the emulator reads from the same pad).
+static BACK_BUTTONS: AtomicBool = AtomicBool::new(false);
+/// A back button is held (set by the keyboard hook).
+static BACK_DOWN: AtomicBool = AtomicBool::new(false);
+/// A game runs: the hook takes the App-menu key instead of passing it on.
+static SWALLOW: AtomicBool = AtomicBool::new(false);
+
+/// Firmware code for the App-menu key in the controller's key table
+/// (the same table G-Helper uses) and the Windows key it arrives as.
+#[cfg(windows)]
+const APP_MENU: u8 = 0x84;
+/// ASUS's own M1 / M2 codes, restored when Lumen lets go of the buttons.
+#[cfg(windows)]
+const DEFAULT_M1: u8 = 0x8F;
+#[cfg(windows)]
+const DEFAULT_M2: u8 = 0x8E;
+
+/// Turns the back-button menu on or off; the controller is re-bound with
+/// the next burst (see `force_gamepad_mode`).
+pub fn set_back_buttons(enabled: bool) {
+    BACK_BUTTONS.store(enabled, Ordering::SeqCst);
+    force_gamepad_mode();
+}
+
+pub fn back_buttons() -> bool {
+    BACK_BUTTONS.load(Ordering::SeqCst) && crate::device::device().model.is_some()
+}
+
+/// A back button is held right now.
+pub fn back_button_down() -> bool {
+    BACK_DOWN.load(Ordering::SeqCst)
+}
+
+/// While a game runs the hook swallows the back buttons' key.
+pub fn set_in_game(in_game: bool) {
+    SWALLOW.store(in_game && back_buttons(), Ordering::SeqCst);
+    if !in_game {
+        BACK_DOWN.store(false, Ordering::SeqCst);
+    }
+}
+
+/// Watches the keyboard for the back buttons' key (a low-level hook on its
+/// own thread with a message loop, as Windows requires).
+pub fn start_hook() {
+    #[cfg(windows)]
+    std::thread::spawn(|| {
+        use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
+        use windows_sys::Win32::UI::WindowsAndMessaging::{
+            GetMessageW, SetWindowsHookExW, UnhookWindowsHookEx, MSG, WH_KEYBOARD_LL,
+        };
+        // SAFETY: the hook procedure is a plain function; the message loop
+        // keeps this thread alive (and the hook served) for the app's life.
+        unsafe {
+            let hook = SetWindowsHookExW(
+                WH_KEYBOARD_LL,
+                Some(keyboard_hook),
+                GetModuleHandleW(std::ptr::null()),
+                0,
+            );
+            if hook.is_null() {
+                log("keyboard hook failed: back buttons can't open the menu");
+                return;
+            }
+            let mut msg: MSG = std::mem::zeroed();
+            while GetMessageW(&mut msg, std::ptr::null_mut(), 0, 0) > 0 {}
+            UnhookWindowsHookEx(hook);
+        }
+    });
+}
+
+#[cfg(windows)]
+unsafe extern "system" fn keyboard_hook(
+    code: i32,
+    wparam: windows_sys::Win32::Foundation::WPARAM,
+    lparam: windows_sys::Win32::Foundation::LPARAM,
+) -> windows_sys::Win32::Foundation::LRESULT {
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::VK_APPS;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        CallNextHookEx, HC_ACTION, KBDLLHOOKSTRUCT, WM_KEYDOWN, WM_SYSKEYDOWN,
+    };
+    if code == HC_ACTION as i32 && SWALLOW.load(Ordering::SeqCst) {
+        let key = &*(lparam as *const KBDLLHOOKSTRUCT);
+        if key.vkCode == u32::from(VK_APPS) {
+            let down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
+            BACK_DOWN.store(down, Ordering::SeqCst);
+            return 1; // never reaches the game
+        }
+    }
+    CallNextHookEx(std::ptr::null_mut(), code, wparam, lparam)
+}
+
+/// The controller's M1/M2 binding command (zone 8): both buttons send `m1`
+/// / `m2` as keyboard keys, primary and secondary layer alike.
+#[cfg(windows)]
+fn back_button_binding(m1: u8, m2: u8) -> [u8; 50] {
+    let mut report = [0u8; 50];
+    report[..5].copy_from_slice(&[0x5A, 0xD1, 0x02, 0x08, 0x2C]);
+    // Each binding is 10 bytes: [0x02 = keyboard, 0, key, 0…]; the zone
+    // lists M2 then M1, each with a second-layer copy.
+    for (offset, key) in [(5, m2), (16, m2), (27, m1), (38, m1)] {
+        report[offset] = 0x02;
+        report[offset + 2] = key;
+    }
+    report
+}
+
+/// Gives M1/M2 back to ASUS's defaults (on exit, or when turned off).
+pub fn restore_back_buttons() {
+    #[cfg(windows)]
+    if crate::device::device().model.is_some() {
+        let binding = back_button_binding(DEFAULT_M1, DEFAULT_M2);
+        let _ = send(&[&binding]);
+    }
+}
 
 /// `ally.log` in Lumen's data dir: what was found and sent, for diagnosis.
 static LOG: OnceLock<PathBuf> = OnceLock::new();
@@ -81,19 +200,31 @@ pub fn force_gamepad_mode() {
 /// accepted them.
 #[cfg(windows)]
 fn send_gamepad_mode() -> anyhow::Result<String> {
-    const ASUS: u16 = 0x0B05;
-    const VENDOR_PAGE: u16 = 0xFF31;
     const REPORT_ID: u8 = 0x5A;
     const GAMEPAD: u8 = 0x01;
 
     let mut wake = vec![REPORT_ID];
     wake.extend_from_slice(b"ASUS Tech.Inc.");
-    let commands: [&[u8]; 3] = [
+    let binding = if back_buttons() {
+        back_button_binding(APP_MENU, APP_MENU)
+    } else {
+        back_button_binding(DEFAULT_M1, DEFAULT_M2)
+    };
+    send(&[
         &wake,
         // Xbox controller on (desktop mode can leave it switched off).
         &[REPORT_ID, 0xD1, 0x0B, 0x01, 0x01],
         &[REPORT_ID, 0xD1, 0x01, 0x01, GAMEPAD],
-    ];
+        &binding,
+    ])
+}
+
+/// Sends feature reports to every ASUS vendor collection (usage page
+/// 0xFF31); returns which ones took them all.
+#[cfg(windows)]
+fn send(commands: &[&[u8]]) -> anyhow::Result<String> {
+    const ASUS: u16 = 0x0B05;
+    const VENDOR_PAGE: u16 = 0xFF31;
 
     let api = hidapi::HidApi::new()?;
     let mut sent = Vec::new();

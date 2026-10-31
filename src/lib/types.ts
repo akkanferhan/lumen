@@ -81,6 +81,8 @@ export interface Settings {
   /** Battery and clock beside the in-game menu button. */
   overlayStatus: boolean;
   kids: KidsSettings;
+  /** ROG Ally: the back buttons (M1/M2) open the in-game menu. */
+  backButtons: boolean;
 }
 
 export interface RaUser {
