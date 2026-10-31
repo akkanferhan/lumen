@@ -1,0 +1,41 @@
+src-tauri/src/launcher.rs
+  s_e07464b85ba926::t_309c2b4222c4a6 204-217
+src/screens/GameSheet.tsx
+  s_e07464b85ba926::t_b0b8e8db31ad63 12-16,59-71,99-105,133,167,281-289
+src/lib/mock.ts
+  s_e07464b85ba926::t_b0b8e8db31ad63 7,59,343-345
+  s_e07464b85ba926::t_8b6dc9adc09955 346
+src-tauri/src/state.rs
+  s_e07464b85ba926::t_309c2b4222c4a6 66-67
+src-tauri/src/lib.rs
+  s_e07464b85ba926::t_309c2b4222c4a6 121
+src/lib/types.ts
+  s_e07464b85ba926::t_b0b8e8db31ad63 32-33,147-148
+src-tauri/src/power.rs
+  s_e07464b85ba926::t_309c2b4222c4a6 39-52
+  s_e07464b85ba926::t_a8bb6c9459446b 155-169
+  s_e07464b85ba926::t_7c9ae4aca79536 154
+src/lib/store.ts
+  s_e07464b85ba926::t_b0b8e8db31ad63 335-348
+src/lib/api.ts
+  s_e07464b85ba926::t_b0b8e8db31ad63 22,72,168
+src-tauri/src/commands.rs
+  s_e07464b85ba926::t_309c2b4222c4a6 74-75,171,482-490
+  s_e07464b85ba926::t_a3bf875ec2daff 491-492
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c5c02b26e6d30d47ce0b2b51b6d5c6c2acc0ab84",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
