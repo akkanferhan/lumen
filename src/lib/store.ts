@@ -155,6 +155,7 @@ export const actions = {
       set({ quickMenu: true, launchingGameId: null });
     });
     api.onGameShown(() => set({ launchingGameId: null }));
+    api.onKidsTimeUp(() => notify("Bugünkü oyun süresi doldu · oyun kaydedilip kapatılıyor", "info", 12000));
     api.onSystemResumed(() => notify("Uykudan döndün · oyun duraklatıldı, hazır olunca devam et", "info", 6000));
     api.onGameExited(async (exited) => {
       set({ runningGameId: null, launchingGameId: null, quickMenu: false });
@@ -624,6 +625,32 @@ export const actions = {
   async setQuickCombo(enabled: boolean) {
     await api.setQuickCombo(enabled);
     await refreshOverview();
+  },
+
+  /** Kids mode on; refreshes what the library shows. */
+  async kidsStart(pin: string, collection: string | null, dailyMinutes: number | null): Promise<boolean> {
+    try {
+      await api.kidsStart(pin, collection, dailyMinutes);
+      await refreshOverview();
+      notify("Çocuk modu açık", "success");
+      return true;
+    } catch (e) {
+      notify(errorText(e), "error");
+      return false;
+    }
+  },
+
+  async kidsStop(pin: string): Promise<boolean> {
+    try {
+      await api.kidsStop(pin);
+      await refreshOverview();
+      notify("Çocuk modu kapandı", "success");
+      return true;
+    } catch (e) {
+      sfx.error();
+      notify(errorText(e), "error");
+      return false;
+    }
   },
 
   async setOverlayStatus(enabled: boolean) {

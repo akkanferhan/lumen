@@ -49,3 +49,9 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
+
+/** Unix seconds of today's local midnight. */
+export function todayStart(): number {
+  const now = new Date();
+  return Math.floor(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 1000);
+}

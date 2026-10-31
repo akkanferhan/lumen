@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { HintBar } from "../components/HintBar";
+import { TextKeyboard } from "../components/TextKeyboard";
 import { ProgressBar } from "../components/Toasts";
 import { isTauri } from "../lib/api";
 import { emulatorOf, emulators, installLabel, isPcSystem, systems } from "../lib/catalog";
@@ -61,7 +62,7 @@ export function Menu({
   onOpenArt: () => void;
   onOpenRaLogin: () => void;
 }) {
-  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems">("main");
+  const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems" | "kids">("main");
   // Restore overwrites saves: it needs a second press to confirm.
   const [confirmRestore, setConfirmRestore] = useState(false);
   // Same for removing an emulator (holds the emulator id being confirmed).
@@ -77,10 +78,78 @@ export function Menu({
   const appUpdate = useStore((s) => s.appUpdate);
   const appUpdateProgress = useStore((s) => s.appUpdateProgress);
 
+  // Kids mode: what will be allowed, and the PIN being typed (set or exit).
+  const kids = overview?.settings.kids;
+  const collections = overview?.collections ?? [];
+  const [kidsCollection, setKidsCollection] = useState<string | null>(kids?.collection ?? null);
+  const [kidsMinutes, setKidsMinutes] = useState<number | null>(kids?.dailyMinutes ?? null);
+  const [newPin, setNewPin] = useState("");
+  const [pinPrompt, setPinPrompt] = useState<null | "set" | "exit">(null);
+  const [pin, setPin] = useState("");
+  const [pinBusy, setPinBusy] = useState(false);
+  const hasPin = kids?.pinHash != null || newPin.length > 0;
+  const KIDS_MINUTES = [null, 30, 60, 90, 120];
+
   const consoleSystems = systems.filter((s) => !isPcSystem(s.id));
   const gameCount = (id: string) => overview?.systems.find((s) => s.id === id)?.gameCount ?? 0;
 
-  const main: Item[] = [
+  const kidsItems: Item[] = [
+    {
+      id: "kids-pin",
+      title: "PIN",
+      sub: "Çocuk modundan çıkmak için gerekir; en az 4 rakam",
+      value: hasPin ? "••••" : "Belirle",
+      run: () => {
+        setPin("");
+        setPinPrompt("set");
+      },
+    },
+    {
+      id: "kids-games",
+      title: "Görünen oyunlar",
+      sub: collections.length ? "Bir koleksiyon seç ya da tüm konsol oyunları" : "Koleksiyon oluşturursan yalnızca onu gösterebilirsin",
+      value: collections.find((c) => c.id === kidsCollection)?.name ?? "Tüm oyunlar",
+      run: () => {
+        const ids = [null, ...collections.map((c) => c.id)];
+        setKidsCollection(ids[(ids.indexOf(kidsCollection) + 1) % ids.length]);
+      },
+    },
+    {
+      id: "kids-limit",
+      title: "Günlük oyun süresi",
+      sub: "Süre dolunca oyun kaydedilip kapanır; ertesi gün yeniden açılır",
+      value: kidsMinutes ? `${kidsMinutes} dk` : "Sınırsız",
+      run: () => setKidsMinutes(KIDS_MINUTES[(KIDS_MINUTES.indexOf(kidsMinutes) + 1) % KIDS_MINUTES.length]),
+    },
+    {
+      id: "kids-start",
+      title: "Çocuk modunu başlat",
+      sub: hasPin ? "Ayarlar, mağazalar ve oyun silme gizlenir" : "Önce bir PIN belirle",
+      run: async () => {
+        if (!hasPin) {
+          sfx.error();
+          setPin("");
+          setPinPrompt("set");
+          return;
+        }
+        if (await actions.kidsStart(newPin, kidsCollection, kidsMinutes)) onClose();
+      },
+    },
+  ];
+
+  const kidsActiveItems: Item[] = [
+    {
+      id: "kids-exit",
+      title: "Çocuk modundan çık",
+      sub: "PIN gerekir",
+      run: () => {
+        setPin("");
+        setPinPrompt("exit");
+      },
+    },
+  ];
+
+  const main: Item[] = kids?.active ? kidsActiveItems : [
     ...(appUpdate
       ? [
           {
@@ -251,6 +320,13 @@ export function Menu({
           },
         ]
       : []),
+    {
+      id: "kids",
+      title: "Çocuk modu",
+      sub: "PIN korumalı sade kütüphane ve günlük oyun süresi",
+      value: "›",
+      run: () => setPage("kids"),
+    },
     { id: "tour", title: "Kısa tur", sub: "Nerede ne var, önemli kısayollar", value: "›", run: onOpenTour },
     { id: "sounds", title: "Arayüz sesleri", value: sounds ? "Açık" : "Kapalı", run: () => actions.setSounds(!sounds) },
     {
@@ -466,7 +542,9 @@ export function Menu({
             ? themeItems
             : page === "systems"
               ? systemItems
-              : emulatorItems;
+              : page === "kids"
+                ? kidsItems
+                : emulatorItems;
   const [focus, setFocus] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const index = Math.min(focus, items.length - 1);
@@ -523,7 +601,41 @@ export function Menu({
         onClose();
         break;
     }
-  }, Layer.menu);
+  }, Layer.menu, !pinPrompt);
+
+  if (pinPrompt) {
+    return (
+      <TextKeyboard
+        title={pinPrompt === "set" ? "Yeni PIN (en az 4 rakam)" : "Çocuk modundan çıkmak için PIN"}
+        placeholder="PIN"
+        value={pin}
+        secret
+        busy={pinBusy}
+        onChange={(v) => setPin(v.replace(/\D/g, ""))}
+        onDone={async () => {
+          if (pinPrompt === "set") {
+            if (pin.length < 4) {
+              sfx.error();
+              notify("PIN en az 4 rakam olmalı", "error");
+              return;
+            }
+            setNewPin(pin);
+            setPinPrompt(null);
+            return;
+          }
+          setPinBusy(true);
+          const ok = await actions.kidsStop(pin);
+          setPinBusy(false);
+          setPin("");
+          if (ok) {
+            setPinPrompt(null);
+            onClose();
+          }
+        }}
+        onCancel={() => setPinPrompt(null)}
+      />
+    );
+  }
 
   return (
     <>
@@ -531,7 +643,11 @@ export function Menu({
       <aside className="menu">
         <h2>
           {page === "main"
-            ? "Menü"
+            ? kids?.active
+              ? "Çocuk modu"
+              : "Menü"
+            : page === "kids"
+              ? "Çocuk modu"
             : page === "backup"
               ? "Kayıt yedekleme"
               : page === "ra"
@@ -544,7 +660,11 @@ export function Menu({
         </h2>
         <p className="menu-sub">
           {page === "main"
-            ? "Lumen 0.1"
+            ? kids?.active
+              ? "Ayarlar kapalı. Çıkmak için PIN gerekir."
+              : "Lumen 0.1"
+            : page === "kids"
+              ? "Kütüphanede sadece seçtiğin oyunlar görünür; ayarlar, mağazalar ve oyun silme gizlenir."
             : page === "backup"
               ? "Kayıtlar ve save state'ler seçtiğin klasöre kopyalanır; OneDrive klasörü buluta da taşır."
               : page === "ra"

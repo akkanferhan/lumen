@@ -89,7 +89,11 @@ pub async fn get_overview(app: AppHandle) -> Overview {
 /// mutexes aren't re-entrant, and this runs on the main thread, so a
 /// self-deadlock freezes the whole app on a black screen.
 fn overview(state: &AppState, autostart: bool) -> Overview {
-    let settings = state.settings.lock().unwrap().clone();
+    let mut settings = state.settings.lock().unwrap().clone();
+    // The UI only needs to know a PIN is set, not its hash.
+    if settings.kids.pin_hash.is_some() {
+        settings.kids.pin_hash = Some(String::new());
+    }
     let backup_dir = settings.backup.target();
     let ra_user = state.ra.lock().unwrap().as_ref().map(|a| RaUser {
         username: a.username.clone(),
@@ -457,7 +461,12 @@ pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResu
 }
 
 #[tauri::command]
-pub async fn launch_game(app: AppHandle, game_id: String, fresh: Option<bool>) -> CmdResult<()> {
+pub async fn launch_game(
+    app: AppHandle,
+    game_id: String,
+    fresh: Option<bool>,
+    day_start: Option<u64>,
+) -> CmdResult<()> {
     let state = app.state::<AppState>();
     let game = state
         .library
@@ -467,9 +476,76 @@ pub async fn launch_game(app: AppHandle, game_id: String, fresh: Option<bool>) -
         .find(|g| g.id == game_id)
         .cloned()
         .ok_or("Oyun bulunamadı")?;
-    launcher::launch(&app, &game, fresh.unwrap_or(false))
+    // Kids mode: only the chosen games, and only while today's time lasts.
+    let kids = state.settings.lock().unwrap().kids.clone();
+    let mut time_left = None;
+    if kids.active {
+        let allowed = !crate::pc::is_pc(&game.system_id)
+            && kids.collection.as_ref().is_none_or(|id| {
+                state
+                    .collections
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .any(|c| &c.id == id && c.games.contains(&game.id))
+            });
+        if !allowed {
+            return Err("Bu oyun çocuk modunda açılamaz".into());
+        }
+        let used = day_start.map_or(0, |d| crate::kids::used_since(&state.dirs.data, d));
+        time_left = kids.remaining(used);
+        if time_left == Some(0) {
+            return Err("Bugünkü oyun süresi doldu. Yarın görüşürüz!".into());
+        }
+    }
+    launcher::launch(&app, &game, fresh.unwrap_or(false), time_left)
         .await
         .map_err(err)
+}
+
+/// Turns kids mode on (a new PIN replaces the old one; an empty PIN keeps
+/// it) with the games and daily limit to allow.
+#[tauri::command]
+pub fn kids_start(
+    state: State<'_, AppState>,
+    pin: String,
+    collection: Option<String>,
+    daily_minutes: Option<u32>,
+) -> CmdResult<()> {
+    let mut settings = state.settings.lock().unwrap();
+    let pin = pin.trim();
+    if !pin.is_empty() {
+        if pin.len() < 4 || !pin.chars().all(|c| c.is_ascii_digit()) {
+            return Err("PIN en az 4 rakam olmalı".into());
+        }
+        settings.kids.pin_hash = Some(crate::kids::hash(pin));
+    }
+    if settings.kids.pin_hash.is_none() {
+        return Err("Önce bir PIN belirle".into());
+    }
+    settings.kids.collection = collection;
+    settings.kids.daily_minutes = daily_minutes;
+    settings.kids.active = true;
+    drop(settings);
+    state.save_settings().map_err(err)
+}
+
+/// Leaves kids mode with the PIN.
+#[tauri::command]
+pub fn kids_stop(state: State<'_, AppState>, pin: String) -> CmdResult<()> {
+    let mut settings = state.settings.lock().unwrap();
+    if !settings.kids.pin_matches(&pin) {
+        return Err("PIN yanlış".into());
+    }
+    settings.kids.active = false;
+    drop(settings);
+    state.save_settings().map_err(err)
+}
+
+/// Seconds played today, for kids mode's "time left".
+#[tauri::command]
+pub fn played_since(state: State<'_, AppState>, day_start: u64) -> u64 {
+    crate::kids::used_since(&state.dirs.data, day_start)
 }
 
 #[tauri::command]

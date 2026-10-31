@@ -65,8 +65,10 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     : undefined;
   const canPlay = missing.length === 0 && !busy;
 
+  // Kids mode hides collections, power and removal.
+  const kidsMode = !!overview?.settings.kids.active;
   // Per-game power mode: only where Lumen sets ASUS power modes at all.
-  const powerChoice = !!overview?.powerAvailable && overview.settings.power !== "off" && !pc;
+  const powerChoice = !kidsMode && !!overview?.powerAvailable && overview.settings.power !== "off" && !pc;
   type Button = "play" | "fresh" | "fav" | "lists" | "shots" | "power" | "remove";
   const buttons: Button[] = game?.notInstalled
     ? ["play", "fav", "lists"]
@@ -74,10 +76,10 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         "play",
         ...(resumable ? (["fresh"] as const) : []),
         "fav",
-        "lists",
+        ...(kidsMode ? [] : (["lists"] as const)),
         ...(shots.length ? (["shots"] as const) : []),
         ...(powerChoice ? (["power"] as const) : []),
-        "remove",
+        ...(kidsMode ? [] : (["remove"] as const)),
       ];
   const [picking, setPicking] = useState(false);
 
@@ -289,9 +291,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             >
               {game.favorite ? "★ Favorilerde" : "☆ Favorilere ekle"}
             </button>
+            {!kidsMode && (
             <button className={`btn${focusOf("lists") ? " focused" : ""}`} onClick={() => setPicking(true)}>
               {inLists ? `☰ ${inLists} listede` : "☰ Koleksiyona ekle"}
             </button>
+            )}
             {shots.length > 0 && !game.notInstalled && (
               <button className={`btn${focusOf("shots") ? " focused" : ""}`} onClick={() => setViewingShots(true)}>
                 ▣ {shots.length} ekran görüntüsü
@@ -306,7 +310,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
                 ⚡ {game.power ? GAME_POWER_LABEL[game.power] : "Güç: sisteme göre"}
               </button>
             )}
-            {!game.notInstalled && (
+            {!game.notInstalled && !kidsMode && (
             <button
               className={`btn danger${focusOf("remove") ? " focused" : ""}${confirmRemove ? " armed" : ""}`}
               onClick={remove}

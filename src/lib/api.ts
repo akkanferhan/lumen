@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { gameExtensions } from "./catalog";
+import { todayStart } from "./format";
 import { mockApi } from "./mock";
 import type {
   AppUpdate,
@@ -44,6 +45,13 @@ export interface Api {
   installSystems(systemIds: string[]): Promise<void>;
   /** `fresh` starts over instead of continuing from the last session. */
   launchGame(gameId: string, fresh?: boolean): Promise<void>;
+  /** Kids mode on; an empty PIN keeps the one set before. */
+  kidsStart(pin: string, collection: string | null, dailyMinutes: number | null): Promise<void>;
+  kidsStop(pin: string): Promise<void>;
+  /** Seconds played since `dayStart` (local midnight). */
+  playedSince(dayStart: number): Promise<number>;
+  /** Kids mode: today's time ran out, the game is being saved and closed. */
+  onKidsTimeUp(cb: () => void): () => void;
   /** Repairs what made this game's last launch fail; null when there's nothing to try. */
   autoFix(gameId: string): Promise<FixResult | null>;
   isResumable(gameId: string): Promise<boolean>;
@@ -153,7 +161,11 @@ const tauriApi: Api = {
   defaultRomRoot: () => invoke("default_rom_root"),
   scanLibrary: () => invoke("scan_library"),
   installSystems: (systemIds) => invoke("install_systems", { systemIds }),
-  launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh }),
+  launchGame: (gameId, fresh) => invoke("launch_game", { gameId, fresh: !!fresh, dayStart: todayStart() }),
+  kidsStart: (pin, collection, dailyMinutes) => invoke("kids_start", { pin, collection, dailyMinutes }),
+  kidsStop: (pin) => invoke("kids_stop", { pin }),
+  playedSince: (dayStart) => invoke("played_since", { dayStart }),
+  onKidsTimeUp: (cb) => subscribe<null>("kids-time-up", () => cb()),
   autoFix: (gameId) => invoke("auto_fix", { gameId }),
   isResumable: (gameId) => invoke("is_resumable", { gameId }),
   gameInfo: (gameId) => invoke("game_info", { gameId }),
