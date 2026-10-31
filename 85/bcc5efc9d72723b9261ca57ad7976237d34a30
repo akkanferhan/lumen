@@ -1,0 +1,36 @@
+src/screens/Library.tsx
+  s_e07464b85ba926::t_02de1349862087 355-356
+  s_e07464b85ba926::t_f995ad1648ebc2 128-142,182,187-200,265,270-281,307-308,357-360,397-404,430,443,450,486-490,536-563
+  s_e07464b85ba926::t_cb6d26273e1997 364
+src/themes.css
+  s_e07464b85ba926::t_cb6d26273e1997 115,240,543,697
+src/styles.css
+  s_e07464b85ba926::t_02de1349862087 2173-2174,2180,2187-2207,2209,2211-2261
+  s_e07464b85ba926::t_cb6d26273e1997 276,495,2175-2179,2181-2186,2208,2210
+src/components/Glyph.tsx
+  s_2ccb48050e88d4::t_efcfad5415a4cb 5,8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "85bcc5efc9d72723b9261ca57ad7976237d34a30",
+  "prompts": {},
+  "sessions": {
+    "s_2ccb48050e88d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "096b798c-6c94-4b6b-a2c4-decb7531ad91",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    },
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
