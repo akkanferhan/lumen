@@ -1,0 +1,35 @@
+src/App.tsx
+  s_e07464b85ba926::t_125acf8c6638d6 11,24,109
+src/lib/api.ts
+  s_e07464b85ba926::t_125acf8c6638d6 94-95,173
+src/screens/LaunchLoading.tsx
+  s_e07464b85ba926::t_13df3e1fe9433c 1-63
+src/lib/mock.ts
+  s_e07464b85ba926::t_125acf8c6638d6 89,326-327,473-475
+  s_e07464b85ba926::t_8ebea9e1c355a6 476
+src/styles.css
+  s_e07464b85ba926::t_4b325ee47e61d2 2162-2221
+  s_e07464b85ba926::t_a9d4c77e400836 2256-2262
+src/lib/store.ts
+  s_e07464b85ba926::t_125acf8c6638d6 39-40,63,155,157,160,306,312
+src-tauri/src/launcher.rs
+  s_e07464b85ba926::t_125acf8c6638d6 19-21,464-465,483,488
+src/lib/input.ts
+  s_e07464b85ba926::t_125acf8c6638d6 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9c04abfce54b9d8d8496cdf72cc9c493e08e966d",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
