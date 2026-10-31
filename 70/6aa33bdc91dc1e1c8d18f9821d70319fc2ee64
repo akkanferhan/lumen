@@ -1,0 +1,19 @@
+src/screens/GameSheet.tsx
+  s_e07464b85ba926::t_0c9b5cf8c17dc2 1,126-145,176-184,341
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "706aa33bdc91dc1e1c8d18f9821d70319fc2ee64",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
