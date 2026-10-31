@@ -16,6 +16,9 @@ use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::oneshot;
 
 pub const EXITED_EVENT: &str = "game-exited";
+/// The game's window is up (or Lumen stopped waiting for it): the loading
+/// screen can go.
+pub const SHOWN_EVENT: &str = "game-shown";
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -458,7 +461,8 @@ pub fn is_resumable(state: &AppState, game: &Game) -> bool {
 /// Brings the emulator's window to the front once it appears and minimizes
 /// Lumen, so the game never opens hidden behind Lumen's fullscreen window
 /// (where button presses went to Lumen instead of the game). Slow starters
-/// (RPCS3 compiling, Xenia) get half a minute.
+/// (RPCS3 compiling, Xenia) get half a minute. Lumen shows a loading screen
+/// until then.
 fn bring_up_when_shown(app: AppHandle, pid: u32) {
     tauri::async_runtime::spawn(async move {
         for _ in 0..120 {
@@ -476,10 +480,12 @@ fn bring_up_when_shown(app: AppHandle, pid: u32) {
             if crate::windows::focus_process(pid) {
                 hide_lumen(&app);
                 crate::overlay::show(&app);
+                let _ = app.emit(SHOWN_EVENT, ());
                 keep_game_in_front(&app, pid).await;
                 return;
             }
         }
+        let _ = app.emit(SHOWN_EVENT, ());
     });
 }
 

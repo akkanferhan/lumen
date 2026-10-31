@@ -2159,6 +2159,66 @@ button {
   }
 }
 
+/* ---------- Loading screen while an emulator starts ---------- */
+
+.launch-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: var(--bg);
+  animation: fade-in 200ms var(--ease-out);
+}
+
+.launch-loading-inner {
+  max-width: 34rem;
+  padding: var(--gutter);
+  animation: rise 420ms var(--ease-out);
+}
+
+.launch-loading .eyebrow {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.launch-loading h2 {
+  margin: 0.5rem 0 1.6rem;
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+}
+
+.launch-loading p {
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 1.2rem 0 0;
+}
+
+.launch-loading small {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.launch-spinner {
+  width: 2.6rem;
+  height: 2.6rem;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--accent, #fff);
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ---------- In-game menu button (its own transparent window) ---------- */
 
 html.overlay-window,
@@ -2192,4 +2252,11 @@ html.overlay-window #root {
 .overlay-button:active {
   opacity: 1;
   transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still turning (slowly), so loading never looks frozen. */
+  .launch-spinner {
+    animation-duration: 2.4s !important;
+  }
 }

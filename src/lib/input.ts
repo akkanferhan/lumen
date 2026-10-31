@@ -21,7 +21,7 @@ export type Action =
   | "select";
 
 /** Higher layers win. */
-export const Layer = { screen: 0, sheet: 10, menu: 20, running: 30 } as const;
+export const Layer = { screen: 0, sheet: 10, menu: 20, running: 30, loading: 40 } as const;
 
 type Handler = (action: Action) => void;
 interface Entry {
