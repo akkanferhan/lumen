@@ -7,6 +7,7 @@ import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { notify } from "../lib/store";
 import type { Shot } from "../lib/types";
+import { L, locale } from "../lib/i18n";
 
 /** A screenshot's address: files on disk go through Tauri's asset protocol. */
 export const shotUrl = (path: string) => (/^https?:/.test(path) ? path : convertFileSrc(path));
@@ -70,20 +71,20 @@ export function ShotGallery({
 
   if (!shot) return null;
   const when = formatLastPlayed(shot.takenAt);
-  const time = new Date(shot.takenAt * 1000).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  const time = new Date(shot.takenAt * 1000).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="shot-gallery" role="dialog" aria-label="Ekran görüntüleri">
+    <div className="shot-gallery" role="dialog" aria-label={L("Ekran görüntüleri", "Screenshots")}>
       <img key={shot.path} className="shot-full" src={shotUrl(shot.path)} alt="" draggable={false} />
       <div className="shot-caption">
         {index + 1} / {shots.length} · {when} {time}
-        {armed && <b> · Silmek için X'e tekrar bas</b>}
+        {armed && <b>{L(" · Silmek için X'e tekrar bas", " · Press X again to delete")}</b>}
       </div>
       <HintBar
         hints={[
-          ...(shots.length > 1 ? [{ action: "left" as const, label: "Önceki / sonraki" }] : []),
-          { action: "x", label: armed ? "Emin misin? Sil" : "Sil" },
-          { action: "b", label: "Kapat" },
+          ...(shots.length > 1 ? [{ action: "left" as const, label: L("Önceki / sonraki", "Previous / next") }] : []),
+          { action: "x", label: armed ? L("Emin misin? Sil", "Are you sure? Delete") : L("Sil", "Delete") },
+          { action: "b", label: L("Kapat", "Close") },
         ]}
       />
     </div>

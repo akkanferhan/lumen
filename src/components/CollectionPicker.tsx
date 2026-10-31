@@ -4,6 +4,7 @@ import { TextKeyboard } from "./TextKeyboard";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, getState, useStore } from "../lib/store";
+import { L } from "../lib/i18n";
 
 /** Puts a game in (or takes it out of) the user's collections; new ones are named on the pad keyboard. */
 export function CollectionPicker({ gameId, title, onClose }: { gameId: string; title: string; onClose: () => void }) {
@@ -73,8 +74,13 @@ export function CollectionPicker({ gameId, title, onClose }: { gameId: string; t
     <>
       <div className="scrim" onClick={onClose} />
       <aside className="menu" hidden={naming}>
-        <h2>Koleksiyonlar</h2>
-        <p className="menu-sub">{title} hangi listelerde olsun? Her koleksiyon kütüphanede kendi sekmesi olur.</p>
+        <h2>{L("Koleksiyonlar", "Collections")}</h2>
+        <p className="menu-sub">
+          {L(
+            `${title} hangi listelerde olsun? Her koleksiyon kütüphanede kendi sekmesi olur.`,
+            `Which lists should ${title} be in? Each collection gets its own tab in the library.`,
+          )}
+        </p>
         <div className="menu-list">
           {collections.map((c, i) => {
             const inIt = c.games.includes(gameId);
@@ -86,10 +92,12 @@ export function CollectionPicker({ gameId, title, onClose }: { gameId: string; t
                 tabIndex={-1}
               >
                 <div className="menu-item-main">
-                  <div className="menu-item-title">{confirmDelete === c.id ? `“${c.name}” silinsin mi? X ile onayla` : c.name}</div>
-                  <div className="menu-item-sub">{c.games.length} oyun</div>
+                  <div className="menu-item-title">{confirmDelete === c.id ? L(`“${c.name}” silinsin mi? X ile onayla`, `Delete “${c.name}”? Press X to confirm`) : c.name}</div>
+                  <div className="menu-item-sub">
+                    {L(`${c.games.length} oyun`, `${c.games.length} ${c.games.length === 1 ? "game" : "games"}`)}
+                  </div>
                 </div>
-                <span className="menu-item-value">{inIt ? <span className="pill ok">✓ Bu listede</span> : "Ekle"}</span>
+                <span className="menu-item-value">{inIt ? <span className="pill ok">{L("✓ Bu listede", "✓ In this list")}</span> : L("Ekle", "Add")}</span>
               </button>
             );
           })}
@@ -99,16 +107,18 @@ export function CollectionPicker({ gameId, title, onClose }: { gameId: string; t
             tabIndex={-1}
           >
             <div className="menu-item-main">
-              <div className="menu-item-title">+ Yeni koleksiyon</div>
-              <div className="menu-item-sub">Örneğin “RPG'ler”, “Bitirdiklerim”, “Çocuklar için”</div>
+              <div className="menu-item-title">{L("+ Yeni koleksiyon", "+ New collection")}</div>
+              <div className="menu-item-sub">
+                {L("Örneğin “RPG'ler”, “Bitirdiklerim”, “Çocuklar için”", "For example “RPGs”, “Finished”, “For the kids”")}
+              </div>
             </div>
           </button>
         </div>
       </aside>
       {naming ? (
         <TextKeyboard
-          title="Koleksiyonun adı"
-          placeholder="ör. RPG'ler"
+          title={L("Koleksiyonun adı", "Collection name")}
+          placeholder={L("ör. RPG'ler", "e.g. RPGs")}
           value={name}
           onChange={setName}
           onDone={create}
@@ -120,9 +130,9 @@ export function CollectionPicker({ gameId, title, onClose }: { gameId: string; t
       ) : (
         <HintBar
           hints={[
-            { action: "a", label: current ? (current.games.includes(gameId) ? "Listeden çıkar" : "Listeye ekle") : "Oluştur" },
-            ...(current ? [{ action: "x" as const, label: confirmDelete === current.id ? "Onayla" : "Sil" }] : []),
-            { action: "b", label: "Bitti" },
+            { action: "a", label: current ? (current.games.includes(gameId) ? L("Listeden çıkar", "Remove from list") : L("Listeye ekle", "Add to list")) : L("Oluştur", "Create") },
+            ...(current ? [{ action: "x" as const, label: confirmDelete === current.id ? L("Onayla", "Confirm") : L("Sil", "Delete") }] : []),
+            { action: "b", label: L("Bitti", "Done") },
           ]}
         />
       )}

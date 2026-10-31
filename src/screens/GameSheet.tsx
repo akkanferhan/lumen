@@ -12,10 +12,15 @@ import { sfx } from "../lib/sfx";
 import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
 import type { AchievementProgress, Game, GameInfo, PowerMode, Session, Shot, UninstallPlan } from "../lib/types";
+import { L } from "../lib/i18n";
 
 /** A game's power choices, in the order A steps through them (null: its system's). */
 const GAME_POWER: (PowerMode | null)[] = [null, "silent", "performance", "turbo"];
-const GAME_POWER_LABEL: Record<PowerMode, string> = { silent: "Sessiz", performance: "Performans", turbo: "Turbo" };
+const GAME_POWER_LABEL: Record<PowerMode, string> = {
+  silent: L("Sessiz", "Silent"),
+  performance: L("Performans", "Performance"),
+  turbo: "Turbo",
+};
 import { formatBytes } from "../lib/format";
 
 export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => void }) {
@@ -184,16 +189,16 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
   const bios = overview?.settings.romRoot ? `${overview.settings.romRoot}${sep(overview.settings.romRoot)}bios` : "bios";
   const playLabel = game.notInstalled
-    ? "Steam'de yükle"
+    ? L("Steam'de yükle", "Install on Steam")
     : busy
     ? install
-      ? "Hazırlanıyor…"
-      : "Başlatılıyor…"
+      ? L("Hazırlanıyor…", "Preparing…")
+      : L("Başlatılıyor…", "Starting…")
     : missing.length
-      ? "Dosya gerekli"
+      ? L("Dosya gerekli", "File needed")
       : resumable
-        ? "Devam et"
-        : "Oyna";
+        ? L("Devam et", "Continue")
+        : L("Oyna", "Play");
   const focusOf = (id: Button) => buttons.indexOf(id) === focus;
   const inLists = (overview?.collections ?? []).filter((c) => c.games.includes(game.id)).length;
 
@@ -213,7 +218,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
           <h1>{game.title}</h1>
           {info && (
             <div className="facts" lang="en">
-              {[info.year, info.developer, info.genre, info.players && `${info.players} oyuncu`]
+              {[info.year, info.developer, info.genre, info.players && L(`${info.players} oyuncu`, `${info.players} ${info.players === "1" ? "player" : "players"}`)]
                 .filter(Boolean)
                 .map((fact) => (
                   <span key={fact}>{fact}</span>
@@ -224,15 +229,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
           <div className="stats">
             <div>
-              <div className="stat-label">Son oynanma</div>
+              <div className="stat-label">{L("Son oynanma", "Last played")}</div>
               <div className="stat-value">{formatLastPlayed(game.lastPlayed)}</div>
             </div>
             <div>
-              <div className="stat-label">Toplam süre</div>
-              <div className="stat-value">{pc ? "Mağazada" : formatPlaytime(game.playSeconds)}</div>
+              <div className="stat-label">{L("Toplam süre", "Total time")}</div>
+              <div className="stat-value">{pc ? L("Mağazada", "In store") : formatPlaytime(game.playSeconds)}</div>
             </div>
             <div>
-              <div className="stat-label">{pc ? "Mağaza" : "Emülatör"}</div>
+              <div className="stat-label">{pc ? L("Mağaza", "Store") : L("Emülatör", "Emulator")}</div>
               <div className="stat-value">{pc ? system.name : emulator?.name}</div>
             </div>
           </div>
@@ -242,18 +247,33 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
               <span>⚠</span>
               <div>
                 {missing.some((m) => m.verdict === "wrongSize") ? (
-                  <>
-                    BIOS dosyası bulundu ama bozuk ya da yanlış görünüyor (boyutu tutmuyor):{" "}
-                    <b>{missing.filter((m) => m.verdict === "wrongSize").map((m) => m.file).join(", ")}</b>
-                    <br />
-                    Konsolundan yeniden döküm alıp <code>{bios}</code> klasörüne koy.
-                  </>
+                  L(
+                    <>
+                      BIOS dosyası bulundu ama bozuk ya da yanlış görünüyor (boyutu tutmuyor):{" "}
+                      <b>{missing.filter((m) => m.verdict === "wrongSize").map((m) => m.file).join(", ")}</b>
+                      <br />
+                      Konsolundan yeniden döküm alıp <code>{bios}</code> klasörüne koy.
+                    </>,
+                    <>
+                      A BIOS file was found but looks damaged or wrong (its size doesn't match):{" "}
+                      <b>{missing.filter((m) => m.verdict === "wrongSize").map((m) => m.file).join(", ")}</b>
+                      <br />
+                      Dump it again from your console and put it in the <code>{bios}</code> folder.
+                    </>,
+                  )
                 ) : (
-                  <>
-                    Bu sistem için bir dosya eksik: <b>{missing.map((m) => m.label).join(", ")}</b>
-                    <br />
-                    Dosyayı <code>{bios}</code> klasörüne koyduktan sonra menüden kütüphaneyi yenile.
-                  </>
+                  L(
+                    <>
+                      Bu sistem için bir dosya eksik: <b>{missing.map((m) => m.label).join(", ")}</b>
+                      <br />
+                      Dosyayı <code>{bios}</code> klasörüne koyduktan sonra menüden kütüphaneyi yenile.
+                    </>,
+                    <>
+                      This system needs a file that's missing: <b>{missing.map((m) => m.label).join(", ")}</b>
+                      <br />
+                      Put it in the <code>{bios}</code> folder, then refresh the library from the menu.
+                    </>,
+                  )
                 )}
               </div>
             </div>
@@ -262,9 +282,18 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <div className="callout info">
               <span>✓</span>
               <div>
-                Ek dosya gerekmez: oyun Lumen'in yerleşik BIOS'uyla çalışır. İstersen kendi konsolundan aldığın{" "}
-                <b>{missingAll.map((m) => m.label).join(", ")}</b> dosyasını <code>{bios}</code> klasörüne koyabilirsin;
-                bazı oyunlarda uyumluluk artar.
+                {L(
+                  <>
+                    Ek dosya gerekmez: oyun Lumen'in yerleşik BIOS'uyla çalışır. İstersen kendi konsolundan aldığın{" "}
+                    <b>{missingAll.map((m) => m.label).join(", ")}</b> dosyasını <code>{bios}</code> klasörüne koyabilirsin;
+                    bazı oyunlarda uyumluluk artar.
+                  </>,
+                  <>
+                    No extra file needed: the game runs on Lumen's built-in BIOS. If you like, you can put{" "}
+                    <b>{missingAll.map((m) => m.label).join(", ")}</b> dumped from your own console in the{" "}
+                    <code>{bios}</code> folder; it improves compatibility in some games.
+                  </>,
+                )}
               </div>
             </div>
           )}
@@ -272,7 +301,10 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <div className="callout info">
               <span>↓</span>
               <div>
-                İlk açılışta {emulator?.name} otomatik olarak indirilip ayarlanacak. Bu işlem bir kez yapılır.
+                {L(
+                  `İlk açılışta ${emulator?.name} otomatik olarak indirilip ayarlanacak. Bu işlem bir kez yapılır.`,
+                  `${emulator?.name} will be downloaded and set up automatically on first launch. This only happens once.`,
+                )}
               </div>
             </div>
           )}
@@ -296,37 +328,39 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
                 disabled={!canPlay}
                 onClick={() => play(game, true)}
               >
-                Baştan başla
+                {L("Baştan başla", "Start over")}
               </button>
             )}
             <button
               className={`btn${focusOf("fav") ? " focused" : ""}`}
               onClick={() => actions.toggleFavorite(game.id)}
             >
-              {game.favorite ? "★ Favorilerde" : "☆ Favorilere ekle"}
+              {game.favorite ? L("★ Favorilerde", "★ In favorites") : L("☆ Favorilere ekle", "☆ Add to favorites")}
             </button>
             {!kidsMode && (
             <button className={`btn${focusOf("lists") ? " focused" : ""}`} onClick={() => setPicking(true)}>
-              {inLists ? `☰ ${inLists} listede` : "☰ Koleksiyona ekle"}
+              {inLists
+                ? L(`☰ ${inLists} listede`, `☰ In ${inLists} ${inLists === 1 ? "list" : "lists"}`)
+                : L("☰ Koleksiyona ekle", "☰ Add to collection")}
             </button>
             )}
             {sessions.length > 0 && !game.notInstalled && (
               <button className={`btn${focusOf("history") ? " focused" : ""}`} onClick={() => setViewingHistory(true)}>
-                🕘 Geçmiş
+                {L("🕘 Geçmiş", "🕘 History")}
               </button>
             )}
             {shots.length > 0 && !game.notInstalled && (
               <button className={`btn${focusOf("shots") ? " focused" : ""}`} onClick={() => setViewingShots(true)}>
-                ▣ {shots.length} ekran görüntüsü
+                {L(`▣ ${shots.length} ekran görüntüsü`, `▣ ${shots.length} ${shots.length === 1 ? "screenshot" : "screenshots"}`)}
               </button>
             )}
             {powerChoice && !game.notInstalled && (
               <button
                 className={`btn${focusOf("power") ? " focused" : ""}`}
                 onClick={cyclePower}
-                title="Bu oyun açılınca kullanılacak ASUS güç modu"
+                title={L("Bu oyun açılınca kullanılacak ASUS güç modu", "ASUS power mode used when this game starts")}
               >
-                ⚡ {game.power ? GAME_POWER_LABEL[game.power] : "Güç: sisteme göre"}
+                ⚡ {game.power ? GAME_POWER_LABEL[game.power] : L("Güç: sisteme göre", "Power: system default")}
               </button>
             )}
             {!game.notInstalled && !kidsMode && (
@@ -335,7 +369,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
               onClick={remove}
               disabled={removing || !plan}
             >
-              {removing ? "Kaldırılıyor…" : confirmRemove ? "Emin misin? Tekrar bas" : "Kaldır"}
+              {removing
+                ? L("Kaldırılıyor…", "Removing…")
+                : confirmRemove
+                  ? L("Emin misin? Tekrar bas", "Are you sure? Press again")
+                  : L("Kaldır", "Remove")}
             </button>
             )}
           </div>
@@ -344,8 +382,10 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <div className="callout info">
               <span>↓</span>
               <div>
-                Bu oyun Steam kütüphanende ama yüklü değil. Steam kurulum penceresi açılır; indirme bitince oyun burada
-                oynanabilir olur.
+                {L(
+                  "Bu oyun Steam kütüphanende ama yüklü değil. Steam kurulum penceresi açılır; indirme bitince oyun burada oynanabilir olur.",
+                  "This game is in your Steam library but isn't installed. Steam's install window opens; once the download finishes, you can play it here.",
+                )}
               </div>
             </div>
           )}
@@ -372,9 +412,9 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
       ) : (
         <HintBar
           hints={[
-            { action: "a", label: "Seç" },
-            { action: "y", label: "Favori" },
-            { action: "b", label: "Geri" },
+            { action: "a", label: L("Seç", "Select") },
+            { action: "y", label: L("Favori", "Favorite") },
+            { action: "b", label: L("Geri", "Back") },
           ]}
         />
       )}
@@ -408,9 +448,9 @@ function Achievements({ gameId }: { gameId: string }) {
   return (
     <section className="achievements">
       <div className="achievements-head">
-        <span className="stat-label">Başarımlar</span>
+        <span className="stat-label">{L("Başarımlar", "Achievements")}</span>
         <span>
-          {won.length} / {all.length} · {points(won)} / {points(all)} puan
+          {won.length} / {all.length} · {points(won)} / {points(all)} {L("puan", "points")}
         </span>
       </div>
       <ProgressBar value={won.length / all.length} />
@@ -448,12 +488,18 @@ function Screenshots({ game }: { game: Game }) {
 function removeNote(plan: UninstallPlan): string {
   switch (plan.method) {
     case "recycleBin":
-      return `${plan.files} dosya${plan.bytes ? ` (${formatBytes(plan.bytes)})` : ""} Geri Dönüşüm Kutusu'na taşınacak. Kayıtların silinmez.`;
+      return L(
+        `${plan.files} dosya${plan.bytes ? ` (${formatBytes(plan.bytes)})` : ""} Geri Dönüşüm Kutusu'na taşınacak. Kayıtların silinmez.`,
+        `${plan.files} ${plan.files === 1 ? "file" : "files"}${plan.bytes ? ` (${formatBytes(plan.bytes)})` : ""} will be moved to the Recycle Bin. Your saves are kept.`,
+      );
     case "storeDialog":
-      return "Steam'in kaldırma penceresi açılacak; onay Steam'den istenir.";
+      return L("Steam'in kaldırma penceresi açılacak; onay Steam'den istenir.", "Steam's uninstall window will open; Steam asks you to confirm.");
     case "windowsPackage":
-      return "Oyun Windows'tan kaldırılacak. Bulut kayıtların Xbox hesabında kalır.";
+      return L(
+        "Oyun Windows'tan kaldırılacak. Bulut kayıtların Xbox hesabında kalır.",
+        "The game will be uninstalled from Windows. Your cloud saves stay on your Xbox account.",
+      );
     case "openStore":
-      return "Epic Games açılacak; kaldırmayı oradan yapabilirsin.";
+      return L("Epic Games açılacak; kaldırmayı oradan yapabilirsin.", "Epic Games will open; you can uninstall it from there.");
   }
 }

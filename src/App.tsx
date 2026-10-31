@@ -17,6 +17,7 @@ import { ArtLink } from "./screens/ArtLink";
 import { Tour } from "./components/Tour";
 import { Layer } from "./lib/input";
 import { RaLogin } from "./screens/RaLogin";
+import { L } from "./lib/i18n";
 
 export function App() {
   const ready = useStore((s) => s.ready);
@@ -147,7 +148,7 @@ function Splash() {
     const id = setTimeout(() => setSlow(true), 10_000);
     return () => clearTimeout(id);
   }, []);
-  const problem = bootError ?? (slow ? "Lumen 10 saniyedir yanıt vermiyor." : null);
+  const problem = bootError ?? (slow ? L("Lumen 10 saniyedir yanıt vermiyor.", "Lumen hasn't responded for 10 seconds.") : null);
 
   return (
     <div className="app splash">
@@ -156,10 +157,10 @@ function Splash() {
         <BrandMark className="splash-mark" />
         {problem && (
           <>
-            <h2>Lumen başlatılamadı</h2>
+            <h2>{L("Lumen başlatılamadı", "Lumen couldn't start")}</h2>
             <p>{problem}</p>
             <button className="btn primary focused" onClick={() => location.reload()}>
-              Tekrar dene
+              {L("Tekrar dene", "Try again")}
             </button>
           </>
         )}
@@ -169,7 +170,7 @@ function Splash() {
 }
 
 /** Bump when a release brings features worth a "Yenilikler" screen. */
-const WHATS_NEW = "2026-10-31";
+const WHATS_NEW = "2026-10-31b";
 const WHATS_NEW_KEY = "lumen.whatsNew";
 
 function whatsNewSeen(): boolean {

@@ -1,14 +1,15 @@
 import { installLabel } from "../lib/catalog";
+import { L } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import type { InstallStage } from "../lib/types";
 
 const STAGE: Record<InstallStage, string> = {
-  downloading: "İndiriliyor",
-  extracting: "Açılıyor",
-  configuring: "Ayarlanıyor",
-  copying: "Kopyalanıyor",
-  done: "Hazır",
-  error: "Hata",
+  downloading: L("İndiriliyor", "Downloading"),
+  extracting: L("Açılıyor", "Extracting"),
+  configuring: L("Ayarlanıyor", "Configuring"),
+  copying: L("Kopyalanıyor", "Copying"),
+  done: L("Hazır", "Ready"),
+  error: L("Hata", "Error"),
 };
 
 export function Toasts({ hideInstalls = false }: { hideInstalls?: boolean }) {
@@ -25,7 +26,7 @@ export function Toasts({ hideInstalls = false }: { hideInstalls?: boolean }) {
               <span>
                 {STAGE[p.stage]}
                 {(p.stage === "downloading" || p.stage === "copying") && p.progress > 0
-                  ? ` · %${Math.round(p.progress * 100)}`
+                  ? L(` · %${Math.round(p.progress * 100)}`, ` · ${Math.round(p.progress * 100)}%`)
                   : ""}
               </span>
             </div>

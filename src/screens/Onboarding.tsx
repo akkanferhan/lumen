@@ -9,6 +9,7 @@ import { emulatorOf, installLabel, isPcSystem, systemOf, systems as allSystems }
 const systems = allSystems.filter((s) => !isPcSystem(s.id));
 import { api } from "../lib/api";
 import { Layer, rumble, useInput } from "../lib/input";
+import { L } from "../lib/i18n";
 import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";
 import type { InstallProgress } from "../lib/types";
@@ -61,18 +62,20 @@ function Welcome({ onNext }: { onNext: () => void }) {
     <>
       <div className="step center">
         <BrandMark className="hero-mark" />
-        <h1>Tüm oyunların, tek ekranda.</h1>
+        <h1>{L("Tüm oyunların, tek ekranda.", "All your games, on one screen.")}</h1>
         <p className="lead">
-          Lumen emülatörleri senin için indirir, ayarlar ve oyunlarını tek bir kütüphanede toplar. Kurulum bir dakikadan
-          kısa sürer.
+          {L(
+            "Lumen emülatörleri senin için indirir, ayarlar ve oyunlarını tek bir kütüphanede toplar. Kurulum bir dakikadan kısa sürer.",
+            "Lumen downloads and sets up emulators for you and gathers your games in one library. Setup takes less than a minute.",
+          )}
         </p>
         <div className="actions">
           <button className="btn primary focused" onClick={onNext}>
-            Başla
+            {L("Başla", "Start")}
           </button>
         </div>
       </div>
-      <HintBar hints={[{ action: "a", label: "Başla" }]} />
+      <HintBar hints={[{ action: "a", label: L("Başla", "Start") }]} />
     </>
   );
 }
@@ -108,28 +111,37 @@ function Folder({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
   return (
     <>
       <div className="step center">
-        <div className="step-count">Adım 1 / 2</div>
-        <h1>Oyunların nerede dursun?</h1>
+        <div className="step-count">{L("Adım 1 / 2", "Step 1 / 2")}</div>
+        <h1>{L("Oyunların nerede dursun?", "Where should your games live?")}</h1>
         <p className="lead">
-          Masaüstünde <b>Lumen Oyunlar</b> klasörünü oluşturacağız. İçinde her sistemin kendi klasörü (<b>ps1</b>,{" "}
-          <b>snes</b>, <b>gba</b>…) ve BIOS dosyaları için <b>bios</b> klasörü olacak. Oyun dosyasını ilgili klasöre
-          bırakman yeterli; Lumen her açılışta klasörü yeniden tarar.
+          {L(
+            <>
+              Masaüstünde <b>Lumen Oyunlar</b> klasörünü oluşturacağız. İçinde her sistemin kendi klasörü (<b>ps1</b>,{" "}
+              <b>snes</b>, <b>gba</b>…) ve BIOS dosyaları için <b>bios</b> klasörü olacak. Oyun dosyasını ilgili klasöre
+              bırakman yeterli; Lumen her açılışta klasörü yeniden tarar.
+            </>,
+            <>
+              We'll create a <b>Lumen Oyunlar</b> folder on your desktop. Inside, each system gets its own folder (
+              <b>ps1</b>, <b>snes</b>, <b>gba</b>…) plus a <b>bios</b> folder for BIOS files. Just drop a game file into
+              the matching folder; Lumen rescans it every time it starts.
+            </>,
+          )}
         </p>
         {defaultRoot && <div className="path-chip">{defaultRoot}</div>}
         <div className="actions">
           <button className="btn primary focused" onClick={useDefault} disabled={scanning}>
-            {scanning ? "Klasör hazırlanıyor…" : "Masaüstünde oluştur"}
+            {scanning ? L("Klasör hazırlanıyor…", "Preparing folder…") : L("Masaüstünde oluştur", "Create on desktop")}
           </button>
           <button className="btn" onClick={choose} disabled={scanning}>
-            Başka klasör seç
+            {L("Başka klasör seç", "Choose another folder")}
           </button>
         </div>
       </div>
       <HintBar
         hints={[
-          { action: "a", label: "Masaüstünde oluştur" },
-          { action: "x", label: "Başka klasör seç" },
-          { action: "b", label: "Geri" },
+          { action: "a", label: L("Masaüstünde oluştur", "Create on desktop") },
+          { action: "x", label: L("Başka klasör seç", "Choose another folder") },
+          { action: "b", label: L("Geri", "Back") },
         ]}
       />
     </>
@@ -221,12 +233,18 @@ function Systems({ onInstall, onSkip }: { onInstall: (systemIds: string[]) => vo
   return (
     <>
       <div className="step wide">
-        <div className="step-count">Adım 2 / 2</div>
-        <h1>Hangi sistemleri hazırlayalım?</h1>
+        <div className="step-count">{L("Adım 2 / 2", "Step 2 / 2")}</div>
+        <h1>{L("Hangi sistemleri hazırlayalım?", "Which systems should we set up?")}</h1>
         <p className="lead" style={{ margin: 0 }}>
           {found > 0
-            ? `${found} oyun bulduk; ilgili sistemleri seçtik.`
-            : "Henüz oyun bulunamadı. İstediklerini şimdi seç ya da atla; bir oyunu ilk açtığında emülatörü otomatik kurarız."}
+            ? L(
+                `${found} oyun bulduk; ilgili sistemleri seçtik.`,
+                `We found ${found} ${found === 1 ? "game" : "games"} and selected their systems.`,
+              )
+            : L(
+                "Henüz oyun bulunamadı. İstediklerini şimdi seç ya da atla; bir oyunu ilk açtığında emülatörü otomatik kurarız.",
+                "No games found yet. Pick the systems you want now or skip; we'll install the emulator automatically the first time you open a game.",
+              )}
         </p>
 
         <div className="system-grid" ref={gridRef}>
@@ -257,17 +275,17 @@ function Systems({ onInstall, onSkip }: { onInstall: (systemIds: string[]) => vo
             onClick={install}
             disabled={selected.size === 0}
           >
-            Kur ({selected.size})
+            {L("Kur", "Install")} ({selected.size})
           </button>
           <button className={`btn${focus === buttonsStart + 1 ? " focused" : ""}`} onClick={onSkip}>
-            Şimdilik atla
+            {L("Şimdilik atla", "Skip for now")}
           </button>
         </div>
       </div>
       <HintBar
         hints={[
-          { action: "a", label: "Seç" },
-          { action: "y", label: selected.size === systems.length ? "Hiçbiri" : "Hepsi" },
+          { action: "a", label: L("Seç", "Select") },
+          { action: "y", label: selected.size === systems.length ? L("Hiçbiri", "None") : L("Hepsi", "All") },
         ]}
       />
     </>
@@ -275,12 +293,12 @@ function Systems({ onInstall, onSkip }: { onInstall: (systemIds: string[]) => vo
 }
 
 const STAGE_LABEL: Record<InstallProgress["stage"], string> = {
-  downloading: "İndiriliyor",
-  extracting: "Açılıyor",
-  configuring: "Ayarlanıyor",
-  copying: "Kopyalanıyor",
-  done: "Hazır",
-  error: "Hata",
+  downloading: L("İndiriliyor", "Downloading"),
+  extracting: L("Açılıyor", "Extracting"),
+  configuring: L("Ayarlanıyor", "Configuring"),
+  copying: L("Kopyalanıyor", "Copying"),
+  done: L("Hazır", "Ready"),
+  error: L("Hata", "Error"),
 };
 
 function Install({ finished, onDone }: { finished: boolean; onDone: () => void }) {
@@ -328,21 +346,37 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
   return (
     <>
       <div className="step install-step">
-        <h1>{finished ? (failed ? "Neredeyse hazır" : "Hazırsın") : "Emülatörler hazırlanıyor"}</h1>
+        <h1>{finished
+            ? failed
+              ? L("Neredeyse hazır", "Almost ready")
+              : L("Hazırsın", "You're all set")
+            : L("Emülatörler hazırlanıyor", "Setting up emulators")}</h1>
         <p className="lead" style={{ margin: 0 }}>
           {!overview?.platformSupported
-            ? "Bu bir geliştirme önizlemesi; emülatör kurulumu Windows'ta yapılır."
+            ? L(
+                "Bu bir geliştirme önizlemesi; emülatör kurulumu Windows'ta yapılır.",
+                "This is a development preview; emulators are installed on Windows.",
+              )
             : finished
               ? failed
-                ? `${failed} kurulum tamamlanamadı. Menü › Emülatörler'den tekrar deneyebilirsin.`
-                : "Her şey ayarlandı. Oyun eklemek için sistem klasörlerine dosya koyman yeterli."
-              : "Resmi kaynaklardan indirip senin için ayarlıyoruz. Bu ekranı kapatabilirsin; arkada devam eder."}
+                ? L(
+                    `${failed} kurulum tamamlanamadı. Menü › Emülatörler'den tekrar deneyebilirsin.`,
+                    `${failed} ${failed === 1 ? "install" : "installs"} couldn't finish. You can retry from Menu › Emulators.`,
+                  )
+                : L(
+                    "Her şey ayarlandı. Oyun eklemek için sistem klasörlerine dosya koyman yeterli.",
+                    "Everything's set up. To add games, just put files in the system folders.",
+                  )
+              : L(
+                  "Resmi kaynaklardan indirip senin için ayarlıyoruz. Bu ekranı kapatabilirsin; arkada devam eder.",
+                  "Downloading from official sources and setting them up for you. You can close this screen; it continues in the background.",
+                )}
         </p>
 
         {rows.length > 0 && (
           <div className="install-summary">
             <span>
-              {completed} / {rows.length} tamamlandı
+              {completed} / {rows.length} {L("tamamlandı", "done")}
             </span>
             <ProgressBar value={rows.length ? completed / rows.length : 0} />
           </div>
@@ -367,26 +401,37 @@ function Install({ finished, onDone }: { finished: boolean; onDone: () => void }
           <div className="callout info" style={{ marginTop: rows.length ? 0 : "1.6rem" }}>
             <span>i</span>
             <div>
-              Bazı sistemler BIOS dosyası istiyor:{" "}
-              <b>{missingBios.map((b) => `${b.system}: ${b.label}`).join(" · ")}</b>. Bu dosyaları kendi cihazından alıp{" "}
-              <code>bios</code> klasörüne koyabilirsin.
+              {L("Bazı sistemler BIOS dosyası istiyor:", "Some systems need a BIOS file:")}{" "}
+              <b>{missingBios.map((b) => `${b.system}: ${b.label}`).join(" · ")}</b>.{" "}
+              {L(
+                <>
+                  Bu dosyaları kendi cihazından alıp <code>bios</code> klasörüne koyabilirsin.
+                </>,
+                <>
+                  Dump them from your own console and put them in the <code>bios</code> folder.
+                </>,
+              )}
             </div>
           </div>
         )}
 
         <div className="actions" style={{ marginTop: "1.6rem" }}>
           <button className={`btn primary${finished ? " focused" : ""}`} onClick={onDone} disabled={!finished}>
-            Kütüphaneye git
+            {L("Kütüphaneye git", "Go to library")}
           </button>
           {!finished && (
             <button className="btn" onClick={onDone}>
-              Arkada devam etsin
+              {L("Arkada devam etsin", "Continue in background")}
             </button>
           )}
         </div>
       </div>
       <HintBar
-        hints={finished ? [{ action: "a", label: "Kütüphaneye git" }] : [{ action: "b", label: "Arkada devam etsin" }]}
+        hints={
+          finished
+            ? [{ action: "a", label: L("Kütüphaneye git", "Go to library") }]
+            : [{ action: "b", label: L("Arkada devam etsin", "Continue in background") }]
+        }
       />
     </>
   );

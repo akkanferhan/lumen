@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { locale } from "../lib/i18n";
 
 interface BatteryManager extends EventTarget {
   level: number;
@@ -11,7 +12,7 @@ export function useClock() {
     const id = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(id);
   }, []);
-  return now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  return now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 }
 
 export function useBattery() {

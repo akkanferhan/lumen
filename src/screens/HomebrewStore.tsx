@@ -4,6 +4,7 @@ import { ProgressBar } from "../components/Toasts";
 import { api } from "../lib/api";
 import { homebrew, systemOf, systems } from "../lib/catalog";
 import { Layer, rumble, useInput } from "../lib/input";
+import { L } from "../lib/i18n";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
 import type { HomebrewGame } from "../lib/types";
@@ -17,8 +18,8 @@ interface Tab {
 
 /** All, the rights-holder-freed classics, then one tab per system in catalog order. */
 const TABS: Tab[] = [
-  { id: "all", label: "Tümü", games: homebrew },
-  { id: "classic", label: "Klasikler", games: homebrew.filter((g) => g.collection === "classic") },
+  { id: "all", label: L("Tümü", "All"), games: homebrew },
+  { id: "classic", label: L("Klasikler", "Classics"), games: homebrew.filter((g) => g.collection === "classic") },
   ...systems.map((s) => ({ id: s.id, label: s.short, games: homebrew.filter((g) => g.system === s.id) })),
 ].filter((t) => t.games.length > 0);
 
@@ -56,21 +57,28 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
 
   const download = async (g: HomebrewGame) => {
     if (installed.has(g.slug)) {
-      notify(`${g.title} zaten kütüphanende`, "success");
+      notify(L(`${g.title} zaten kütüphanende`, `${g.title} is already in your library`), "success");
       return;
     }
     if (installs[`homebrew:${g.slug}`]) return;
     if (g.collection === "classic" && acknowledged !== g.slug) {
       sfx.confirm();
       setAcknowledged(g.slug);
-      notify(`${g.title}: yalnızca ticari olmayan kişisel kullanım için ücretsiz. Onaylıyorsan tekrar İndir'e bas.`, "info", 6000);
+      notify(
+        L(
+          `${g.title}: yalnızca ticari olmayan kişisel kullanım için ücretsiz. Onaylıyorsan tekrar İndir'e bas.`,
+          `${g.title}: free for non-commercial personal use only. If you agree, press Download again.`,
+        ),
+        "info",
+        6000,
+      );
       return;
     }
     sfx.confirm();
     rumble();
     if (await actions.installHomebrew(g.slug)) {
       setInstalled((s) => new Set(s).add(g.slug));
-      notify(`${g.title} kütüphaneye eklendi`, "success");
+      notify(L(`${g.title} kütüphaneye eklendi`, `${g.title} added to your library`), "success");
     }
   };
 
@@ -119,9 +127,12 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
     <div className="store" style={{ "--accent": system?.accent } as CSSProperties}>
       <header className="store-head">
         <div>
-          <h2>Ücretsiz oyunlar</h2>
+          <h2>{L("Ücretsiz oyunlar", "Free games")}</h2>
           <p>
-            Geliştiricilerinin paylaşıma izin verdiği homebrew'lar ve hak sahiplerinin ücretsiz yaptığı klasikler
+            {L(
+              "Geliştiricilerinin paylaşıma izin verdiği homebrew'lar ve hak sahiplerinin ücretsiz yaptığı klasikler",
+              "Homebrew whose developers allow sharing, and classics their rights holders made free",
+            )}
           </p>
         </div>
         <nav className="tabs store-tabs">
@@ -175,14 +186,18 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
               {[game.developer, game.year].filter(Boolean).map((f) => (
                 <span key={f}>{f}</span>
               ))}
-              <span className="license">Lisans: {game.license}</span>
+              <span className="license">
+                {L("Lisans", "License")}: {game.license}
+              </span>
             </div>
             {game.description && <p className="description">{game.description}</p>}
             {game.source && <p className="store-source">{game.source.replace(/^https?:\/\//, "")}</p>}
             {game.collection === "classic" && (
               <p className="store-note">
-                Hak sahibi bu oyunu mamedev.org üzerinden yalnızca ticari olmayan kullanım için ücretsiz yaptı;
-                dosya doğrudan oradan indirilir.
+                {L(
+                  "Hak sahibi bu oyunu mamedev.org üzerinden yalnızca ticari olmayan kullanım için ücretsiz yaptı; dosya doğrudan oradan indirilir.",
+                  "The rights holder made this game free for non-commercial use only via mamedev.org; the file downloads straight from there.",
+                )}
               </p>
             )}
             <button
@@ -191,12 +206,12 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
               disabled={!!job && job.stage !== "error"}
             >
               {installed.has(game.slug)
-                ? "✓ Kütüphanede"
+                ? L("✓ Kütüphanede", "✓ In library")
                 : job
-                  ? "İndiriliyor…"
+                  ? L("İndiriliyor…", "Downloading…")
                   : acknowledged === game.slug
-                    ? "Onayla ve indir"
-                    : "İndir"}
+                    ? L("Onayla ve indir", "Agree and download")
+                    : L("İndir", "Download")}
             </button>
           </aside>
         )}
@@ -205,8 +220,8 @@ export function HomebrewStore({ onClose }: { onClose: () => void }) {
       <HintBar
         left={`${index + 1} / ${list.length}`}
         hints={[
-          { action: "a", label: game && installed.has(game.slug) ? "Kütüphanede" : "İndir" },
-          { action: "b", label: "Kapat" },
+          { action: "a", label: game && installed.has(game.slug) ? L("Kütüphanede", "In library") : L("İndir", "Download") },
+          { action: "b", label: L("Kapat", "Close") },
         ]}
       />
     </div>

@@ -36,12 +36,18 @@ pub async fn check_key(key: &str) -> anyhow::Result<()> {
     let response = request(key, &["search", "autocomplete", "mario"]).await?;
     anyhow::ensure!(
         response.status() != reqwest::StatusCode::UNAUTHORIZED,
-        "SteamGridDB anahtarı kabul etmedi; anahtarı kontrol et"
+        crate::tr!(
+            "SteamGridDB anahtarı kabul etmedi; anahtarı kontrol et",
+            "SteamGridDB didn't accept the key; check the key"
+        )
     );
     anyhow::ensure!(
         response.status().is_success(),
-        "SteamGridDB yanıt vermedi ({})",
-        response.status()
+        crate::tr!(
+            "SteamGridDB yanıt vermedi ({})",
+            "SteamGridDB didn't respond ({})",
+            response.status()
+        )
     );
     Ok(())
 }

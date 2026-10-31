@@ -49,15 +49,25 @@ pub async fn login(username: &str, secret: Secret<'_>) -> anyhow::Result<Account
         .await?
         .json()
         .await
-        .map_err(|_| anyhow!("RetroAchievements'a ulaşılamadı"))?;
+        .map_err(|_| {
+            anyhow!(crate::tr!(
+                "RetroAchievements'a ulaşılamadı",
+                "Couldn't reach RetroAchievements"
+            ))
+        })?;
     if !response.success {
-        bail!(response.error.unwrap_or_else(|| "Giriş başarısız".into()));
+        bail!(response
+            .error
+            .unwrap_or_else(|| crate::tr!("Giriş başarısız", "Sign-in failed")));
     }
     Ok(Account {
         username: response.user.unwrap_or_else(|| username.to_string()),
-        token: response
-            .token
-            .ok_or_else(|| anyhow!("RetroAchievements token göndermedi"))?,
+        token: response.token.ok_or_else(|| {
+            anyhow!(crate::tr!(
+                "RetroAchievements token göndermedi",
+                "RetroAchievements didn't send a token"
+            ))
+        })?,
         score: response.score,
     })
 }

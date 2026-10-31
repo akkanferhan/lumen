@@ -73,7 +73,10 @@ pub fn uninstall(game: &Game) -> anyhow::Result<bool> {
                 .unwrap_or_default()
                 .to_string();
             if id.is_empty() || !id.chars().all(|c| c.is_ascii_digit()) {
-                bail!("Steam oyun kimliği okunamadı");
+                bail!(crate::tr!(
+                    "Steam oyun kimliği okunamadı",
+                    "Couldn't read the Steam game ID"
+                ));
             }
             open(&format!("steam://uninstall/{id}"))?;
             Ok(false)
@@ -91,8 +94,13 @@ pub fn uninstall(game: &Game) -> anyhow::Result<bool> {
             if files.iter().all(|f| !f.exists()) {
                 return Ok(true);
             }
-            trash::delete_all(files.iter().filter(|f| f.exists()))
-                .map_err(|e| anyhow!("Geri Dönüşüm Kutusu'na taşınamadı: {e}"))?;
+            trash::delete_all(files.iter().filter(|f| f.exists())).map_err(|e| {
+                anyhow!(crate::tr!(
+                    "Geri Dönüşüm Kutusu'na taşınamadı: {}",
+                    "Couldn't move to the Recycle Bin: {}",
+                    e
+                ))
+            })?;
             Ok(true)
         }
     }
@@ -104,13 +112,21 @@ fn package_family(uri: &str) -> anyhow::Result<String> {
     let family = uri
         .strip_prefix(r"shell:AppsFolder\")
         .and_then(|rest| rest.split('!').next())
-        .ok_or_else(|| anyhow!("Xbox paket adı okunamadı"))?;
+        .ok_or_else(|| {
+            anyhow!(crate::tr!(
+                "Xbox paket adı okunamadı",
+                "Couldn't read the Xbox package name"
+            ))
+        })?;
     let valid = !family.is_empty()
         && family
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'));
     if !valid {
-        bail!("Geçersiz Xbox paket adı");
+        bail!(crate::tr!(
+            "Geçersiz Xbox paket adı",
+            "Invalid Xbox package name"
+        ));
     }
     Ok(family.to_string())
 }
@@ -127,17 +143,21 @@ fn remove_package(family: &str) -> anyhow::Result<()> {
         .creation_flags(CREATE_NO_WINDOW)
         .output()?;
     if !output.status.success() {
-        bail!(
+        bail!(crate::tr!(
             "Xbox oyunu kaldırılamadı: {}",
+            "Couldn't uninstall the Xbox game: {}",
             String::from_utf8_lossy(&output.stderr).trim()
-        );
+        ));
     }
     Ok(())
 }
 
 #[cfg(not(windows))]
 fn remove_package(_family: &str) -> anyhow::Result<()> {
-    bail!("Xbox oyunları sadece Windows'ta kaldırılabilir")
+    bail!(crate::tr!(
+        "Xbox oyunları sadece Windows'ta kaldırılabilir",
+        "Xbox games can only be uninstalled on Windows"
+    ))
 }
 
 fn open(uri: &str) -> anyhow::Result<()> {

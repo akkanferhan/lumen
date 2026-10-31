@@ -1,6 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import manifestJson from "../../src-tauri/emulators.json";
 import homebrewJson from "../../src-tauri/homebrew.json";
+import { L } from "./i18n";
 import type { EmulatorDef, Game, HomebrewGame, SystemDef } from "./types";
 
 /** Store launchers shown next to the emulated systems. */
@@ -8,7 +9,7 @@ const PC_SYSTEMS: SystemDef[] = [
   { id: "steam", name: "Steam", short: "Steam", maker: "Valve", year: 2003, accent: "#66c0f4", extensions: [], folders: [], emulator: "steam", thumbnails: "" },
   { id: "epic", name: "Epic Games", short: "Epic", maker: "Epic Games", year: 2018, accent: "#c8c8c8", extensions: [], folders: [], emulator: "epic", thumbnails: "" },
   // Games installed by the Xbox app (Game Pass, purchases). Not the original Xbox system.
-  { id: "xboxapp", name: "Xbox uygulaması", short: "Xbox PC", maker: "Microsoft", year: 2020, accent: "#3fa142", extensions: [], folders: [], emulator: "xboxapp", thumbnails: "" },
+  { id: "xboxapp", name: L("Xbox uygulaması", "Xbox app"), short: "Xbox PC", maker: "Microsoft", year: 2020, accent: "#3fa142", extensions: [], folders: [], emulator: "xboxapp", thumbnails: "" },
   { id: "gog", name: "GOG", short: "GOG", maker: "GOG.com", year: 2008, accent: "#a855f7", extensions: [], folders: [], emulator: "gog", thumbnails: "" },
   { id: "itch", name: "itch.io", short: "itch", maker: "itch.io", year: 2013, accent: "#fa5c5c", extensions: [], folders: [], emulator: "itch", thumbnails: "" },
 ];
@@ -56,17 +57,17 @@ export const homebrew = homebrewJson as HomebrewGame[];
 
 export function installLabel(id: string): string {
   if (id.startsWith("homebrew:")) return homebrew.find((g) => `homebrew:${g.slug}` === id)?.title ?? "Homebrew";
-  if (id === "import") return "Oyunlar içe aktarılıyor";
-  if (id === "shaders") return "Görüntü filtreleri";
-  if (id === "fix:vcredist") return "Microsoft Visual C++ çalışma zamanı";
+  if (id === "import") return L("Oyunlar içe aktarılıyor", "Importing games");
+  if (id === "shaders") return L("Görüntü filtreleri", "Display filters");
+  if (id === "fix:vcredist") return L("Microsoft Visual C++ çalışma zamanı", "Microsoft Visual C++ runtime");
   if (id === "firmware:ps3") return "PS3 firmware (Sony)";
-  if (id === "hdd:xbox") return "Xbox HDD imajı";
+  if (id === "hdd:xbox") return L("Xbox HDD imajı", "Xbox HDD image");
   if (id === "firmware:vita") return "PS Vita firmware (Sony)";
-  if (id === "firmware:vita-fonts") return "PS Vita font paketi (Sony)";
+  if (id === "firmware:vita-fonts") return L("PS Vita font paketi (Sony)", "PS Vita font pack (Sony)");
   if (id.startsWith("core:")) {
     const core = id.slice(5);
     const users = systems.filter((s) => s.core === core || s.fallback?.core === core).map((s) => s.short);
-    return `${users.join(" / ") || core} çekirdeği`;
+    return L(`${users.join(" / ") || core} çekirdeği`, `${users.join(" / ") || core} core`);
   }
   return emulatorOf(id)?.name ?? id;
 }

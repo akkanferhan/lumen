@@ -4,6 +4,7 @@ import { HintBar } from "../components/HintBar";
 import { systemOf } from "../lib/catalog";
 import { Layer, useInput } from "../lib/input";
 import { actions, useStore } from "../lib/store";
+import { L } from "../lib/i18n";
 
 /** After this long, say that a slow start is normal. */
 const SLOW_MS = 8000;
@@ -45,19 +46,24 @@ export function LaunchLoading({ gameId }: { gameId: string }) {
         <div className="eyebrow">
           <span lang="en">{system?.name}</span>
         </div>
-        <h2>{game?.title ?? "Oyun"}</h2>
+        <h2>{game?.title ?? L("Oyun", "Game")}</h2>
         <div className="launch-spinner" aria-hidden />
         <p>
-          Yükleniyor…
+          {L("Yükleniyor…", "Loading…")}
           {slow && (
             <>
               <br />
-              <small>Bazı emülatörlerin açılması biraz sürebilir, özellikle ilk seferde.</small>
+              <small>
+                {L(
+                  "Bazı emülatörlerin açılması biraz sürebilir, özellikle ilk seferde.",
+                  "Some emulators take a while to start, especially the first time.",
+                )}
+              </small>
             </>
           )}
         </p>
       </div>
-      <HintBar hints={started ? [{ action: "b", label: "Vazgeç" }] : []} />
+      <HintBar hints={started ? [{ action: "b", label: L("Vazgeç", "Cancel") }] : []} />
     </div>
   );
 }

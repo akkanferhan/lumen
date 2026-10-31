@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { L } from "../lib/i18n";
 import { captureText, Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { Glyph } from "./Glyph";
@@ -6,6 +7,13 @@ import { Glyph } from "./Glyph";
 const LETTERS = ["1234567890", "qwertyuiop", "asdfghjkl-", "zxcvbnm_.@"].map((r) => r.split(""));
 const SYMBOLS = ["1234567890", "!#$%&*+=?/", "()[]{}<>:;", "~^'\",|\\_.@"].map((r) => r.split(""));
 const SPECIAL = ["Aa", "#+=", "Sil", "Bitti"] as const;
+/** What the special keys show (SPECIAL stays the key id). */
+const SPECIAL_TEXT: Record<(typeof SPECIAL)[number], string> = {
+  Aa: "Aa",
+  "#+=": "#+=",
+  Sil: L("Sil", "Delete"),
+  Bitti: L("Bitti", "Done"),
+};
 
 /**
  * Gamepad keyboard for free text (user names, passwords). Case and symbols
@@ -99,7 +107,7 @@ export function TextKeyboard({
         <div className="search-field">
           <span className={value ? "" : "placeholder"}>{value ? (secret ? "•".repeat(value.length) : value) : placeholder}</span>
           <span className="caret" />
-          <span className="search-count">{busy ? "Bağlanıyor…" : ""}</span>
+          <span className="search-count">{busy ? L("Bağlanıyor…", "Connecting…") : ""}</span>
         </div>
         <div className="keys">
           {rows.map((keys, r) => (
@@ -133,16 +141,16 @@ export function TextKeyboard({
                 }}
                 tabIndex={-1}
               >
-                {label}
+                {SPECIAL_TEXT[label]}
               </button>
             ))}
           </div>
         </div>
         <div className="search-hints">
-          <span><Glyph action="y" /> Büyük harf</span>
-          <span><Glyph action="x" /> Sil</span>
-          <span><Glyph action="start" /> Bitti</span>
-          <span><Glyph action="b" /> {value ? "Sil" : "İptal"}</span>
+          <span><Glyph action="y" /> {L("Büyük harf", "Caps")}</span>
+          <span><Glyph action="x" /> {L("Sil", "Delete")}</span>
+          <span><Glyph action="start" /> {L("Bitti", "Done")}</span>
+          <span><Glyph action="b" /> {value ? L("Sil", "Delete") : L("İptal", "Cancel")}</span>
         </div>
       </section>
     </>

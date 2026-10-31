@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useBattery, useClock } from "./StatusBar";
+import { L } from "../lib/i18n";
 
 /**
  * The touch button Lumen floats over a running game (its own transparent
@@ -13,7 +14,7 @@ export function OverlayButton() {
       <OverlayStatus />
       <button
         className="overlay-button"
-        aria-label="Lumen menüsü"
+        aria-label={L("Lumen menüsü", "Lumen menu")}
         onPointerDown={(e) => {
           e.preventDefault();
           invoke("overlay_pressed").catch(() => {});
