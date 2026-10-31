@@ -4,6 +4,7 @@
 //! it to save and quit.
 //! Holding Select + LT rewinds and Select + RT fast-forwards (see `controls`).
 
+use crate::controls::M2Action;
 use crate::state::Running;
 use gilrs::{Button, Gilrs};
 use std::time::{Duration, Instant};
@@ -28,12 +29,13 @@ pub fn spawn(app: AppHandle, running: Running) {
         loop {
             while gilrs.next_event().is_some() {}
 
-            let quick_combo = app
-                .state::<crate::state::AppState>()
-                .settings
-                .lock()
-                .unwrap()
-                .quick_combo;
+            let (quick_combo, m2_action) = {
+                let state = app.state::<crate::state::AppState>();
+                let settings = state.settings.lock().unwrap();
+                (settings.quick_combo, settings.m2_action)
+            };
+            // The Ally's M2 runs its shortcut without the game seeing it.
+            let m2 = |action| crate::ally::m2_down() && m2_action == action;
             let playing = running.lock().unwrap().is_some();
             crate::ally::set_in_game(playing);
             // Ally back buttons (never seen by the game), or Select + Start.
@@ -80,16 +82,18 @@ pub fn spawn(app: AppHandle, running: Running) {
                     .and_then(|g| g.pid.filter(|_| !g.suspended).map(|pid| (pid, g.controls)));
                 match game {
                     Some((pid, controls)) if crate::windows::is_foreground(pid) => (
-                        controls.rewind && with(Button::LeftTrigger2),
-                        controls.fast_forward && with(Button::RightTrigger2),
+                        controls.rewind && (with(Button::LeftTrigger2) || m2(M2Action::Rewind)),
+                        controls.fast_forward
+                            && (with(Button::RightTrigger2) || m2(M2Action::FastForward)),
                     ),
                     _ => (false, false),
                 }
             };
             let shot = in_game_now(&running)
-                && gilrs
-                    .gamepads()
-                    .any(|(_, p)| p.is_pressed(Button::Select) && p.is_pressed(Button::North));
+                && (m2(M2Action::Screenshot)
+                    || gilrs
+                        .gamepads()
+                        .any(|(_, p)| p.is_pressed(Button::Select) && p.is_pressed(Button::North)));
             if shot && !shot_held {
                 let app = app.clone();
                 std::thread::spawn(move || {

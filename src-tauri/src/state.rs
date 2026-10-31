@@ -42,6 +42,8 @@ pub struct Settings {
     /// ROG Ally: the back buttons (M1/M2) open the in-game menu; the game
     /// never sees them.
     pub back_buttons: bool,
+    /// What M2 does in game (M1 is the menu).
+    pub m2_action: crate::controls::M2Action,
     /// Bumped when the in-game menu shortcuts' defaults change (1: the
     /// back buttons replace Select + Start on the Ally).
     pub combo_version: u32,
@@ -66,6 +68,7 @@ impl Default for Settings {
             overlay_status: true,
             kids: crate::kids::Kids::default(),
             back_buttons: true,
+            m2_action: crate::controls::M2Action::default(),
             combo_version: COMBO_VERSION,
         }
     }

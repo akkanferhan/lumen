@@ -20,6 +20,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  M2Action,
   CloudFolder,
   Shot,
   PowerMode,
@@ -95,6 +96,7 @@ export interface Api {
   setOverlayButton(enabled: boolean): Promise<void>;
   setOverlayStatus(enabled: boolean): Promise<void>;
   setBackButtons(enabled: boolean): Promise<void>;
+  setM2Action(action: M2Action): Promise<void>;
   createCollection(name: string): Promise<Collection[]>;
   /** Local midnights come from the UI, which knows the time zone. */
   playStats(today: number, year: number, yearStart: number): Promise<PlayStats>;
@@ -202,6 +204,7 @@ const tauriApi: Api = {
   setOverlayButton: (enabled) => invoke("set_overlay_button", { enabled }),
   setOverlayStatus: (enabled) => invoke("set_overlay_status", { enabled }),
   setBackButtons: (enabled) => invoke("set_back_buttons", { enabled }),
+  setM2Action: (action) => invoke("set_m2_action", { action }),
   createCollection: (name) => invoke("create_collection", { name }),
   playStats: (today, year, yearStart) => invoke("play_stats", { today, year, yearStart }),
   deleteCollection: (id) => invoke("delete_collection", { id }),

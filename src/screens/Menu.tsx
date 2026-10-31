@@ -8,7 +8,7 @@ import { EXPERIMENTAL } from "../components/SystemGuide";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
-import type { CloudFolder, FilterSetting, GraphicsSetting, PowerSetting, Tier } from "../lib/types";
+import type { CloudFolder, FilterSetting, M2Action, GraphicsSetting, PowerSetting, Tier } from "../lib/types";
 import { formatLastPlayed } from "../lib/format";
 import { THEMES, themeOf } from "../lib/themes";
 
@@ -20,6 +20,12 @@ const POWER_LABEL: Record<PowerSetting, string> = {
   turbo: "Turbo",
   off: "Lumen değiştirmesin",
 };
+const M2_LABEL: Record<M2Action, string> = {
+  rewind: "Basılı tut: geri sar",
+  fastForward: "Basılı tut: 3× hızlı",
+  screenshot: "Ekran görüntüsü",
+};
+const M2_ORDER: M2Action[] = ["rewind", "fastForward", "screenshot"];
 const POWER_ORDER: PowerSetting[] = ["auto", "silent", "performance", "turbo", "off"];
 const FILTER_ORDER: FilterSetting[] = ["original", "auto", "smooth", "crt", "lcd"];
 const FILTER_LABEL: Record<FilterSetting, [string, string]> = {
@@ -282,11 +288,25 @@ export function Menu({
       ? [
           {
             id: "back-buttons",
-            title: "Arka tuşlarla menü (M1/M2)",
-            sub: "Oyunda arka tuşa dokun: menü, basılı tut: kaydet ve çık. Oyuna hiçbir tuş gitmez",
+            title: "Arka tuşlar (M1/M2)",
+            sub: "M1: dokun menü, basılı tut kaydet ve çık. M2: aşağıda seçtiğin kısayol. Oyuna hiçbir tuş gitmez",
             value: overview.settings.backButtons ? "Açık" : "Kapalı",
             run: () => actions.setBackButtons(!overview.settings.backButtons),
           },
+          ...(overview.settings.backButtons
+            ? [
+                {
+                  id: "m2",
+                  title: "M2 tuşu",
+                  sub: "Oyunda M2'nin işi; oyuna hiçbir tuş gitmez",
+                  value: M2_LABEL[overview.settings.m2Action],
+                  run: () =>
+                    actions.setM2Action(
+                      M2_ORDER[(M2_ORDER.indexOf(overview.settings.m2Action) + 1) % M2_ORDER.length],
+                    ),
+                },
+              ]
+            : []),
         ]
       : []),
     {
