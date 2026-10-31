@@ -169,6 +169,34 @@ export function Library({
     setFocus(focusByTab.current.get(next.id) ?? 0);
   };
 
+  /** Select: a random playable game from this list. Focus hops across a
+   *  few covers first, then lands and opens the game. */
+  const shuffling = useRef(false);
+  const surprise = () => {
+    const playable = list.map((g, i) => [g, i] as const).filter(([g]) => !g.notInstalled);
+    if (playable.length < 2 || shuffling.current) return;
+    shuffling.current = true;
+    const pick = () => playable[Math.floor(Math.random() * playable.length)];
+    let hops = 7;
+    const hop = () => {
+      const [game, i] = pick();
+      sfx.move();
+      setFocus(i);
+      if (--hops > 0) {
+        setTimeout(hop, 70 + (7 - hops) * 20);
+        return;
+      }
+      setTimeout(() => {
+        shuffling.current = false;
+        sfx.confirm();
+        rumble();
+        onOpen(game);
+      }, 350);
+    };
+    hop();
+  };
+  const canSurprise = list.filter((g) => !g.notInstalled).length >= 2;
+
   /** LT/RT: previous/next first letter (A, B, C…) in the current list. */
   const jumpGroup = (delta: 1 | -1) => {
     if (!list.length) return;
@@ -274,6 +302,9 @@ export function Library({
       case "start":
         sfx.confirm();
         onMenu();
+        break;
+      case "select":
+        surprise();
         break;
     }
   }, Layer.screen, !keyboard);
@@ -401,6 +432,7 @@ export function Library({
             { action: "a", label: "Aç" },
             { action: "y", label: focused?.favorite ? "Favoriden çıkar" : "Favori" },
             { action: "x", label: "Ara" },
+            ...(canSurprise ? [{ action: "select" as const, label: "Rastgele" }] : []),
             ...(searching ? [{ action: "b" as const, label: "Aramayı temizle" }] : []),
             { action: "start", label: "Menü" },
           ]}
