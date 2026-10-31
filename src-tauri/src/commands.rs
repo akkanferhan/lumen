@@ -213,15 +213,23 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
         let _ = prepare_root(root);
     }
     // Emulated games from the ROM folder plus installed Steam / Epic games.
-    let games = tauri::async_runtime::spawn_blocking(move || {
+    let (games, playlists) = tauri::async_runtime::spawn_blocking(move || {
+        // Loose multi-disc sets become one game first.
+        let playlists = root
+            .as_deref()
+            .map(library::make_disc_playlists)
+            .unwrap_or_default();
         let mut games = root.map(|r| library::scan(&r)).unwrap_or_default();
         let mut pc = crate::pc::scan();
         pc.sort_by_key(|g| g.title.to_lowercase());
         games.extend(pc);
-        games
+        (games, playlists)
     })
     .await
     .map_err(err)?;
+    if !playlists.is_empty() {
+        adopt_disc_sets(&state, &playlists);
+    }
     let mut games = games;
     // Owned Steam games that aren't installed, in the Steam tab.
     let installed_steam: HashSet<String> = games
@@ -282,6 +290,68 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
     *state.library.lock().unwrap() = games;
     state.save_library().map_err(err)?;
     Ok(library_view(&state))
+}
+
+/// A multi-disc set just became one game: it keeps what its discs had
+/// (favorite, play time, last played, collections, RetroArch saves).
+fn adopt_disc_sets(state: &AppState, playlists: &[crate::discs::Created]) {
+    {
+        let mut user = state.user.lock().unwrap();
+        let mut collections = state.collections.lock().unwrap();
+        for set in playlists {
+            let id = library::game_id(&set.playlist);
+            let old: Vec<String> = set.discs.iter().map(|d| library::game_id(d)).collect();
+            let entries: Vec<_> = old.iter().filter_map(|o| user.remove(o)).collect();
+            if !entries.is_empty() {
+                let merged = user.entry(id.clone()).or_default();
+                merged.favorite |= entries.iter().any(|e| e.favorite);
+                merged.play_seconds += entries.iter().map(|e| e.play_seconds).sum::<u64>();
+                let latest = entries.iter().max_by_key(|e| e.last_played);
+                merged.last_played = merged.last_played.max(latest.and_then(|e| e.last_played));
+                if merged.resume_state.is_none() {
+                    merged.resume_state = latest.and_then(|e| e.resume_state.clone());
+                }
+            }
+            for collection in collections.iter_mut() {
+                if collection.games.iter().any(|g| old.contains(g)) {
+                    collection.games.retain(|g| !old.contains(g) && g != &id);
+                    collection.games.push(id.clone());
+                }
+            }
+            copy_retroarch_saves(state, set);
+        }
+    }
+    let _ = state.save_user();
+    let _ = state.save_collections();
+}
+
+/// RetroArch names saves after the loaded file: disc 1's memory card
+/// (`Game (Disc 1).srm`) is copied to the playlist's name (`Game.srm`).
+fn copy_retroarch_saves(state: &AppState, set: &crate::discs::Created) {
+    let (Some(first), Some(to)) = (
+        set.discs.first().and_then(|d| d.file_stem()),
+        set.playlist.file_stem(),
+    ) else {
+        return;
+    };
+    let saves = state.dirs.emulators.join("retroarch").join("saves");
+    for file in walkdir::WalkDir::new(&saves)
+        .max_depth(3)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_file() && e.path().file_stem() == Some(first))
+    {
+        // Built by hand: `set_extension` would cut titles like "v1.1".
+        let mut name = to.to_os_string();
+        if let Some(ext) = file.path().extension() {
+            name.push(".");
+            name.push(ext);
+        }
+        let target = file.path().with_file_name(name);
+        if !target.exists() {
+            let _ = std::fs::copy(file.path(), target);
+        }
+    }
 }
 
 /// Installs whatever the given systems are missing: their emulators and, for
@@ -966,6 +1036,23 @@ pub async fn game_achievements(
 #[tauri::command]
 pub fn game_controls(state: State<'_, AppState>) -> Option<crate::controls::Controls> {
     state.running.lock().unwrap().as_ref().map(|g| g.controls)
+}
+
+/// Back to the game, then the next (or previous) disc of its playlist.
+#[tauri::command]
+pub fn switch_disc(app: AppHandle, next: bool) -> CmdResult<()> {
+    let (emulator, pid) = {
+        let state = app.state::<AppState>();
+        let running = state.running.lock().unwrap();
+        let game = running
+            .as_ref()
+            .filter(|g| g.controls.discs)
+            .ok_or("Bu oyunda disk değiştirilemiyor")?;
+        (game.emulator.clone(), game.pid.ok_or("Oyun penceresi yok")?)
+    };
+    crate::launcher::resume_game(&app);
+    std::thread::spawn(move || crate::controls::switch_disc(&emulator, pid, next));
+    Ok(())
 }
 
 /// Save-state slots of the running game; None when its emulator has none.

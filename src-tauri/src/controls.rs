@@ -7,11 +7,14 @@
 //! things like loading states, so they get nothing.
 
 use serde::Serialize;
+use std::{path::Path, time::Duration};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Hotkey {
     Rewind,
     FastForward,
+    NextDisc,
+    PreviousDisc,
 }
 
 impl Hotkey {
@@ -21,6 +24,8 @@ impl Hotkey {
         match self {
             Hotkey::Rewind => 0x3F,
             Hotkey::FastForward => 0x40,
+            Hotkey::NextDisc => 0x41,
+            Hotkey::PreviousDisc => 0x42,
         }
     }
 }
@@ -61,13 +66,20 @@ pub const REWIND_SYSTEMS: &[&str] = &[
 pub struct Controls {
     pub rewind: bool,
     pub fast_forward: bool,
+    /// Started from a multi-disc playlist (`.m3u`): discs can be switched.
+    pub discs: bool,
 }
 
-pub fn for_game(emulator: &str, system_id: &str) -> Controls {
+pub fn for_game(emulator: &str, system_id: &str, rom: &Path) -> Controls {
+    let driven = matches!(emulator, "retroarch" | "duckstation");
     Controls {
         rewind: emulator == "duckstation"
             || (emulator == "retroarch" && REWIND_SYSTEMS.contains(&system_id)),
-        fast_forward: matches!(emulator, "retroarch" | "duckstation"),
+        fast_forward: driven,
+        discs: driven
+            && rom
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("m3u")),
     }
 }
 
@@ -79,4 +91,34 @@ pub fn press(hotkey: Hotkey, down: bool) {
     }
     #[cfg(not(windows))]
     let _ = (hotkey, down);
+}
+
+/// A short press, long enough for emulators that poll once per frame.
+pub fn tap(hotkey: Hotkey) {
+    press(hotkey, true);
+    std::thread::sleep(Duration::from_millis(80));
+    press(hotkey, false);
+}
+
+/// Switches to the next (or previous) disc of the running playlist, once
+/// the game is back in front. RetroArch swaps through its command port
+/// (open the tray, change disc, close it); DuckStation gets its hotkey.
+pub fn switch_disc(emulator: &str, pid: u32, next: bool) {
+    // The quick menu just handed focus back to the game.
+    std::thread::sleep(Duration::from_millis(400));
+    match emulator {
+        "retroarch" => {
+            let step = if next { "DISK_NEXT" } else { "DISK_PREV" };
+            for command in ["DISK_EJECT_TOGGLE", step, "DISK_EJECT_TOGGLE"] {
+                crate::states::send(command);
+                std::thread::sleep(Duration::from_millis(200));
+            }
+        }
+        "duckstation" if crate::windows::is_foreground(pid) => tap(if next {
+            Hotkey::NextDisc
+        } else {
+            Hotkey::PreviousDisc
+        }),
+        _ => {}
+    }
 }

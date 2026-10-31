@@ -61,6 +61,13 @@ pub fn slots(states_dir: &Path, rom: &Path) -> Vec<Slot> {
         .collect()
 }
 
+/// Sends a command RetroArch doesn't answer (disc tray, disc swap).
+pub fn send(command: &str) {
+    if let Ok(socket) = UdpSocket::bind(("127.0.0.1", 0)) {
+        let _ = socket.send_to(format!("{command}\n").as_bytes(), ("127.0.0.1", PORT));
+    }
+}
+
 /// Sends `SAVE_STATE_SLOT n` or `LOAD_STATE_SLOT n` and waits for the answer.
 pub fn command(load: bool, slot: u8) -> anyhow::Result<()> {
     let name = if load {

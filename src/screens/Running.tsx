@@ -44,6 +44,7 @@ export function Running({ gameId }: { gameId: string }) {
     if (!quickMenu) return;
     setFocus(0);
     api.stateSlots().then(setSlots).catch(() => setSlots(null));
+    api.gameControls().then(setControls).catch(() => setControls(null));
   }, [quickMenu]);
 
   const saveSlot = async () => {
@@ -87,9 +88,11 @@ export function Running({ gameId }: { gameId: string }) {
   const items = [
     { id: "resume", label: "Oyuna dön", run: () => actions.resume() },
     ...(slots ? [{ id: "slots", label: "Kayıt slotları", run: saveSlot }] : []),
+    ...(controls?.discs ? [{ id: "disc", label: "Sonraki diske geç", run: () => actions.switchDisc(true) }] : []),
     { id: "quit", label: stopping ? "Kaydediliyor…" : "Kaydet ve çık", run: stop },
   ];
   const onSlots = items[focus]?.id === "slots";
+  const onDisc = items[focus]?.id === "disc";
 
   useInput((action) => {
     if (!quickMenu) {
@@ -111,7 +114,8 @@ export function Running({ gameId }: { gameId: string }) {
       }
       case "left":
       case "right":
-        if (onSlots && slots) {
+        if (onDisc && action === "left") actions.switchDisc(false);
+        else if (onSlots && slots) {
           const next = Math.min(slots.length - 1, Math.max(0, slot + (action === "left" ? -1 : 1)));
           if (next !== slot) {
             sfx.move();
@@ -230,7 +234,13 @@ export function Running({ gameId }: { gameId: string }) {
       <HintBar
         hints={
           quickMenu
-            ? onSlots
+            ? onDisc
+              ? [
+                  { action: "a", label: "Sonraki disk" },
+                  { action: "left", label: "Önceki disk" },
+                  { action: "b", label: "Oyuna dön" },
+                ]
+              : onSlots
               ? [
                   { action: "left", label: "Slot" },
                   { action: "a", label: slotBusy ? "Kaydediliyor…" : "Kaydet" },

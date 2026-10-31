@@ -309,7 +309,8 @@ export const mockApi: Api = {
   isResumable: async (gameId) => (store.user[gameId]?.playSeconds ?? 0) > 0,
   resumeGame: async () => {},
   stateSlots: async () => mockSlots,
-  gameControls: async () => (running ? { rewind: true, fastForward: true } : null),
+  gameControls: async () => (running ? { rewind: true, fastForward: true, discs: true } : null),
+  switchDisc: async () => {},
   saveState: async (slot) => {
     await sleep(300);
     mockSlots = mockSlots.map((s) => (s.slot === slot ? { ...s, savedAt: Math.floor(Date.now() / 1000) } : s));
