@@ -132,6 +132,8 @@ export interface Overview {
   steamAccount: boolean;
   /** A Steam Web API key is saved; owned games are listed. */
   steamLinked: boolean;
+  /** A SteamGridDB key is saved: covers for games libretro has none for. */
+  sgdbLinked: boolean;
 }
 
 export interface Game {
@@ -146,6 +148,8 @@ export interface Game {
   playSeconds: number;
   /** Power mode chosen for this game; null follows its system. */
   power?: PowerMode | null;
+  /** Downloaded cover (SteamGridDB) on disk, for games libretro has no art for. */
+  cover?: string | null;
   /** Owned in a store (or in its catalog) but not installed; `path` installs it. */
   notInstalled?: boolean;
 }

@@ -111,6 +111,8 @@ pub struct AppState {
     /// Steam Web API key for listing owned games. Kept in steam.json, which
     /// isn't backed up.
     pub steam_key: Mutex<Option<String>>,
+    /// SteamGridDB API key for covers libretro lacks; kept out of backups.
+    pub sgdb_key: Mutex<Option<String>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -158,6 +160,9 @@ impl AppState {
             steam_key: Mutex::new(
                 read_json::<SteamKey>(&dirs.data.join("steam.json")).map(|k| k.key),
             ),
+            sgdb_key: Mutex::new(
+                read_json::<SteamKey>(&dirs.data.join("steamgriddb.json")).map(|k| k.key),
+            ),
             dirs,
         })
     }
@@ -188,6 +193,17 @@ impl AppState {
     }
 
     /// Saves the Steam key, or removes the file when signed out (None).
+    pub fn save_sgdb_key(&self) -> anyhow::Result<()> {
+        let path = self.dirs.data.join("steamgriddb.json");
+        match self.sgdb_key.lock().unwrap().clone() {
+            Some(key) => write_json(&path, &SteamKey { key }),
+            None => {
+                let _ = fs::remove_file(path);
+                Ok(())
+            }
+        }
+    }
+
     pub fn save_steam_key(&self) -> anyhow::Result<()> {
         let path = self.dirs.data.join("steam.json");
         match self.steam_key.lock().unwrap().clone() {

@@ -75,6 +75,8 @@ export interface Api {
   setFilter(filter: FilterSetting): Promise<void>;
   /** Checks and saves the key; resolves to the number of owned games. "" signs out. */
   setSteamKey(key: string): Promise<number>;
+  /** SteamGridDB key for covers libretro lacks; empty removes it. */
+  setSgdbKey(key: string): Promise<void>;
   setQuickCombo(enabled: boolean): Promise<void>;
   setOverlayButton(enabled: boolean): Promise<void>;
   createCollection(name: string): Promise<Collection[]>;
@@ -170,6 +172,7 @@ const tauriApi: Api = {
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   setFilter: (filter) => invoke("set_filter", { filter }),
   setSteamKey: (key) => invoke("set_steam_key", { key }),
+  setSgdbKey: (key) => invoke("set_sgdb_key", { key }),
   setQuickCombo: (enabled) => invoke("set_quick_combo", { enabled }),
   setOverlayButton: (enabled) => invoke("set_overlay_button", { enabled }),
   createCollection: (name) => invoke("create_collection", { name }),

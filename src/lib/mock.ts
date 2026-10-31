@@ -92,6 +92,7 @@ let graphics: GraphicsSetting = "auto";
 let filter: FilterSetting = "original";
 let collections: Collection[] = [];
 let steamLinked = false;
+let sgdbLinked = false;
 let quickCombo = true;
 let overlayButton = true;
 const homebrewInstalled = new Set<string>();
@@ -166,6 +167,7 @@ function overview(): Overview {
     collections,
     steamAccount: true,
     steamLinked,
+    sgdbLinked,
     raUser,
     backupDir: backup.dir ?? "C:\\Users\\Oyuncu\\OneDrive\\Lumen Yedek",
     powerAvailable: true,
@@ -420,6 +422,9 @@ export const mockApi: Api = {
     await sleep(500);
     steamLinked = !!key.trim();
     return steamLinked ? 214 : 0;
+  },
+  setSgdbKey: async (key) => {
+    sgdbLinked = !!key.trim();
   },
   playStats: async (today, year) => {
     const list = games();

@@ -48,6 +48,7 @@ export function Menu({
   onOpenStats,
   onOpenTour,
   onOpenSteam,
+  onOpenArt,
   onOpenRaLogin,
 }: {
   onClose: () => void;
@@ -57,6 +58,7 @@ export function Menu({
   onOpenStats: () => void;
   onOpenTour: () => void;
   onOpenSteam: () => void;
+  onOpenArt: () => void;
   onOpenRaLogin: () => void;
 }) {
   const [page, setPage] = useState<"main" | "emulators" | "backup" | "ra" | "theme" | "systems">("main");
@@ -128,6 +130,15 @@ export function Menu({
         : "Yüklü olmayan Steam oyunlarını göster ve buradan kur",
       value: overview?.steamLinked ? <span className="pill ok">Bağlı</span> : "›",
       run: onOpenSteam,
+    },
+    {
+      id: "art",
+      title: "Kapak görselleri",
+      sub: overview?.sgdbLinked
+        ? "SteamGridDB bağlı · eksik kapaklar indirilir"
+        : "Kapağı olmayan oyunlar için SteamGridDB'den kapak indir",
+      value: overview?.sgdbLinked ? <span className="pill ok">Bağlı</span> : "›",
+      run: onOpenArt,
     },
     {
       id: "stats",

@@ -24,6 +24,9 @@ pub struct Game {
     /// the store's install link.
     #[serde(default)]
     pub not_installed: bool,
+    /// Downloaded cover (SteamGridDB) for games libretro has no art for.
+    #[serde(default)]
+    pub cover: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -198,6 +201,7 @@ pub fn make_virtual_game(system_id: &str, id_seed: &str, title: &str, uri: Strin
         thumb_name: String::new(),
         path: PathBuf::from(uri),
         not_installed: false,
+        cover: None,
     }
 }
 
@@ -226,6 +230,7 @@ fn make_game(system: &System, path: &Path) -> Game {
         ),
         path: path.to_path_buf(),
         not_installed: false,
+        cover: None,
     }
 }
 

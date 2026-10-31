@@ -42,6 +42,8 @@ pub struct Overview {
     pub steam_account: bool,
     /// A Steam Web API key is saved, so owned games are listed.
     pub steam_linked: bool,
+    /// A SteamGridDB key is saved (covers for games libretro lacks).
+    pub sgdb_linked: bool,
 }
 
 #[derive(Serialize)]
@@ -146,6 +148,7 @@ fn overview(state: &AppState, autostart: bool) -> Overview {
             .and_then(|r| crate::store_library::steam_user(&r))
             .is_some(),
         steam_linked: state.steam_key.lock().unwrap().is_some(),
+        sgdb_linked: state.sgdb_key.lock().unwrap().is_some(),
     }
 }
 
@@ -289,7 +292,14 @@ pub async fn scan_library(app: AppHandle) -> CmdResult<Vec<GameView>> {
         }
     }
     // Loosely named files ("Spiderman.cue") get the closest box art name.
-    crate::art::resolve(&mut games, &state.dirs.data.join("art")).await;
+    let missing = crate::art::resolve(&mut games, &state.dirs.data.join("art")).await;
+    // Covers for the rest from SteamGridDB (with the user's key).
+    let missing: Vec<usize> = missing
+        .into_iter()
+        .filter(|&i| !crate::pc::is_pc(&games[i].system_id))
+        .collect();
+    let sgdb_key = state.sgdb_key.lock().unwrap().clone();
+    crate::griddb::fill(&mut games, &missing, sgdb_key.as_deref(), &state.dirs.data).await;
     *state.library.lock().unwrap() = games;
     state.save_library().map_err(err)?;
     Ok(library_view(&state))
@@ -525,6 +535,19 @@ pub async fn set_steam_key(app: AppHandle, key: String) -> CmdResult<usize> {
     *state.steam_key.lock().unwrap() = Some(key);
     state.save_steam_key().map_err(err)?;
     Ok(owned.len())
+}
+
+/// Saves a SteamGridDB API key after a test search; an empty key removes
+/// it. Covers come with the next library scan.
+#[tauri::command]
+pub async fn set_sgdb_key(app: AppHandle, key: String) -> CmdResult<()> {
+    let state = app.state::<AppState>();
+    let key = key.trim().to_string();
+    if !key.is_empty() {
+        crate::griddb::check_key(&key).await.map_err(err)?;
+    }
+    *state.sgdb_key.lock().unwrap() = (!key.is_empty()).then_some(key);
+    state.save_sgdb_key().map_err(err)
 }
 
 /// Play time by day, week and year, and the most played games and systems.
