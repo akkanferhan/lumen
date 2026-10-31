@@ -18,6 +18,7 @@ import { SearchKeyboard } from "../components/SearchKeyboard";
 import { themeOf } from "../lib/themes";
 import { formatLastPlayed, formatPlaytime } from "../lib/format";
 import { screenshotUrls } from "../lib/catalog";
+import { L } from "../lib/i18n";
 
 interface Tab {
   id: string;
@@ -55,9 +56,9 @@ function useTabs(games: Game[], collections: Collection[]): Tab[] {
     // Store games that aren't installed live only in their store's tab.
     const installed = games.filter((g) => !g.notInstalled);
     return [
-      { id: "all", label: "Tümü", games: installed },
-      ...(recent.length ? [{ id: "recent", label: "Son oynanan", games: recent }] : []),
-      ...(favorites.length ? [{ id: "fav", label: "Favoriler", games: favorites }] : []),
+      { id: "all", label: L("Tümü", "All"), games: installed },
+      ...(recent.length ? [{ id: "recent", label: L("Son oynanan", "Recent"), games: recent }] : []),
+      ...(favorites.length ? [{ id: "fav", label: L("Favoriler", "Favorites"), games: favorites }] : []),
       // The user's collections, each in the order its games were added.
       ...collections
         .map((c) => ({
@@ -422,15 +423,31 @@ export function Library({
       ) : list.length === 0 ? (
         <div className="empty">
           <div className="empty-inner">
-            <h2>{searching ? "Sonuç yok" : scanning ? "Oyunlar aranıyor…" : "Henüz oyun yok"}</h2>
+            <h2>
+              {searching
+                ? L("Sonuç yok", "No results")
+                : scanning
+                  ? L("Oyunlar aranıyor…", "Looking for games…")
+                  : L("Henüz oyun yok", "No games yet")}
+            </h2>
             {searching ? (
-              <p>“{query.trim()}” ile eşleşen oyun bulunamadı.</p>
+              <p>{L(<>“{query.trim()}” ile eşleşen oyun bulunamadı.</>, <>No games match “{query.trim()}”.</>)}</p>
             ) : (
               <>
             <p>
-              Oyun dosyalarını oyun klasöründeki sistem klasörlerine bırak, örneğin <b>ps1</b>, <b>snes</b> veya{" "}
-              <b>gba</b>. Lumen her açılışta klasörü tarar; hemen görmek için menüden kütüphaneyi yenile. Menüdeki
-              "Oyunlarını içe aktar" da dosyaları senin yerine doğru klasöre koyar.
+              {L(
+                <>
+                  Oyun dosyalarını oyun klasöründeki sistem klasörlerine bırak, örneğin <b>ps1</b>, <b>snes</b> veya{" "}
+                  <b>gba</b>. Lumen her açılışta klasörü tarar; hemen görmek için menüden kütüphaneyi yenile. Menüdeki
+                  "Oyunlarını içe aktar" da dosyaları senin yerine doğru klasöre koyar.
+                </>,
+                <>
+                  Drop game files into the system folders inside your game folder, for example <b>ps1</b>,{" "}
+                  <b>snes</b> or <b>gba</b>. Lumen scans the folder every time it opens; to see them right away,
+                  refresh the library from the menu. "Import your games" in the menu also puts files in the right
+                  folder for you.
+                </>,
+              )}
             </p>
             {root && <div className="path-chip">{root}</div>}
               </>
@@ -492,22 +509,22 @@ export function Library({
         <HintBar
           left={focused ? `${index + 1} / ${list.length}` : null}
           hints={guide ? [
-            { action: "a", label: "İçe aktar" },
-            ...(freeGames > 0 ? [{ action: "y" as const, label: "Ücretsiz oyunlar" }] : []),
+            { action: "a", label: L("İçe aktar", "Import") },
+            ...(freeGames > 0 ? [{ action: "y" as const, label: L("Ücretsiz oyunlar", "Free games") }] : []),
             { action: "x", label: "Ara" },
-            { action: "start", label: "Menü" },
+            { action: "start", label: L("Menü", "Menu") },
           ] : onHero ? [
-            { action: "a", label: "Devam et" },
-            { action: "y", label: "Ayrıntılar" },
-            { action: "down", label: "Kütüphane" },
-            { action: "start", label: "Menü" },
+            { action: "a", label: L("Devam et", "Resume") },
+            { action: "y", label: L("Ayrıntılar", "Details") },
+            { action: "down", label: L("Kütüphane", "Library") },
+            { action: "start", label: L("Menü", "Menu") },
           ] : [
-            { action: "a", label: "Aç" },
-            { action: "y", label: focused?.favorite ? "Favoriden çıkar" : "Favori" },
+            { action: "a", label: L("Aç", "Open") },
+            { action: "y", label: focused?.favorite ? L("Favoriden çıkar", "Unfavorite") : L("Favori", "Favorite") },
             { action: "x", label: "Ara" },
-            ...(canSurprise ? [{ action: "select" as const, label: "Rastgele" }] : []),
-            ...(searching ? [{ action: "b" as const, label: "Aramayı temizle" }] : []),
-            { action: "start", label: "Menü" },
+            ...(canSurprise ? [{ action: "select" as const, label: L("Rastgele", "Random") }] : []),
+            ...(searching ? [{ action: "b" as const, label: L("Aramayı temizle", "Clear search") }] : []),
+            { action: "start", label: L("Menü", "Menu") },
           ]}
         />
       )}
@@ -537,7 +554,7 @@ function GameCard({
       <div className="card-art">
         <Cover game={game} />
         {game.favorite && <span className="fav-badge">★</span>}
-        {game.notInstalled && <span className="install-badge">Yüklü değil</span>}
+        {game.notInstalled && <span className="install-badge">{L("Yüklü değil", "Not installed")}</span>}
       </div>
       <span className="card-title">{game.title}</span>
       {showSystem && <span className="card-sub">{system?.short}</span>}
@@ -558,7 +575,11 @@ function KidsTimer({ minutes, played }: { minutes: number | null; played: Game[]
   const left = minutes && used !== null ? Math.max(0, minutes - Math.floor(used / 60)) : null;
   return (
     <span className={`kids-chip${left === 0 ? " over" : ""}`}>
-      Çocuk modu{left !== null && (left > 0 ? ` · ${left} dk kaldı` : " · bugünlük süre doldu")}
+      {L("Çocuk modu", "Kids mode")}
+      {left !== null &&
+        (left > 0
+          ? L(` · ${left} dk kaldı`, ` · ${left} min left`)
+          : L(" · bugünlük süre doldu", " · time's up for today"))}
     </span>
   );
 }
@@ -577,7 +598,7 @@ function ContinueCard({ game, focused, onPlay }: { game: Game; focused: boolean;
         <Cover game={game} />
       </span>
       <span className="continue-text">
-        <span className="continue-eyebrow">Kaldığın yerden devam et</span>
+        <span className="continue-eyebrow">{L("Kaldığın yerden devam et", "Pick up where you left off")}</span>
         <span className="continue-title">{game.title}</span>
         <span className="continue-meta">
           <span lang="en">{system?.short}</span> · {formatLastPlayed(game.lastPlayed)}
@@ -655,9 +676,12 @@ function GalleryView({
           <h1>{game.title}</h1>
           <p>
             {game.lastPlayed
-              ? `Son oynanma ${formatLastPlayed(game.lastPlayed).toLowerCase()} · ${formatPlaytime(game.playSeconds)}`
-              : "Henüz oynanmadı"}
-            {game.favorite ? " · ★ Favori" : ""}
+              ? L(
+                  `Son oynanma ${formatLastPlayed(game.lastPlayed).toLowerCase()} · ${formatPlaytime(game.playSeconds)}`,
+                  `Last played ${formatLastPlayed(game.lastPlayed).replace(/^(Today|Yesterday)$/, (d) => d.toLowerCase())} · ${formatPlaytime(game.playSeconds)}`,
+                )
+              : L("Henüz oynanmadı", "Not played yet")}
+            {game.favorite ? L(" · ★ Favori", " · ★ Favorite") : ""}
           </p>
         </div>
       )}
@@ -704,11 +728,11 @@ function PlainView({
           </div>
           <h2>{game.title}</h2>
           <dl>
-            <dt>Sistem</dt>
+            <dt>{L("Sistem", "System")}</dt>
             <dd lang="en">{system?.name}</dd>
-            <dt>Son oynanma</dt>
+            <dt>{L("Son oynanma", "Last played")}</dt>
             <dd>{formatLastPlayed(game.lastPlayed)}</dd>
-            <dt>Toplam süre</dt>
+            <dt>{L("Toplam süre", "Total time")}</dt>
             <dd>{formatPlaytime(game.playSeconds)}</dd>
           </dl>
         </aside>

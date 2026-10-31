@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TextKeyboard } from "../components/TextKeyboard";
+import { L } from "../lib/i18n";
 import { actions } from "../lib/store";
 
 /** User name, then password; the password is sent once and never stored. */
@@ -13,8 +14,8 @@ export function RaLogin({ onClose }: { onClose: () => void }) {
     return (
       <TextKeyboard
         key="user"
-        title="RetroAchievements · kullanıcı adı"
-        placeholder="Kullanıcı adı"
+        title={L("RetroAchievements · kullanıcı adı", "RetroAchievements · username")}
+        placeholder={L("Kullanıcı adı", "Username")}
         value={username}
         onChange={setUsername}
         onDone={() => username.trim() && setStep("password")}
@@ -26,8 +27,8 @@ export function RaLogin({ onClose }: { onClose: () => void }) {
   return (
     <TextKeyboard
       key="password"
-      title={`RetroAchievements · ${username} için şifre`}
-      placeholder="Şifre"
+      title={L(`RetroAchievements · ${username} için şifre`, `RetroAchievements · password for ${username}`)}
+      placeholder={L("Şifre", "Password")}
       value={password}
       secret
       busy={busy}

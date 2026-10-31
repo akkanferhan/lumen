@@ -9,12 +9,13 @@ import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
 import { formatLastPlayed } from "../lib/format";
 import type { GameControls, StateSlot } from "../lib/types";
+import { L, locale } from "../lib/i18n";
 
 /** Today's saves by time (slots are often minutes apart), older ones by day. */
 function savedWhen(unixSeconds: number): string {
   const day = formatLastPlayed(unixSeconds);
-  return day === "Bugün"
-    ? new Date(unixSeconds * 1000).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+  return day === L("Bugün", "Today")
+    ? new Date(unixSeconds * 1000).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
     : day;
 }
 
@@ -55,7 +56,7 @@ export function Running({ gameId }: { gameId: string }) {
     try {
       setSlots(await api.saveState(slots[slot].slot));
       sfx.confirm();
-      notify(`Slot ${slots[slot].slot}'e kaydedildi`, "success");
+      notify(L(`Slot ${slots[slot].slot}'e kaydedildi`, `Saved to slot ${slots[slot].slot}`), "success");
     } catch (e) {
       sfx.error();
       notify(String(e), "error");
@@ -69,7 +70,7 @@ export function Running({ gameId }: { gameId: string }) {
     setSlotBusy(true);
     try {
       await api.loadState(slots[slot].slot);
-      notify(`Slot ${slots[slot].slot} yüklendi`, "success");
+      notify(L(`Slot ${slots[slot].slot} yüklendi`, `Slot ${slots[slot].slot} loaded`), "success");
       actions.resume();
     } catch (e) {
       sfx.error();
@@ -88,11 +89,11 @@ export function Running({ gameId }: { gameId: string }) {
   };
 
   const items = [
-    { id: "resume", label: "Oyuna dön", run: () => actions.resume() },
-    ...(slots ? [{ id: "slots", label: "Kayıt slotları", run: saveSlot }] : []),
-    ...(controls?.discs ? [{ id: "disc", label: "Sonraki diske geç", run: () => actions.switchDisc(true) }] : []),
-    { id: "shot", label: "Ekran görüntüsü al", run: () => actions.takeScreenshot() },
-    { id: "quit", label: stopping ? "Kaydediliyor…" : "Kaydet ve çık", run: stop },
+    { id: "resume", label: L("Oyuna dön", "Back to game"), run: () => actions.resume() },
+    ...(slots ? [{ id: "slots", label: L("Kayıt slotları", "Save slots"), run: saveSlot }] : []),
+    ...(controls?.discs ? [{ id: "disc", label: L("Sonraki diske geç", "Next disc"), run: () => actions.switchDisc(true) }] : []),
+    { id: "shot", label: L("Ekran görüntüsü al", "Take screenshot"), run: () => actions.takeScreenshot() },
+    { id: "quit", label: stopping ? L("Kaydediliyor…", "Saving…") : L("Kaydet ve çık", "Save and quit"), run: stop },
   ];
   const onSlots = items[focus]?.id === "slots";
   const onDisc = items[focus]?.id === "disc";
@@ -151,9 +152,9 @@ export function Running({ gameId }: { gameId: string }) {
           </div>
         )}
         <div className="eyebrow">
-          <span lang="en">{system?.name}</span> · {quickMenu ? "duraklatıldı" : "oynanıyor"}
+          <span lang="en">{system?.name}</span> · {quickMenu ? L("duraklatıldı", "paused") : L("oynanıyor", "playing")}
         </div>
-        <h2>{game?.title ?? "Oyun"}</h2>
+        <h2>{game?.title ?? L("Oyun", "Game")}</h2>
 
         {quickMenu ? (
           <div className="quick-list">
@@ -171,7 +172,7 @@ export function Running({ gameId }: { gameId: string }) {
                       tabIndex={-1}
                     >
                       <span className="slot-shot">
-                        {s.thumbnail ? <img src={s.thumbnail} alt="" draggable={false} /> : <span>{s.savedAt ? "✓" : "Boş"}</span>}
+                        {s.thumbnail ? <img src={s.thumbnail} alt="" draggable={false} /> : <span>{s.savedAt ? "✓" : L("Boş", "Empty")}</span>}
                       </span>
                       <span className="slot-label">
                         Slot {s.slot}
@@ -197,27 +198,44 @@ export function Running({ gameId }: { gameId: string }) {
           <>
             <p>
               {backButtons ? (
-                <>
-                  Oyun içinde <b>M1</b> arka tuşuna dokunmak menüyü açar, basılı tutmak kaydedip çıkar; oyuna hiçbir
-                  tuş gitmez.
-                </>
+                L(
+                  <>
+                    Oyun içinde <b>M1</b> arka tuşuna dokunmak menüyü açar, basılı tutmak kaydedip çıkar; oyuna hiçbir
+                    tuş gitmez.
+                  </>,
+                  <>
+                    In game, tap the <b>M1</b> back button to open the menu, or hold it to save and quit; the game
+                    never sees the press.
+                  </>,
+                )
               ) : (
-                <>
-                  Oyun içinde <span className="combo">
-                    <Glyph action="select" /> + <Glyph action="start" />
-                  </span>{" "}
-                  menüyü açar, basılı tutmak kaydedip çıkar.
-                </>
+                L(
+                  <>
+                    Oyun içinde <span className="combo">
+                      <Glyph action="select" /> + <Glyph action="start" />
+                    </span>{" "}
+                    menüyü açar, basılı tutmak kaydedip çıkar.
+                  </>,
+                  <>
+                    In game, <span className="combo">
+                      <Glyph action="select" /> + <Glyph action="start" />
+                    </span>{" "}
+                    opens the menu; hold to save and quit.
+                  </>,
+                )
               )}{" "}
-              Ekranın sağ üst köşesindeki ☰ düğmesine dokunmak da menüyü açar.
-              {!isTauri && " (Tarayıcı önizlemesi: menü için Q + E'ye birlikte bas.)"}
+              {L(
+                "Ekranın sağ üst köşesindeki ☰ düğmesine dokunmak da menüyü açar.",
+                "Tapping the ☰ button in the top-right corner also opens the menu.",
+              )}
+              {!isTauri && L(" (Tarayıcı önizlemesi: menü için Q + E'ye birlikte bas.)", " (Browser preview: press Q + E together for the menu.)")}
             </p>
             <div className="quick-list">
               <button className="btn primary focused" onClick={() => actions.resume()} disabled={stopping}>
-                Oyuna dön
+                {L("Oyuna dön", "Back to game")}
               </button>
               <button className="btn" onClick={stop} disabled={stopping}>
-                {stopping ? "Kaydediliyor…" : "Kaydet ve çık"}
+                {stopping ? L("Kaydediliyor…", "Saving…") : L("Kaydet ve çık", "Save and quit")}
               </button>
             </div>
           </>
@@ -227,7 +245,11 @@ export function Running({ gameId }: { gameId: string }) {
             {backButtons && m2Action && (m2Action === "screenshot" || (m2Action === "rewind" ? controls.rewind : controls.fastForward)) && (
               <span>
                 <b>M2</b>{" "}
-                {m2Action === "rewind" ? "basılı tut: geri sar" : m2Action === "fastForward" ? "basılı tut: 3× hızlı" : "ekran görüntüsü"}
+                {m2Action === "rewind"
+                  ? L("basılı tut: geri sar", "hold: rewind")
+                  : m2Action === "fastForward"
+                    ? L("basılı tut: 3× hızlı", "hold: 3× speed")
+                    : L("ekran görüntüsü", "screenshot")}
               </span>
             )}
             {controls.rewind && (
@@ -235,7 +257,7 @@ export function Running({ gameId }: { gameId: string }) {
                 <span className="combo">
                   <Glyph action="select" /> + <Glyph action="lt" />
                 </span>{" "}
-                basılı tut: geri sar
+                {L("basılı tut: geri sar", "hold: rewind")}
               </span>
             )}
             {controls.fastForward && (
@@ -243,14 +265,14 @@ export function Running({ gameId }: { gameId: string }) {
                 <span className="combo">
                   <Glyph action="select" /> + <Glyph action="rt" />
                 </span>{" "}
-                basılı tut: 3× hızlı
+                {L("basılı tut: 3× hızlı", "hold: 3× speed")}
               </span>
             )}
             <span>
               <span className="combo">
                 <Glyph action="select" /> + <Glyph action="y" />
               </span>{" "}
-              ekran görüntüsü
+              {L("ekran görüntüsü", "screenshot")}
             </span>
           </div>
         )}
@@ -260,24 +282,24 @@ export function Running({ gameId }: { gameId: string }) {
           quickMenu
             ? onDisc
               ? [
-                  { action: "a", label: "Sonraki disk" },
-                  { action: "left", label: "Önceki disk" },
-                  { action: "b", label: "Oyuna dön" },
+                  { action: "a", label: L("Sonraki disk", "Next disc") },
+                  { action: "left", label: L("Önceki disk", "Previous disc") },
+                  { action: "b", label: L("Oyuna dön", "Back to game") },
                 ]
               : onSlots
               ? [
                   { action: "left", label: "Slot" },
-                  { action: "a", label: slotBusy ? "Kaydediliyor…" : "Kaydet" },
-                  ...(slots?.[slot]?.savedAt ? [{ action: "x" as const, label: "Yükle" }] : []),
-                  { action: "b", label: "Oyuna dön" },
+                  { action: "a", label: slotBusy ? L("Kaydediliyor…", "Saving…") : L("Kaydet", "Save") },
+                  ...(slots?.[slot]?.savedAt ? [{ action: "x" as const, label: L("Yükle", "Load") }] : []),
+                  { action: "b", label: L("Oyuna dön", "Back to game") },
                 ]
               : [
-                  { action: "a", label: "Seç" },
-                  { action: "b", label: "Oyuna dön" },
+                  { action: "a", label: L("Seç", "Select") },
+                  { action: "b", label: L("Oyuna dön", "Back to game") },
                 ]
             : [
-                { action: "a", label: "Oyuna dön" },
-                { action: "x", label: "Kaydet ve çık" },
+                { action: "a", label: L("Oyuna dön", "Back to game") },
+                { action: "x", label: L("Kaydet ve çık", "Save and quit") },
               ]
         }
       />

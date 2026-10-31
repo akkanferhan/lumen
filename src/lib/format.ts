@@ -1,3 +1,5 @@
+import { L, locale } from "./i18n";
+
 /** Same rules as `clean_title` in library.rs. */
 export function cleanTitle(stem: string): string {
   const base = stem
@@ -11,22 +13,24 @@ export function cleanTitle(stem: string): string {
 }
 
 export function formatPlaytime(seconds: number): string {
-  if (seconds < 60) return seconds > 0 ? "1 dakikadan az" : "Hiç oynanmadı";
+  if (seconds < 60) return seconds > 0 ? L("1 dakikadan az", "Less than a minute") : L("Hiç oynanmadı", "Never played");
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
-  if (hours === 0) return `${minutes} dk`;
-  return minutes % 60 ? `${hours} sa ${minutes % 60} dk` : `${hours} sa`;
+  if (hours === 0) return L(`${minutes} dk`, `${minutes} min`);
+  return minutes % 60
+    ? L(`${hours} sa ${minutes % 60} dk`, `${hours} h ${minutes % 60} min`)
+    : L(`${hours} sa`, `${hours} h`);
 }
 
 export function formatLastPlayed(unixSeconds: number | null): string {
-  if (!unixSeconds) return "Hiç";
+  if (!unixSeconds) return L("Hiç", "Never");
   const then = new Date(unixSeconds * 1000);
   const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const days = Math.round((startOfDay(new Date()) - startOfDay(then)) / 86_400_000);
-  if (days <= 0) return "Bugün";
-  if (days === 1) return "Dün";
-  if (days < 7) return `${days} gün önce`;
-  return then.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+  if (days <= 0) return L("Bugün", "Today");
+  if (days === 1) return L("Dün", "Yesterday");
+  if (days < 7) return L(`${days} gün önce`, `${days} days ago`);
+  return then.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
 }
 
 /** Case/diacritic-insensitive form for search and letter grouping ("Pokémon" → "pokemon"). */

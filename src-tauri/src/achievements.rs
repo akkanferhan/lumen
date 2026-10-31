@@ -59,7 +59,9 @@ pub struct Progress {
 /// A zip is hashed by its first file, which is what the core loads.
 pub fn rom_hash(system_id: &str, path: &Path) -> anyhow::Result<String> {
     if system_id == "arcade" {
-        let set = path.file_stem().ok_or_else(|| anyhow!("Geçersiz dosya"))?;
+        let set = path
+            .file_stem()
+            .ok_or_else(|| anyhow!(crate::tr!("Geçersiz dosya", "Invalid file")))?;
         return Ok(hex(&Md5::digest(set.to_string_lossy().as_bytes())));
     }
     let data = rom_bytes(path)?;
@@ -87,7 +89,7 @@ fn rom_bytes(path: &Path) -> anyhow::Result<Vec<u8>> {
     let mut archive = zip::ZipArchive::new(std::fs::File::open(path)?)?;
     let index = (0..archive.len())
         .find(|&i| archive.by_index(i).is_ok_and(|f| f.is_file()))
-        .ok_or_else(|| anyhow!("Arşiv boş"))?;
+        .ok_or_else(|| anyhow!(crate::tr!("Arşiv boş", "The archive is empty")))?;
     let mut data = Vec::new();
     archive.by_index(index)?.read_to_end(&mut data)?;
     Ok(data)
@@ -166,7 +168,9 @@ pub async fn progress(account: &Account, hash: &str) -> anyhow::Result<Option<Pr
     let patch: Patch =
         post(&[&[("r", "patch"), ("g", game.as_str())][..], &auth[..]].concat()).await?;
     if !patch.success {
-        bail!(patch.error.unwrap_or_else(|| "Başarımlar alınamadı".into()));
+        bail!(patch
+            .error
+            .unwrap_or_else(|| crate::tr!("Başarımlar alınamadı", "Couldn't get achievements")));
     }
 
     #[derive(Deserialize)]
@@ -225,7 +229,12 @@ async fn post<T: for<'de> Deserialize<'de>>(form: &[(&str, &str)]) -> anyhow::Re
         .await?
         .json()
         .await
-        .map_err(|_| anyhow!("RetroAchievements'a ulaşılamadı"))
+        .map_err(|_| {
+            anyhow!(crate::tr!(
+                "RetroAchievements'a ulaşılamadı",
+                "Couldn't reach RetroAchievements"
+            ))
+        })
 }
 
 #[cfg(test)]

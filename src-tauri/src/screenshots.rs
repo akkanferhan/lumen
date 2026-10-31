@@ -49,7 +49,10 @@ pub fn delete(data_dir: &Path, path: &Path) -> anyhow::Result<()> {
     let root = data_dir.join("screenshots");
     anyhow::ensure!(
         path.starts_with(&root) && path.extension().is_some_and(|e| e == "png"),
-        "Bu dosya bir ekran görüntüsü değil"
+        crate::tr!(
+            "Bu dosya bir ekran görüntüsü değil",
+            "This file isn't a screenshot"
+        )
     );
     std::fs::remove_file(path)?;
     Ok(())
@@ -70,7 +73,7 @@ pub fn take(app: &AppHandle) -> anyhow::Result<PathBuf> {
         let running = state.running.lock().unwrap();
         let game = running
             .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Oyun çalışmıyor"))?;
+            .ok_or_else(|| anyhow::anyhow!(crate::tr!("Oyun çalışmıyor", "No game is running")))?;
         (
             game.game_id.clone(),
             game.emulator.clone(),
@@ -101,10 +104,18 @@ pub fn take(app: &AppHandle) -> anyhow::Result<PathBuf> {
     if in_front {
         crate::overlay::show(app);
     }
-    let (width, height, pixels) = frame.ok_or_else(|| anyhow::anyhow!("Ekran yakalanamadı"))?;
+    let (width, height, pixels) = frame.ok_or_else(|| {
+        anyhow::anyhow!(crate::tr!(
+            "Ekran yakalanamadı",
+            "Couldn't capture the screen"
+        ))
+    })?;
     anyhow::ensure!(
         !mostly_black(&pixels),
-        "Bu emülatörün görüntüsü yakalanamıyor"
+        crate::tr!(
+            "Bu emülatörün görüntüsü yakalanamıyor",
+            "This emulator's picture can't be captured"
+        )
     );
     write_png(&target, width, height, &pixels)?;
     Ok(target)

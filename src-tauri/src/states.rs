@@ -79,16 +79,25 @@ pub fn command(load: bool, slot: u8) -> anyhow::Result<()> {
     socket.set_read_timeout(Some(Duration::from_secs(5)))?;
     socket.send_to(format!("{name} {slot}\n").as_bytes(), ("127.0.0.1", PORT))?;
     let mut buf = [0u8; 512];
-    let n = socket
-        .recv(&mut buf)
-        .map_err(|_| anyhow::anyhow!("Emülatör yanıt vermedi"))?;
+    let n = socket.recv(&mut buf).map_err(|_| {
+        anyhow::anyhow!(crate::tr!(
+            "Emülatör yanıt vermedi",
+            "The emulator didn't respond"
+        ))
+    })?;
     let reply = String::from_utf8_lossy(&buf[..n]);
     if reply.trim() == format!("{name} {slot}") {
         Ok(())
     } else if load {
-        anyhow::bail!("Bu slotta yüklenebilecek bir kayıt yok")
+        anyhow::bail!(crate::tr!(
+            "Bu slotta yüklenebilecek bir kayıt yok",
+            "There's no save to load in this slot"
+        ))
     } else {
-        anyhow::bail!("Oyun şu an kaydedilemiyor")
+        anyhow::bail!(crate::tr!(
+            "Oyun şu an kaydedilemiyor",
+            "The game can't be saved right now"
+        ))
     }
 }
 

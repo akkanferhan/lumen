@@ -54,30 +54,74 @@ impl Launch<'_> {
 pub fn spawn_error(launch: &Launch, error: &io::Error) -> Diagnosis {
     let emulator = launch.emulator;
     let (message, fix) = match error.raw_os_error() {
-        Some(2 | 3) => (format!("{emulator} dosyası eksik."), launch.reinstall()),
-        Some(193 | 216) => (format!("{emulator} dosyası bozuk."), launch.reinstall()),
+        Some(2 | 3) => (
+            crate::tr!(
+                "{} dosyası eksik.",
+                "Some of {}'s files are missing.",
+                emulator
+            ),
+            launch.reinstall(),
+        ),
+        Some(193 | 216) => (
+            crate::tr!(
+                "{} dosyası bozuk.",
+                "Some of {}'s files are damaged.",
+                emulator
+            ),
+            launch.reinstall(),
+        ),
         Some(5) => (
-            format!("Windows {emulator} için erişimi reddetti; bir güvenlik özelliği engelliyor olabilir."),
+            crate::tr!(
+                "Windows {} için erişimi reddetti; bir güvenlik özelliği engelliyor olabilir.",
+                "Windows denied access to {}; a security feature may be blocking it.",
+                emulator
+            ),
             None,
         ),
         Some(225 | 226) => (
-            format!(
-                "Windows Defender {emulator} dosyasını tehdit sanıp engelledi. Emülatör resmi kaynağından \
-                 indirildi; izin vermek istersen Koruma geçmişi'nden verebilirsin."
+            crate::tr!(
+                "Windows Defender {} dosyasını tehdit sanıp engelledi. Emülatör resmi kaynağından \
+                 indirildi; izin vermek istersen Koruma geçmişi'nden verebilirsin.",
+                "Windows Defender mistook {} for a threat and blocked it. The emulator was \
+                 downloaded from its official source; you can allow it from Protection history.",
+                emulator
             ),
             Some(Fix::Defender),
         ),
-        Some(740) => (format!("{emulator} yönetici izni istedi; Lumen bunu vermiyor."), None),
+        Some(740) => (
+            crate::tr!(
+                "{} yönetici izni istedi; Lumen bunu vermiyor.",
+                "{} asked for administrator rights; Lumen doesn't grant them.",
+                emulator
+            ),
+            None,
+        ),
         Some(1260) => (
-            format!("{emulator} bu bilgisayarda bir ilkeyle (sistem yöneticisi) engellenmiş."),
+            crate::tr!(
+                "{} bu bilgisayarda bir ilkeyle (sistem yöneticisi) engellenmiş.",
+                "{} is blocked on this PC by a policy (set by an administrator).",
+                emulator
+            ),
             None,
         ),
         // ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION and friends.
         Some(4551 | 4553 | 4556) => (
-            format!("Windows {emulator} uygulamasını engelledi."),
+            crate::tr!(
+                "Windows {} uygulamasını engelledi.",
+                "Windows blocked {}.",
+                emulator
+            ),
             Some(Fix::SmartAppControl),
         ),
-        _ => (format!("{emulator} başlatılamadı: {error}"), None),
+        _ => (
+            crate::tr!(
+                "{} başlatılamadı: {}",
+                "Couldn't start {}: {}",
+                emulator,
+                error
+            ),
+            None,
+        ),
     };
     blocked_by_smart_app_control(Diagnosis { message, fix }, error.raw_os_error() == Some(5))
 }
@@ -98,29 +142,56 @@ pub fn early_exit(
     let status = code.map(|c| c as u32);
     let (mut message, mut fix, blocked) = match status {
         Some(0xC000_0135) => (
-            format!("{emulator} açılamadı: Microsoft Visual C++ çalışma zamanı eksik."),
+            crate::tr!(
+                "{} açılamadı: Microsoft Visual C++ çalışma zamanı eksik.",
+                "{} couldn't open: the Microsoft Visual C++ runtime is missing.",
+                emulator
+            ),
             Some(Fix::VcRedist),
             false,
         ),
         Some(0xC000_007B) => (
-            format!("{emulator} dosyaları bozuk."),
+            crate::tr!("{} dosyaları bozuk.", "{}'s files are damaged.", emulator),
             launch.reinstall(),
             false,
         ),
         Some(0xC000_0022 | 0xC000_0428 | 0xC000_0142) => (
-            format!("{emulator} açılırken Windows bir dosyasının yüklenmesine izin vermedi."),
+            crate::tr!(
+                "{} açılırken Windows bir dosyasının yüklenmesine izin vermedi.",
+                "Windows didn't let one of {}'s files load while it was opening.",
+                emulator
+            ),
             None,
             true,
         ),
-        Some(0xC000_0005 | 0xC000_0409 | 0xC000_001D) => {
-            (format!("{emulator} açılır açılmaz çöktü."), None, false)
-        }
-        Some(c) if c != 0 => (
-            format!("{emulator} açılır açılmaz kapandı (kod {c:#x})."),
+        Some(0xC000_0005 | 0xC000_0409 | 0xC000_001D) => (
+            crate::tr!(
+                "{} açılır açılmaz çöktü.",
+                "{} crashed right after opening.",
+                emulator
+            ),
             None,
             false,
         ),
-        _ => (format!("{emulator} açılır açılmaz kapandı."), None, false),
+        Some(c) if c != 0 => (
+            crate::tr!(
+                "{} açılır açılmaz kapandı (kod {:#x}).",
+                "{} closed right after opening (code {:#x}).",
+                emulator,
+                c
+            ),
+            None,
+            false,
+        ),
+        _ => (
+            crate::tr!(
+                "{} açılır açılmaz kapandı.",
+                "{} closed right after opening.",
+                emulator
+            ),
+            None,
+            false,
+        ),
     };
     let errors = log.map(log_errors).unwrap_or_default();
     if !errors.is_empty() {
@@ -146,9 +217,11 @@ fn blocked_by_smart_app_control(diagnosis: Diagnosis, relevant: bool) -> Diagnos
         || relevant && crate::windows::smart_app_control_enforced()
     {
         Diagnosis {
-            message: format!(
+            message: crate::tr!(
                 "{} Windows Akıllı Uygulama Denetimi imzasız emülatörleri engelliyor; kapatmak senin kararın \
                  (kapatınca Windows sıfırlanmadan yeniden açılamaz).",
+                "{} Windows Smart App Control blocks unsigned emulators; turning it off is your call \
+                 (once off, it can't be turned back on without resetting Windows).",
                 diagnosis.message
             ),
             fix: Some(Fix::SmartAppControl),

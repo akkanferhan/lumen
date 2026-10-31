@@ -25,7 +25,8 @@ pub async fn apply(app: &AppHandle, fix: &Fix) -> anyhow::Result<Outcome> {
     let state = app.state::<AppState>();
     match fix {
         Fix::ReinstallEmulator(id) => {
-            let emu = manifest::emulator(id).ok_or_else(|| anyhow!("Bilinmeyen emülatör"))?;
+            let emu = manifest::emulator(id)
+                .ok_or_else(|| anyhow!(crate::tr!("Bilinmeyen emülatör", "Unknown emulator")))?;
             // Unpacks over the install: damaged files are replaced, saves stay.
             installer::install_emulator(
                 app,
@@ -39,10 +40,15 @@ pub async fn apply(app: &AppHandle, fix: &Fix) -> anyhow::Result<Outcome> {
             Ok(Outcome::Fixed)
         }
         Fix::ReinstallCore(core) => {
-            let retroarch =
-                manifest::emulator("retroarch").ok_or_else(|| anyhow!("RetroArch yok"))?;
+            let retroarch = manifest::emulator("retroarch")
+                .ok_or_else(|| anyhow!(crate::tr!("RetroArch yok", "RetroArch is missing")))?;
             let exe = installer::find_exe(retroarch, &state.dirs.emulators.join("retroarch"))
-                .ok_or_else(|| anyhow!("RetroArch kurulu değil"))?;
+                .ok_or_else(|| {
+                    anyhow!(crate::tr!(
+                        "RetroArch kurulu değil",
+                        "RetroArch isn't installed"
+                    ))
+                })?;
             let cores = exe.parent().map(|d| d.join("cores")).unwrap_or_default();
             let _ = std::fs::remove_file(cores.join(format!("{core}_libretro.dll")));
             installer::install_core(app, core, &cores, &state.dirs.downloads).await?;
@@ -89,8 +95,15 @@ async fn run_elevated(path: &std::path::Path, args: &[&str]) -> anyhow::Result<(
     // 3010: installed, restart pending. 1638: a newer version is already there.
     match status.code() {
         Some(0 | 3010 | 1638) => Ok(()),
-        Some(1223) | Some(1) => bail!("Kurulum onaylanmadı"),
-        code => bail!("Kurulum başarısız oldu (kod {code:?})"),
+        Some(1223) | Some(1) => bail!(crate::tr!(
+            "Kurulum onaylanmadı",
+            "The install wasn't approved"
+        )),
+        code => bail!(crate::tr!(
+            "Kurulum başarısız oldu (kod {:?})",
+            "The install failed (code {:?})",
+            code
+        )),
     }
 }
 

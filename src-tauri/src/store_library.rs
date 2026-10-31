@@ -65,13 +65,17 @@ pub async fn steam_owned(key: &str, steam_id: &str) -> anyhow::Result<Vec<Owned>
     if response.status() == reqwest::StatusCode::UNAUTHORIZED
         || response.status() == reqwest::StatusCode::FORBIDDEN
     {
-        anyhow::bail!("Steam anahtarı geçersiz");
+        anyhow::bail!(crate::tr!(
+            "Steam anahtarı geçersiz",
+            "The Steam key is invalid"
+        ));
     }
-    let body: Body = response
-        .error_for_status()?
-        .json()
-        .await
-        .map_err(|_| anyhow::anyhow!("Steam'den yanıt alınamadı"))?;
+    let body: Body = response.error_for_status()?.json().await.map_err(|_| {
+        anyhow::anyhow!(crate::tr!(
+            "Steam'den yanıt alınamadı",
+            "Steam didn't respond"
+        ))
+    })?;
     Ok(body
         .response
         .games

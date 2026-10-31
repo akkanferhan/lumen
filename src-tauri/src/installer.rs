@@ -87,8 +87,13 @@ pub async fn install_emulator(
     unpack(archive, target.clone()).await?;
 
     emit(app, &emu.id, "configuring", 1.0, None);
-    let exe = find_exe(emu, &target)
-        .ok_or_else(|| anyhow!("{} çalıştırılabilir dosyası bulunamadı", emu.name))?;
+    let exe = find_exe(emu, &target).ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "{} çalıştırılabilir dosyası bulunamadı",
+            "Couldn't find {}'s program file",
+            emu.name
+        ))
+    })?;
     let exe_dir = exe.parent().unwrap_or(&target);
     for marker in &emu.portable_files {
         let path = exe_dir.join(marker);
@@ -153,11 +158,20 @@ pub async fn download_ps3_firmware(
         .send()
         .await?
         .error_for_status()
-        .context("Sony güncelleme listesine ulaşılamadı")?
+        .with_context(|| {
+            crate::tr!(
+                "Sony güncelleme listesine ulaşılamadı",
+                "Couldn't reach Sony's update list"
+            )
+        })?
         .text()
         .await?;
-    let url =
-        ps3_firmware_url(&list).ok_or_else(|| anyhow!("PS3 firmware bağlantısı bulunamadı"))?;
+    let url = ps3_firmware_url(&list).ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "PS3 firmware bağlantısı bulunamadı",
+            "Couldn't find the PS3 firmware link"
+        ))
+    })?;
     download(app, id, &url, downloads_dir).await
 }
 
@@ -252,7 +266,13 @@ pub async fn resolve_release(source: &Source) -> anyhow::Result<Release> {
                 .send()
                 .await?
                 .error_for_status()
-                .with_context(|| format!("{repo} sürüm bilgisi alınamadı"))?
+                .with_context(|| {
+                    crate::tr!(
+                        "{} sürüm bilgisi alınamadı",
+                        "Couldn't get {} release info",
+                        repo
+                    )
+                })?
                 .json()
                 .await?;
 
@@ -267,7 +287,13 @@ pub async fn resolve_release(source: &Source) -> anyhow::Result<Release> {
                     version: format!("{tag_name}/{}/{}", a.name, a.updated_at),
                     url: a.browser_download_url,
                 })
-                .ok_or_else(|| anyhow!("{repo} sürümünde Windows paketi bulunamadı"))
+                .ok_or_else(|| {
+                    anyhow!(crate::tr!(
+                        "{} sürümünde Windows paketi bulunamadı",
+                        "No Windows package found in the {} release",
+                        repo
+                    ))
+                })
         }
         Source::Page {
             page,
@@ -279,13 +305,25 @@ pub async fn resolve_release(source: &Source) -> anyhow::Result<Release> {
                 .send()
                 .await?
                 .error_for_status()
-                .with_context(|| format!("İndirme sayfası açılamadı: {page}"))?
+                .with_context(|| {
+                    crate::tr!(
+                        "İndirme sayfası açılamadı: {}",
+                        "Couldn't open the download page: {}",
+                        page
+                    )
+                })?
                 .text()
                 .await?;
             let found = Regex::new(pattern)?
                 .find(&body)
                 .map(|m| m.as_str().to_string())
-                .ok_or_else(|| anyhow!("İndirme bağlantısı bulunamadı: {page}"))?;
+                .ok_or_else(|| {
+                    anyhow!(crate::tr!(
+                        "İndirme bağlantısı bulunamadı: {}",
+                        "Couldn't find the download link: {}",
+                        page
+                    ))
+                })?;
             let url = match base {
                 Some(base) if found.starts_with('/') => format!("{base}{found}"),
                 _ => found,
@@ -345,7 +383,7 @@ async fn download(
         .send()
         .await?
         .error_for_status()
-        .with_context(|| format!("İndirme başarısız: {url}"))?;
+        .with_context(|| crate::tr!("İndirme başarısız: {}", "Download failed: {}", url))?;
     let total = response.content_length();
 
     let file_name = url
@@ -380,15 +418,28 @@ async fn unpack(archive: PathBuf, target: PathBuf) -> anyhow::Result<()> {
         std::fs::create_dir_all(&target)?;
         let name = archive.to_string_lossy().to_lowercase();
         let result = if name.ends_with(".7z") {
-            sevenz_rust::decompress_file(&archive, &target)
-                .map_err(|e| anyhow!("7z açılamadı: {e}"))
+            sevenz_rust::decompress_file(&archive, &target).map_err(|e| {
+                anyhow!(crate::tr!(
+                    "7z açılamadı: {}",
+                    "Couldn't open the 7z: {}",
+                    e
+                ))
+            })
         } else if name.ends_with(".zip") {
             let file = std::fs::File::open(&archive)?;
-            zip::ZipArchive::new(file)?
-                .extract(&target)
-                .map_err(|e| anyhow!("zip açılamadı: {e}"))
+            zip::ZipArchive::new(file)?.extract(&target).map_err(|e| {
+                anyhow!(crate::tr!(
+                    "zip açılamadı: {}",
+                    "Couldn't open the zip: {}",
+                    e
+                ))
+            })
         } else {
-            Err(anyhow!("Desteklenmeyen arşiv: {name}"))
+            Err(anyhow!(crate::tr!(
+                "Desteklenmeyen arşiv: {}",
+                "Unsupported archive: {}",
+                name
+            )))
         };
         let _ = std::fs::remove_file(&archive);
         result

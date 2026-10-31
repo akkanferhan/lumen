@@ -376,7 +376,10 @@ fn copy_retroarch_saves(state: &AppState, set: &crate::discs::Created) {
 #[tauri::command]
 pub async fn install_systems(app: AppHandle, system_ids: Vec<String>) -> CmdResult<()> {
     if !cfg!(target_os = "windows") {
-        return Err("Emülatör kurulumu şimdilik sadece Windows'ta destekleniyor".into());
+        return Err(crate::tr!(
+            "Emülatör kurulumu şimdilik sadece Windows'ta destekleniyor",
+            "Installing emulators only works on Windows for now"
+        ));
     }
     let state = app.state::<AppState>();
     let bios = state.bios_dir();
@@ -475,7 +478,7 @@ pub async fn launch_game(
         .iter()
         .find(|g| g.id == game_id)
         .cloned()
-        .ok_or("Oyun bulunamadı")?;
+        .ok_or_else(|| crate::tr!("Oyun bulunamadı", "Game not found"))?;
     // Kids mode: only the chosen games, and only while today's time lasts.
     let kids = state.settings.lock().unwrap().kids.clone();
     let mut time_left = None;
@@ -490,12 +493,18 @@ pub async fn launch_game(
                     .any(|c| &c.id == id && c.games.contains(&game.id))
             });
         if !allowed {
-            return Err("Bu oyun çocuk modunda açılamaz".into());
+            return Err(crate::tr!(
+                "Bu oyun çocuk modunda açılamaz",
+                "This game can't be played in kids mode"
+            ));
         }
         let used = day_start.map_or(0, |d| crate::kids::used_since(&state.dirs.data, d));
         time_left = kids.remaining(used);
         if time_left == Some(0) {
-            return Err("Bugünkü oyun süresi doldu. Yarın görüşürüz!".into());
+            return Err(crate::tr!(
+                "Bugünkü oyun süresi doldu. Yarın görüşürüz!",
+                "Today's play time is up. See you tomorrow!"
+            ));
         }
     }
     launcher::launch(&app, &game, fresh.unwrap_or(false), time_left)
@@ -516,12 +525,15 @@ pub fn kids_start(
     let pin = pin.trim();
     if !pin.is_empty() {
         if pin.len() < 4 || !pin.chars().all(|c| c.is_ascii_digit()) {
-            return Err("PIN en az 4 rakam olmalı".into());
+            return Err(crate::tr!(
+                "PIN en az 4 rakam olmalı",
+                "The PIN must be at least 4 digits"
+            ));
         }
         settings.kids.pin_hash = Some(crate::kids::hash(pin));
     }
     if settings.kids.pin_hash.is_none() {
-        return Err("Önce bir PIN belirle".into());
+        return Err(crate::tr!("Önce bir PIN belirle", "Set a PIN first"));
     }
     settings.kids.collection = collection;
     settings.kids.daily_minutes = daily_minutes;
@@ -535,7 +547,7 @@ pub fn kids_start(
 pub fn kids_stop(state: State<'_, AppState>, pin: String) -> CmdResult<()> {
     let mut settings = state.settings.lock().unwrap();
     if !settings.kids.pin_matches(&pin) {
-        return Err("PIN yanlış".into());
+        return Err(crate::tr!("PIN yanlış", "Wrong PIN"));
     }
     settings.kids.active = false;
     drop(settings);
@@ -601,12 +613,20 @@ pub async fn set_steam_key(app: AppHandle, key: String) -> CmdResult<usize> {
     }
     let user = crate::pc::steam_root()
         .and_then(|r| crate::store_library::steam_user(&r))
-        .ok_or("Bu bilgisayarda Steam'e giriş yapılmış bir hesap bulunamadı")?;
+        .ok_or_else(|| {
+            crate::tr!(
+                "Bu bilgisayarda Steam'e giriş yapılmış bir hesap bulunamadı",
+                "No Steam account is signed in on this PC"
+            )
+        })?;
     let owned = crate::store_library::steam_owned(&key, &user)
         .await
         .map_err(err)?;
     if owned.is_empty() {
-        return Err("Steam oyun listesini boş döndürdü. Steam profilinde Gizlilik → Oyun ayrıntıları'nı \"Herkese açık\" yap ve tekrar dene.".into());
+        return Err(crate::tr!(
+            "Steam oyun listesini boş döndürdü. Steam profilinde Gizlilik → Oyun ayrıntıları'nı \"Herkese açık\" yap ve tekrar dene.",
+            "Steam returned an empty game list. In your Steam profile, set Privacy → Game details to \"Public\" and try again."
+        ));
     }
     *state.steam_key.lock().unwrap() = Some(key);
     state.save_steam_key().map_err(err)?;
@@ -656,14 +676,21 @@ pub fn create_collection(
 ) -> CmdResult<Vec<crate::state::Collection>> {
     let name = name.split_whitespace().collect::<Vec<_>>().join(" ");
     if name.is_empty() {
-        return Err("Koleksiyonun bir adı olmalı".into());
+        return Err(crate::tr!(
+            "Koleksiyonun bir adı olmalı",
+            "The collection needs a name"
+        ));
     }
     let mut collections = state.collections.lock().unwrap();
     if collections
         .iter()
         .any(|c| c.name.eq_ignore_ascii_case(&name))
     {
-        return Err(format!("“{name}” adında bir koleksiyon zaten var"));
+        return Err(crate::tr!(
+            "“{}” adında bir koleksiyon zaten var",
+            "A collection named “{}” already exists",
+            name
+        ));
     }
     let id = format!(
         "c{}",
@@ -709,7 +736,7 @@ pub fn toggle_collection(
         let collection = collections
             .iter_mut()
             .find(|c| c.id == id)
-            .ok_or("Koleksiyon bulunamadı")?;
+            .ok_or_else(|| crate::tr!("Koleksiyon bulunamadı", "Collection not found"))?;
         match collection.games.iter().position(|g| *g == game_id) {
             Some(i) => {
                 collection.games.remove(i);
@@ -734,6 +761,12 @@ pub fn overlay_pressed(app: AppHandle) {
 pub fn set_quick_combo(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
     state.settings.lock().unwrap().quick_combo = enabled;
     state.save_settings().map_err(err)
+}
+
+/// The UI's language, for the messages the backend writes.
+#[tauri::command]
+pub fn set_language(english: bool) {
+    crate::i18n::set_english(english);
 }
 
 /// "Sorun bildir": the report zip on the desktop, shown in Explorer.
@@ -842,9 +875,13 @@ pub async fn check_updates(app: AppHandle) -> Vec<EmulatorUpdate> {
 pub async fn update_emulator(app: AppHandle, id: String) -> CmdResult<()> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
-        return Err("Oyun açıkken emülatör güncellenemez".into());
+        return Err(crate::tr!(
+            "Oyun açıkken emülatör güncellenemez",
+            "Emulators can't be updated while a game is running"
+        ));
     }
-    let emu = manifest::emulator(&id).ok_or("Bilinmeyen emülatör")?;
+    let emu = manifest::emulator(&id)
+        .ok_or_else(|| crate::tr!("Bilinmeyen emülatör", "Unknown emulator"))?;
     if !state.installing.lock().unwrap().insert(emu.id.clone()) {
         return Ok(());
     }
@@ -990,7 +1027,10 @@ pub async fn install_app_update(app: AppHandle) -> CmdResult<()> {
     use tauri::Emitter;
     use tauri_plugin_updater::UpdaterExt;
     if app.state::<AppState>().running.lock().unwrap().is_some() {
-        return Err("Oyun açıkken güncelleme yapılamaz".into());
+        return Err(crate::tr!(
+            "Oyun açıkken güncelleme yapılamaz",
+            "Can't update while a game is running"
+        ));
     }
     let Some(update) = app.updater().map_err(err)?.check().await.map_err(err)? else {
         return Ok(());
@@ -1058,19 +1098,32 @@ pub fn homebrew_installed(state: State<'_, AppState>) -> Vec<String> {
 #[tauri::command]
 pub async fn install_homebrew(app: AppHandle, slug: String) -> CmdResult<Vec<GameView>> {
     let state = app.state::<AppState>();
-    let game = crate::homebrew::find(&slug).ok_or("Katalogda böyle bir oyun yok")?;
-    let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
-    let target = crate::homebrew::target(game, &root).ok_or("Bilinmeyen sistem")?;
+    let game = crate::homebrew::find(&slug).ok_or_else(|| {
+        crate::tr!(
+            "Katalogda böyle bir oyun yok",
+            "That game isn't in the catalog"
+        )
+    })?;
+    let root = state
+        .rom_root()
+        .ok_or_else(|| crate::tr!("Önce bir oyun klasörü seç", "Pick a game folder first"))?;
+    let target = crate::homebrew::target(game, &root)
+        .ok_or_else(|| crate::tr!("Bilinmeyen sistem", "Unknown system"))?;
     let id = format!("homebrew:{slug}");
     let result = if game.extract {
-        let dir = target.parent().ok_or("Geçersiz hedef")?;
+        let dir = target
+            .parent()
+            .ok_or_else(|| crate::tr!("Geçersiz hedef", "Invalid destination"))?;
         installer::download_and_unpack(&app, &id, &game.url, dir, &state.dirs.downloads)
             .await
             .and_then(|()| {
-                target
-                    .exists()
-                    .then_some(())
-                    .ok_or_else(|| anyhow::anyhow!("Arşivde {} yok", game.file_name))
+                target.exists().then_some(()).ok_or_else(|| {
+                    anyhow::anyhow!(crate::tr!(
+                        "Arşivde {} yok",
+                        "{} isn't in the archive",
+                        game.file_name
+                    ))
+                })
             })
     } else {
         installer::download_to(&app, &id, &game.url, &target, &state.dirs.downloads).await
@@ -1090,9 +1143,14 @@ pub async fn import_scan(
     paths: Vec<PathBuf>,
 ) -> CmdResult<Vec<crate::importer::Candidate>> {
     let state = app.state::<AppState>();
-    let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
+    let root = state
+        .rom_root()
+        .ok_or_else(|| crate::tr!("Önce bir oyun klasörü seç", "Pick a game folder first"))?;
     if paths.iter().any(|p| p.starts_with(&root)) {
-        return Err("Seçtiğin oyun zaten Lumen'in oyun klasöründe".into());
+        return Err(crate::tr!(
+            "Seçtiğin oyun zaten Lumen'in oyun klasöründe",
+            "The game you picked is already in Lumen's game folder"
+        ));
     }
     tauri::async_runtime::spawn_blocking(move || crate::importer::scan_all(&paths))
         .await
@@ -1114,7 +1172,9 @@ pub async fn import_games(
     mode: crate::importer::Mode,
 ) -> CmdResult<ImportResult> {
     let state = app.state::<AppState>();
-    let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
+    let root = state
+        .rom_root()
+        .ok_or_else(|| crate::tr!("Önce bir oyun klasörü seç", "Pick a game folder first"))?;
     const ID: &str = "import";
     installer::emit(&app, ID, "copying", 0.0, None);
     let progress_app = app.clone();
@@ -1130,7 +1190,7 @@ pub async fn import_games(
     })
     .await
     .map_err(err)?;
-    let summary = format!("{} oyun eklendi", report.imported);
+    let summary = crate::tr!("{} oyun eklendi", "{} games added", report.imported);
     installer::emit(&app, ID, "done", 1.0, Some(summary));
     let games = scan_library(app.clone()).await?;
     Ok(ImportResult { report, games })
@@ -1210,8 +1270,17 @@ pub fn switch_disc(app: AppHandle, next: bool) -> CmdResult<()> {
         let game = running
             .as_ref()
             .filter(|g| g.controls.discs)
-            .ok_or("Bu oyunda disk değiştirilemiyor")?;
-        (game.emulator.clone(), game.pid.ok_or("Oyun penceresi yok")?)
+            .ok_or_else(|| {
+                crate::tr!(
+                    "Bu oyunda disk değiştirilemiyor",
+                    "This game can't switch discs"
+                )
+            })?;
+        (
+            game.emulator.clone(),
+            game.pid
+                .ok_or_else(|| crate::tr!("Oyun penceresi yok", "The game has no window"))?,
+        )
     };
     crate::launcher::resume_game(&app);
     std::thread::spawn(move || crate::controls::switch_disc(&emulator, pid, next));
@@ -1264,7 +1333,8 @@ pub fn state_slots(state: State<'_, AppState>) -> Option<Vec<crate::states::Slot
 #[tauri::command]
 pub async fn save_state(app: AppHandle, slot: u8) -> CmdResult<Vec<crate::states::Slot>> {
     let state = app.state::<AppState>();
-    let (dir, rom) = running_states(&state).ok_or("Bu oyunda kayıt slotu yok")?;
+    let (dir, rom) = running_states(&state)
+        .ok_or_else(|| crate::tr!("Bu oyunda kayıt slotu yok", "This game has no save slots"))?;
     tauri::async_runtime::spawn_blocking(move || crate::states::command(false, slot))
         .await
         .map_err(err)?
@@ -1275,7 +1345,8 @@ pub async fn save_state(app: AppHandle, slot: u8) -> CmdResult<Vec<crate::states
 #[tauri::command]
 pub async fn load_state(app: AppHandle, slot: u8) -> CmdResult<()> {
     let state = app.state::<AppState>();
-    running_states(&state).ok_or("Bu oyunda kayıt slotu yok")?;
+    running_states(&state)
+        .ok_or_else(|| crate::tr!("Bu oyunda kayıt slotu yok", "This game has no save slots"))?;
     tauri::async_runtime::spawn_blocking(move || crate::states::command(true, slot))
         .await
         .map_err(err)?
@@ -1337,11 +1408,17 @@ pub async fn backup_now(app: AppHandle) -> CmdResult<crate::backup::Report> {
 pub async fn restore_backup(app: AppHandle) -> CmdResult<crate::backup::Report> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
-        return Err("Oyun açıkken geri yükleme yapılamaz".into());
+        return Err(crate::tr!(
+            "Oyun açıkken geri yükleme yapılamaz",
+            "Can't restore while a game is running"
+        ));
     }
     let target = state.settings.lock().unwrap().backup.target();
     if !target.is_dir() {
-        return Err("Yedek klasörü bulunamadı".into());
+        return Err(crate::tr!(
+            "Yedek klasörü bulunamadı",
+            "Couldn't find the backup folder"
+        ));
     }
     let emulators = state.dirs.emulators.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -1454,14 +1531,22 @@ pub async fn ra_refresh(app: AppHandle) -> CmdResult<Option<RaUser>> {
             Ok(Some(user))
         }
         // Network trouble: keep the login, report it unchanged.
-        Err(e) if e.to_string().contains("ulaşılamadı") => Ok(Some(RaUser {
-            username: current.username,
-            score: current.score,
-        })),
+        Err(e)
+            if e.to_string().contains("ulaşılamadı")
+                || e.to_string().contains("Couldn't reach") =>
+        {
+            Ok(Some(RaUser {
+                username: current.username,
+                score: current.score,
+            }))
+        }
         Err(_) => {
             *state.ra.lock().unwrap() = None;
             state.save_ra().map_err(err)?;
-            Err("RetroAchievements oturumunun süresi doldu, tekrar giriş yap".into())
+            Err(crate::tr!(
+                "RetroAchievements oturumunun süresi doldu, tekrar giriş yap",
+                "Your RetroAchievements session expired; sign in again"
+            ))
         }
     }
 }
@@ -1480,7 +1565,7 @@ fn find_game(state: &AppState, game_id: &str) -> CmdResult<Game> {
         .iter()
         .find(|g| g.id == game_id)
         .cloned()
-        .ok_or_else(|| "Oyun bulunamadı".into())
+        .ok_or_else(|| crate::tr!("Oyun bulunamadı", "Game not found"))
 }
 
 /// What removing a game will do (and how much space it frees).
@@ -1504,7 +1589,10 @@ pub async fn uninstall_game(app: AppHandle, game_id: String) -> CmdResult<Vec<Ga
         .as_ref()
         .is_some_and(|g| g.game_id == game_id)
     {
-        return Err("Oyun açıkken kaldırılamaz".into());
+        return Err(crate::tr!(
+            "Oyun açıkken kaldırılamaz",
+            "Can't uninstall while the game is running"
+        ));
     }
     let game = find_game(&state, &game_id)?;
     // Vita games also live inside Vita3K once installed; remove them there too.
@@ -1533,9 +1621,13 @@ pub async fn uninstall_game(app: AppHandle, game_id: String) -> CmdResult<Vec<Ga
 pub async fn uninstall_emulator(app: AppHandle, id: String) -> CmdResult<()> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
-        return Err("Oyun açıkken emülatör kaldırılamaz".into());
+        return Err(crate::tr!(
+            "Oyun açıkken emülatör kaldırılamaz",
+            "Emulators can't be uninstalled while a game is running"
+        ));
     }
-    let emu = manifest::emulator(&id).ok_or("Bilinmeyen emülatör")?;
+    let emu = manifest::emulator(&id)
+        .ok_or_else(|| crate::tr!("Bilinmeyen emülatör", "Unknown emulator"))?;
     let dir = state.dirs.emulators.join(&emu.id);
     if !dir.exists() {
         return Ok(());
@@ -1546,7 +1638,13 @@ pub async fn uninstall_emulator(app: AppHandle, id: String) -> CmdResult<()> {
         if backup.enabled {
             crate::backup::backup_emulator(&emu_id, &dir, &backup.target())?;
         }
-        trash::delete(&dir).map_err(|e| anyhow::anyhow!("Geri Dönüşüm Kutusu'na taşınamadı: {e}"))
+        trash::delete(&dir).map_err(|e| {
+            anyhow::anyhow!(crate::tr!(
+                "Geri Dönüşüm Kutusu'na taşınamadı: {}",
+                "Couldn't move to the Recycle Bin: {}",
+                e
+            ))
+        })
     })
     .await
     .map_err(err)?

@@ -42,7 +42,10 @@ pub async fn launch(
 ) -> anyhow::Result<()> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
-        bail!("Zaten bir oyun çalışıyor");
+        bail!(crate::tr!(
+            "Zaten bir oyun çalışıyor",
+            "A game is already running"
+        ));
     }
     // Games need the Ally's controller as a gamepad, not keyboard and mouse.
     crate::ally::force_gamepad_mode();
@@ -64,7 +67,8 @@ pub async fn launch(
         return Ok(());
     }
 
-    let system = manifest::system(&game.system_id).ok_or_else(|| anyhow!("Bilinmeyen sistem"))?;
+    let system = manifest::system(&game.system_id)
+        .ok_or_else(|| anyhow!(crate::tr!("Bilinmeyen sistem", "Unknown system")))?;
     let bios = state.bios_dir();
     let runner = crate::library::effective(system, bios.as_deref());
     if !runner.fallback {
@@ -72,15 +76,28 @@ pub async fn launch(
             .into_iter()
             .find(|b| !b.found && !b.optional)
         {
-            bail!("Eksik dosya: {}", missing.label);
+            bail!(crate::tr!(
+                "Eksik dosya: {}",
+                "Missing file: {}",
+                missing.label
+            ));
         }
     }
-    let emu = manifest::emulator(runner.emulator).ok_or_else(|| anyhow!("Bilinmeyen emülatör"))?;
-    let exe = installer::find_exe(emu, &state.dirs.emulators.join(&emu.id))
-        .ok_or_else(|| anyhow!("{} kurulu değil", emu.name))?;
-    let exe_dir = exe
-        .parent()
-        .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
+    let emu = manifest::emulator(runner.emulator)
+        .ok_or_else(|| anyhow!(crate::tr!("Bilinmeyen emülatör", "Unknown emulator")))?;
+    let exe = installer::find_exe(emu, &state.dirs.emulators.join(&emu.id)).ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "{} kurulu değil",
+            "{} isn't installed",
+            emu.name
+        ))
+    })?;
+    let exe_dir = exe.parent().ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "Geçersiz emülatör yolu",
+            "Invalid emulator path"
+        ))
+    })?;
 
     config::configure(emu, exe_dir, bios.as_deref(), state.tier())?;
     pull_synced_saves(&state, &emu.id).await;
@@ -107,7 +124,11 @@ pub async fn launch(
         Some(core) => {
             let path = exe_dir.join("cores").join(format!("{core}_libretro.dll"));
             if !path.exists() {
-                bail!("{} çekirdeği kurulu değil", system.short);
+                bail!(crate::tr!(
+                    "{} çekirdeği kurulu değil",
+                    "The {} core isn't installed",
+                    system.short
+                ));
             }
             path.to_string_lossy().into_owned()
         }
@@ -361,9 +382,12 @@ async fn ensure_ps3_firmware(
     bios: Option<&Path>,
     downloads: &Path,
 ) -> anyhow::Result<()> {
-    let exe_dir = exe
-        .parent()
-        .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
+    let exe_dir = exe.parent().ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "Geçersiz emülatör yolu",
+            "Invalid emulator path"
+        ))
+    })?;
     let dev_flash = exe_dir.join("dev_flash");
     let marker = dev_flash.join("vsh").join("module").join("vsh.self");
     if marker.exists() {
@@ -420,7 +444,10 @@ async fn ensure_ps3_firmware(
         installer::emit(app, PS3_FIRMWARE_ID, "done", 1.0, None);
         Ok(())
     } else {
-        let message = "PS3 firmware kurulamadı".to_string();
+        let message = crate::tr!(
+            "PS3 firmware kurulamadı",
+            "Couldn't install the PS3 firmware"
+        );
         installer::emit(app, PS3_FIRMWARE_ID, "error", 0.0, Some(message.clone()));
         bail!(message)
     }

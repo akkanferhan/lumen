@@ -16,6 +16,7 @@ mod formats;
 mod gog;
 mod griddb;
 mod homebrew;
+mod i18n;
 mod importer;
 mod input;
 mod installer;
@@ -55,6 +56,7 @@ pub fn run() {
             None,
         ))
         .setup(|app| {
+            i18n::set_english(!i18n::system_is_turkish());
             let state = state::AppState::load(app.handle())?;
             crash::install(&state.dirs.data);
             ally::init(&state.dirs.data);
@@ -108,6 +110,7 @@ pub fn run() {
             commands::set_back_buttons,
             commands::set_m2_action,
             commands::export_diagnostics,
+            commands::set_language,
             commands::kids_start,
             commands::kids_stop,
             commands::played_since,

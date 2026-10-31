@@ -194,7 +194,8 @@ fn write(path: &Path, text: String) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(path, text).with_context(|| format!("{} yazılamadı", path.display()))
+    fs::write(path, text)
+        .with_context(|| crate::tr!("{} yazılamadı", "Couldn't write {}", path.display()))
 }
 
 #[cfg(test)]

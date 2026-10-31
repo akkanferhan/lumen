@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { gameExtensions } from "./catalog";
 import { todayStart } from "./format";
+import { L } from "./i18n";
 import { mockApi } from "./mock";
 import type {
   AppUpdate,
@@ -101,6 +102,8 @@ export interface Api {
   setM2Action(action: M2Action): Promise<void>;
   /** "Sorun bildir": writes the report zip to the desktop; returns its path. */
   exportDiagnostics(name: string): Promise<string>;
+  /** Which language backend messages are written in. */
+  setLanguage(english: boolean): Promise<void>;
   createCollection(name: string): Promise<Collection[]>;
   /** Local midnights come from the UI, which knows the time zone. */
   playStats(today: number, year: number, yearStart: number): Promise<PlayStats>;
@@ -152,7 +155,7 @@ const tauriApi: Api = {
   getOverview: () => invoke("get_overview"),
   getLibrary: () => invoke("get_library"),
   takeCrashReport: () => invoke("take_crash_report"),
-  pickFolder: async (title = "Oyun klasörünü seç") => {
+  pickFolder: async (title = L("Oyun klasörünü seç", "Choose your game folder")) => {
     const picked = await open({ directory: true, title });
     return typeof picked === "string" ? picked : null;
   },
@@ -161,8 +164,8 @@ const tauriApi: Api = {
       multiple: true,
       title,
       filters: [
-        { name: "Oyun dosyaları", extensions: gameExtensions() },
-        { name: "Tüm dosyalar", extensions: ["*"] },
+        { name: L("Oyun dosyaları", "Game files"), extensions: gameExtensions() },
+        { name: L("Tüm dosyalar", "All files"), extensions: ["*"] },
       ],
     });
     return Array.isArray(picked) ? picked : typeof picked === "string" ? [picked] : [];
@@ -211,6 +214,7 @@ const tauriApi: Api = {
   setBackButtons: (enabled) => invoke("set_back_buttons", { enabled }),
   setM2Action: (action) => invoke("set_m2_action", { action }),
   exportDiagnostics: (name) => invoke("export_diagnostics", { name }),
+  setLanguage: (english) => invoke("set_language", { english }),
   createCollection: (name) => invoke("create_collection", { name }),
   playStats: (today, year, yearStart) => invoke("play_stats", { today, year, yearStart }),
   deleteCollection: (id) => invoke("delete_collection", { id }),

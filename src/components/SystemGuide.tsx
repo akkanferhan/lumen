@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { emulatorOf, homebrew, systemOf } from "../lib/catalog";
+import { L } from "../lib/i18n";
 import { useStore } from "../lib/store";
 
 /** Systems whose emulators are early: most games don't run yet. */
@@ -19,55 +20,67 @@ export function SystemGuide({ systemId, onImport, onStore }: { systemId: string;
   const free = homebrew.filter((g) => g.system === systemId).length;
 
   const format = system.folderMarker
-    ? `Oyun klasörü (içinde ${system.launchFile ?? system.folderMarker} olan)`
+    ? L(
+        `Oyun klasörü (içinde ${system.launchFile ?? system.folderMarker} olan)`,
+        `Game folder (containing ${system.launchFile ?? system.folderMarker})`,
+      )
     : system.extensions
         .filter((e) => e !== "zip" && e !== "7z")
         .map((e) => `.${e}`)
-        .join("  ") + (system.extensions.includes("zip") ? "  ya da bunların .zip hali" : "");
+        .join("  ") + (system.extensions.includes("zip") ? L("  ya da bunların .zip hali", "  or a .zip of them") : "");
   const present = status?.bios.find((b) => b.found);
   const damaged = missing.find((b) => b.verdict === "wrongSize");
   const bios = damaged
-    ? `${damaged.file} bozuk görünüyor (boyutu tutmuyor)`
+    ? L(`${damaged.file} bozuk görünüyor (boyutu tutmuyor)`, `${damaged.file} looks damaged (wrong size)`)
     : missing.length
       ? status?.usingFallback
-        ? "Gerekmez: yerleşik BIOS ile çalışır"
-        : `Gerekli: ${missing.map((b) => b.label).join(", ")}`
+        ? L("Gerekmez: yerleşik BIOS ile çalışır", "Not needed: runs with the built-in BIOS")
+        : L(`Gerekli: ${missing.map((b) => b.label).join(", ")}`, `Required: ${missing.map((b) => b.label).join(", ")}`)
       : present
-        ? `${present.file}${present.verdict === "verified" ? " · ✓ doğrulandı" : " · tanınmayan sürüm, kullanılacak"}`
-        : "Gerekmez";
+        ? `${present.file}${
+            present.verdict === "verified"
+              ? L(" · ✓ doğrulandı", " · ✓ verified")
+              : L(" · tanınmayan sürüm, kullanılacak", " · unrecognized version, will be used")
+          }`
+        : L("Gerekmez", "Not needed");
   const ready = status?.emulatorInstalled && status.coreInstalled;
 
   return (
     <div className="system-guide" style={{ "--accent": system.accent } as CSSProperties}>
       <div className="eyebrow">
         {system.maker} · {system.year}
-        {EXPERIMENTAL.has(systemId) && <span className="pill warn">Deneysel</span>}
+        {EXPERIMENTAL.has(systemId) && <span className="pill warn">{L("Deneysel", "Experimental")}</span>}
       </div>
-      <h2>{system.name} için henüz oyun yok</h2>
+      <h2>{L(`${system.name} için henüz oyun yok`, `No ${system.name} games yet`)}</h2>
       <dl className="guide-facts">
-        <dt>Oyunları koy</dt>
+        <dt>{L("Oyunları koy", "Put games in")}</dt>
         <dd>
           <span className="path-chip">{folder}</span>
         </dd>
-        <dt>Dosya biçimi</dt>
+        <dt>{L("Dosya biçimi", "File format")}</dt>
         <dd>{format}</dd>
         <dt>BIOS</dt>
         <dd className={missing.length && !status?.usingFallback ? "warn" : ""}>{bios}</dd>
-        <dt>Emülatör</dt>
+        <dt>{L("Emülatör", "Emulator")}</dt>
         <dd>
-          {emulator?.name} · {ready ? "kurulu" : "ilk oyunda kendiliğinden kurulur"}
+          {emulator?.name} · {ready ? L("kurulu", "installed") : L("ilk oyunda kendiliğinden kurulur", "installs itself with your first game")}
         </dd>
       </dl>
       {EXPERIMENTAL.has(systemId) && (
-        <p className="guide-note">Bu sistemin emülatörü erken aşamada: çoğu oyun henüz açılmayabilir.</p>
+        <p className="guide-note">
+          {L(
+            "Bu sistemin emülatörü erken aşamada: çoğu oyun henüz açılmayabilir.",
+            "This system's emulator is at an early stage: most games may not run yet.",
+          )}
+        </p>
       )}
       <div className="actions">
         <button className="btn primary focused" onClick={onImport}>
-          Oyunlarını içe aktar
+          {L("Oyunlarını içe aktar", "Import your games")}
         </button>
         {free > 0 && (
           <button className="btn" onClick={onStore}>
-            {free} ücretsiz oyun
+            {L(`${free} ücretsiz oyun`, `${free} free ${free === 1 ? "game" : "games"}`)}
           </button>
         )}
       </div>

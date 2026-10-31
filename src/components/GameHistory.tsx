@@ -5,6 +5,7 @@ import { formatLastPlayed, formatPlaytime } from "../lib/format";
 import { Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import type { Session, Shot } from "../lib/types";
+import { L, locale } from "../lib/i18n";
 
 /** A minute of slack: a shot saved just after the session ended still belongs to it. */
 const SLACK = 60;
@@ -57,9 +58,12 @@ export function GameHistory({
     <>
       <div className="scrim" onClick={onClose} />
       <aside className="menu history">
-        <h2>Geçmiş</h2>
+        <h2>{L("Geçmiş", "History")}</h2>
         <p className="menu-sub">
-          {sessions.length} oturum · toplam {formatPlaytime(total)}
+          {L(
+            `${sessions.length} oturum · toplam ${formatPlaytime(total)}`,
+            `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"} · ${formatPlaytime(total)} total`,
+          )}
         </p>
         <div className="menu-list" ref={listRef}>
           {rows.map(({ session, shots: taken }, i) => (
@@ -72,7 +76,7 @@ export function GameHistory({
               <div className="menu-item-main">
                 <div className="menu-item-title">
                   {formatLastPlayed(session.start)} ·{" "}
-                  {new Date(session.start * 1000).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(session.start * 1000).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                 </div>
                 <div className="menu-item-sub">{formatPlaytime(session.seconds)}</div>
                 {taken.length > 0 && (
@@ -90,8 +94,8 @@ export function GameHistory({
       </aside>
       <HintBar
         hints={[
-          ...(row?.shots.length ? [{ action: "a" as const, label: "Görüntülere bak" }] : []),
-          { action: "b", label: "Kapat" },
+          ...(row?.shots.length ? [{ action: "a" as const, label: L("Görüntülere bak", "View screenshots") }] : []),
+          { action: "b", label: L("Kapat", "Close") },
         ]}
       />
     </>

@@ -59,9 +59,12 @@ pub fn rom_args(exe_dir: &Path, game: &Path) -> Vec<String> {
 
 /// Installs the system software and fonts once. `--firmware` installs and exits.
 pub async fn ensure_firmware(app: &AppHandle, exe: &Path, downloads: &Path) -> anyhow::Result<()> {
-    let exe_dir = exe
-        .parent()
-        .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
+    let exe_dir = exe.parent().ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "Geçersiz emülatör yolu",
+            "Invalid emulator path"
+        ))
+    })?;
     let root = fs_root(exe_dir);
     for (id, url, marker) in [
         ("firmware:vita", FIRMWARE, "vs0"),
@@ -85,9 +88,15 @@ pub async fn ensure_firmware(app: &AppHandle, exe: &Path, downloads: &Path) -> a
                 id,
                 "error",
                 0.0,
-                Some("PS Vita firmware kurulamadı".into()),
+                Some(crate::tr!(
+                    "PS Vita firmware kurulamadı",
+                    "Couldn't install the PS Vita firmware"
+                )),
             );
-            bail!("PS Vita firmware kurulamadı");
+            bail!(crate::tr!(
+                "PS Vita firmware kurulamadı",
+                "Couldn't install the PS Vita firmware"
+            ));
         }
         installer::emit(app, id, "done", 1.0, None);
     }
@@ -97,9 +106,12 @@ pub async fn ensure_firmware(app: &AppHandle, exe: &Path, downloads: &Path) -> a
 /// Removes an installed title from Vita3K (`-d` deletes app, DLC and saves'
 /// shader cache; Lumen backs saves up beforehand when backups are on).
 pub fn delete_title(exe: &Path, title_id: &str) -> anyhow::Result<()> {
-    let exe_dir = exe
-        .parent()
-        .ok_or_else(|| anyhow!("Geçersiz emülatör yolu"))?;
+    let exe_dir = exe.parent().ok_or_else(|| {
+        anyhow!(crate::tr!(
+            "Geçersiz emülatör yolu",
+            "Invalid emulator path"
+        ))
+    })?;
     std::process::Command::new(exe)
         .args(["-d", title_id])
         .current_dir(exe_dir)

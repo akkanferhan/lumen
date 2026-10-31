@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
+import { L } from "../lib/i18n";
 import { captureText, Layer, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { Glyph } from "./Glyph";
 
 const ROWS = ["ABCDEFGHIJ", "KLMNOPQRST", "UVWXYZ0123", "456789'-:."].map((r) => r.split(""));
 const SPECIAL = ["Boşluk", "Sil", "Bitti"] as const;
+/** What the special keys show (SPECIAL stays the key id). */
+const SPECIAL_TEXT: Record<(typeof SPECIAL)[number], string> = {
+  Boşluk: L("Boşluk", "Space"),
+  Sil: L("Sil", "Delete"),
+  Bitti: L("Bitti", "Done"),
+};
 
 /**
  * Gamepad on-screen keyboard. A physical keyboard types straight into it.
@@ -86,9 +93,9 @@ export function SearchKeyboard({
       <section className="search-panel">
         <div className="search-field">
           <span className="search-icon">⌕</span>
-          <span className={query ? "" : "placeholder"}>{query || "Oyun ara"}</span>
+          <span className={query ? "" : "placeholder"}>{query || L("Oyun ara", "Search games")}</span>
           <span className="caret" />
-          <span className="search-count">{query ? `${results} sonuç` : ""}</span>
+          <span className="search-count">{query ? L(`${results} sonuç`, `${results} ${results === 1 ? "result" : "results"}`) : ""}</span>
         </div>
         <div className="keys">
           {ROWS.map((keys, r) => (
@@ -113,16 +120,16 @@ export function SearchKeyboard({
                 onClick={() => (label === "Boşluk" ? type(" ") : label === "Sil" ? erase() : onDone())}
                 tabIndex={-1}
               >
-                {label}
+                {SPECIAL_TEXT[label]}
               </button>
             ))}
           </div>
         </div>
         <div className="search-hints">
-          <span><Glyph action="x" /> Sil</span>
-          <span><Glyph action="y" /> Boşluk</span>
-          <span><Glyph action="start" /> Bitti</span>
-          <span><Glyph action="b" /> {query ? "Sil" : "Kapat"}</span>
+          <span><Glyph action="x" /> {L("Sil", "Delete")}</span>
+          <span><Glyph action="y" /> {L("Boşluk", "Space")}</span>
+          <span><Glyph action="start" /> {L("Bitti", "Done")}</span>
+          <span><Glyph action="b" /> {query ? L("Sil", "Delete") : L("Kapat", "Close")}</span>
         </div>
       </section>
     </>

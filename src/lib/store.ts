@@ -2,6 +2,7 @@
 // the UI optimistic so nothing waits on a round trip it doesn't need.
 
 import { useSyncExternalStore } from "react";
+import { english, L } from "./i18n";
 import { api } from "./api";
 import { installLabel, isPcSystem, systemOf } from "./catalog";
 import { setSoundsEnabled, sfx } from "./sfx";
@@ -97,13 +98,13 @@ export function notify(text: string, tone: Notice["tone"] = "info", ms = 4200) {
 }
 
 function errorText(e: unknown): string {
-  return typeof e === "string" ? e : e instanceof Error ? e.message : "Beklenmeyen bir hata oluştu";
+  return typeof e === "string" ? e : e instanceof Error ? e.message : L("Beklenmeyen bir hata oluştu", "Something went wrong");
 }
 
 const FIXED: Record<string, string> = {
-  reinstallEmulator: "Emülatör yeniden kuruldu",
-  reinstallCore: "Çekirdek yeniden indirildi",
-  vcRedist: "Visual C++ çalışma zamanı kuruldu",
+  reinstallEmulator: L("Emülatör yeniden kuruldu", "Emulator reinstalled"),
+  reinstallCore: L("Çekirdek yeniden indirildi", "Core downloaded again"),
+  vcRedist: L("Visual C++ çalışma zamanı kuruldu", "Visual C++ runtime installed"),
 };
 
 /** After a failed launch: let Lumen repair what it can, then try once more. */
@@ -112,15 +113,29 @@ async function tryAutoFix(game: Game, fresh: boolean) {
   try {
     result = await api.autoFix(game.id);
   } catch (e) {
-    notify(`Otomatik onarım başarısız: ${errorText(e)}`, "error", 8000);
+    notify(L(`Otomatik onarım başarısız: ${errorText(e)}`, `Auto-repair failed: ${errorText(e)}`), "error", 8000);
     return;
   }
   if (!result) return;
   if (result.outcome === "fixed") {
-    notify(`${FIXED[result.fix.kind] ?? "Sorun giderildi"} · oyun yeniden açılıyor`, "success", 5000);
+    notify(
+      L(
+        `${FIXED[result.fix.kind] ?? "Sorun giderildi"} · oyun yeniden açılıyor`,
+        `${FIXED[result.fix.kind] ?? "Problem fixed"} · relaunching the game`,
+      ),
+      "success",
+      5000,
+    );
     await actions.play(game, fresh);
   } else {
-    notify("Windows Güvenliği açıldı: ayarı değiştirirsen oyunu yeniden başlat.", "info", 10000);
+    notify(
+      L(
+        "Windows Güvenliği açıldı: ayarı değiştirirsen oyunu yeniden başlat.",
+        "Windows Security is open: if you change the setting, restart the game.",
+      ),
+      "info",
+      10000,
+    );
   }
 }
 
@@ -137,10 +152,12 @@ async function refreshOverview() {
 
 export const actions = {
   async boot() {
+    // Backend messages in the UI's language, before anything can fail.
+    api.setLanguage(english).catch(() => {});
     api.onInstallProgress((p) => {
       set((s) => ({ installs: { ...s.installs, [p.id]: p } }));
       if (p.stage === "done" || p.stage === "error") {
-        if (p.stage === "error") notify(`${installLabel(p.id)}: ${p.message ?? "kurulamadı"}`, "error", 7000);
+        if (p.stage === "error") notify(`${installLabel(p.id)}: ${p.message ?? L("kurulamadı", "couldn't be installed")}`, "error", 7000);
         setTimeout(() => {
           set((s) => {
             const { [p.id]: _, ...rest } = s.installs;
@@ -155,8 +172,26 @@ export const actions = {
       set({ quickMenu: true, launchingGameId: null });
     });
     api.onGameShown(() => set({ launchingGameId: null }));
-    api.onKidsTimeUp(() => notify("Bugünkü oyun süresi doldu · oyun kaydedilip kapatılıyor", "info", 12000));
-    api.onSystemResumed(() => notify("Uykudan döndün · oyun duraklatıldı, hazır olunca devam et", "info", 6000));
+    api.onKidsTimeUp(() =>
+      notify(
+        L(
+          "Bugünkü oyun süresi doldu · oyun kaydedilip kapatılıyor",
+          "Today's playtime is up · saving and closing the game",
+        ),
+        "info",
+        12000,
+      ),
+    );
+    api.onSystemResumed(() =>
+      notify(
+        L(
+          "Uykudan döndün · oyun duraklatıldı, hazır olunca devam et",
+          "Welcome back · the game is paused, resume when you're ready",
+        ),
+        "info",
+        6000,
+      ),
+    );
     api.onGameExited(async (exited) => {
       set({ runningGameId: null, launchingGameId: null, quickMenu: false });
       if (exited.error) {
@@ -185,7 +220,14 @@ export const actions = {
       .then((report) => {
         if (!report) return;
         const reason = report.split("\n")[0].replace(/^\[\d+\]\s*/, "");
-        notify(`Lumen geçen sefer beklenmedik şekilde kapandı: ${reason}`, "error", 12000);
+        notify(
+          L(
+            `Lumen geçen sefer beklenmedik şekilde kapandı: ${reason}`,
+            `Lumen closed unexpectedly last time: ${reason}`,
+          ),
+          "error",
+          12000,
+        );
       })
       .catch(() => {});
 
@@ -196,7 +238,14 @@ export const actions = {
         const update = await api.checkAppUpdate();
         if (update) {
           set({ appUpdate: update });
-          notify(`Lumen ${update.version} hazır · Menü'den güncelleyebilirsin`, "info", 7000);
+          notify(
+            L(
+              `Lumen ${update.version} hazır · Menü'den güncelleyebilirsin`,
+              `Lumen ${update.version} is ready · update it from the Menu`,
+            ),
+            "info",
+            7000,
+          );
         }
       } catch {
         /* offline or no releases yet */
@@ -242,8 +291,15 @@ export const actions = {
       set({ games });
       await refreshOverview();
       const added = games.length - before;
-      if (added > 0) notify(`${added} yeni oyun bulundu`, "success");
-      else if (!quiet) notify(`Kütüphane güncel · ${games.length} oyun`, "success");
+      if (added > 0) notify(L(`${added} yeni oyun bulundu`, `Found ${added} new ${added === 1 ? "game" : "games"}`), "success");
+      else if (!quiet)
+        notify(
+          L(
+            `Kütüphane güncel · ${games.length} oyun`,
+            `Library up to date · ${games.length} ${games.length === 1 ? "game" : "games"}`,
+          ),
+          "success",
+        );
     } catch (e) {
       notify(errorText(e), "error");
     } finally {
@@ -307,7 +363,13 @@ export const actions = {
       try {
         await api.launchGame(game.id);
         sfx.launch();
-        notify(`${game.title} ${systemOf(game.systemId)?.name} üzerinden açılıyor…`, "success");
+        notify(
+          L(
+            `${game.title} ${systemOf(game.systemId)?.name} üzerinden açılıyor…`,
+            `Opening ${game.title} in ${systemOf(game.systemId)?.name}…`,
+          ),
+          "success",
+        );
         set({ games: await api.getLibrary() });
       } catch (e) {
         sfx.error();
@@ -319,11 +381,16 @@ export const actions = {
     const missingBios = status?.usingFallback ? undefined : status?.bios.find((b) => !b.found && !b.optional);
     if (missingBios) {
       sfx.error();
-      notify(`Önce gerekli dosyayı ekle: ${missingBios.label}`, "error", 6000);
+      notify(L(`Önce gerekli dosyayı ekle: ${missingBios.label}`, `Add the required file first: ${missingBios.label}`), "error", 6000);
       return;
     }
     if (status && (!status.emulatorInstalled || !status.coreInstalled)) {
-      notify(`${systemOf(game.systemId)?.short ?? ""} için emülatör hazırlanıyor…`);
+      notify(
+        L(
+          `${systemOf(game.systemId)?.short ?? ""} için emülatör hazırlanıyor…`,
+          `Setting up the ${systemOf(game.systemId)?.short ?? ""} emulator…`,
+        ),
+      );
       if (!(await actions.install([game.systemId]))) return;
     }
     set({ launchingGameId: game.id });
@@ -420,12 +487,21 @@ export const actions = {
       const gone = !games.some((g) => g.id === game.id);
       notify(
         method === "recycleBin"
-          ? `${game.title} Geri Dönüşüm Kutusu'na taşındı · kayıtların duruyor`
+          ? L(
+              `${game.title} Geri Dönüşüm Kutusu'na taşındı · kayıtların duruyor`,
+              `${game.title} moved to the Recycle Bin · your saves are kept`,
+            )
           : method === "windowsPackage"
-            ? `${game.title} kaldırıldı`
+            ? L(`${game.title} kaldırıldı`, `${game.title} uninstalled`)
             : method === "storeDialog"
-              ? `${game.title} için Steam'de kaldırmayı onayla, ardından kütüphaneyi yenile`
-              : `Epic Games açıldı: ${game.title} oyununu oradan kaldır, ardından kütüphaneyi yenile`,
+              ? L(
+                  `${game.title} için Steam'de kaldırmayı onayla, ardından kütüphaneyi yenile`,
+                  `Confirm uninstalling ${game.title} in Steam, then refresh the library`,
+                )
+              : L(
+                  `Epic Games açıldı: ${game.title} oyununu oradan kaldır, ardından kütüphaneyi yenile`,
+                  `Epic Games is open: uninstall ${game.title} there, then refresh the library`,
+                ),
         gone ? "success" : "info",
         7000,
       );
@@ -440,7 +516,14 @@ export const actions = {
   async uninstallEmulator(id: string, name: string) {
     try {
       await api.uninstallEmulator(id);
-      notify(`${name} kaldırıldı · kayıtları yedeklendi ve Geri Dönüşüm Kutusu'nda`, "success", 7000);
+      notify(
+        L(
+          `${name} kaldırıldı · kayıtları yedeklendi ve Geri Dönüşüm Kutusu'nda`,
+          `${name} uninstalled · its saves were backed up and it's in the Recycle Bin`,
+        ),
+        "success",
+        7000,
+      );
     } catch (e) {
       notify(errorText(e), "error", 7000);
     }
@@ -478,13 +561,13 @@ export const actions = {
       .filter(([, available]) => available)
       .map(([id]) => id);
     for (const id of pending) await actions.updateEmulator(id);
-    if (pending.length) notify("Emülatörler güncellendi", "success");
+    if (pending.length) notify(L("Emülatörler güncellendi", "Emulators updated"), "success");
   },
 
   async raLogin(username: string, password: string): Promise<boolean> {
     try {
       const user = await api.raLogin(username, password);
-      notify(`RetroAchievements: ${user.username} olarak bağlandın`, "success");
+      notify(L(`RetroAchievements: ${user.username} olarak bağlandın`, `RetroAchievements: signed in as ${user.username}`), "success");
       await refreshOverview();
       return true;
     } catch (e) {
@@ -517,7 +600,12 @@ export const actions = {
     try {
       const report = await api.backupNow();
       notify(
-        report.files ? `${report.files} dosya yedeklendi (${formatBytes(report.bytes)})` : "Yedek güncel",
+        report.files
+          ? L(
+              `${report.files} dosya yedeklendi (${formatBytes(report.bytes)})`,
+              `Backed up ${report.files} ${report.files === 1 ? "file" : "files"} (${formatBytes(report.bytes)})`,
+            )
+          : L("Yedek güncel", "Backup is up to date"),
         "success",
       );
     } catch (e) {
@@ -529,7 +617,12 @@ export const actions = {
   async restoreBackup() {
     try {
       const report = await api.restoreBackup();
-      notify(report.files ? `${report.files} kayıt geri yüklendi` : "Geri yüklenecek daha yeni kayıt yok", "success");
+      notify(
+        report.files
+          ? L(`${report.files} kayıt geri yüklendi`, `Restored ${report.files} ${report.files === 1 ? "save" : "saves"}`)
+          : L("Geri yüklenecek daha yeni kayıt yok", "No newer saves to restore"),
+        "success",
+      );
     } catch (e) {
       notify(errorText(e), "error", 6000);
     }
@@ -551,7 +644,7 @@ export const actions = {
   async setBackupSync(enabled: boolean) {
     await api.setBackupSync(enabled);
     await refreshOverview();
-    if (enabled) notify("Her oyundan önce buluttaki daha yeni kayıtlar alınacak", "success");
+    if (enabled) notify(L("Her oyundan önce buluttaki daha yeni kayıtlar alınacak", "Newer cloud saves will be pulled before every game"), "success");
   },
 
   async setPower(power: PowerSetting) {
@@ -562,7 +655,7 @@ export const actions = {
   async setAutostart(enabled: boolean) {
     try {
       await api.setAutostart(enabled);
-      if (enabled) notify("Lumen artık Windows ile birlikte açılacak", "success");
+      if (enabled) notify(L("Lumen artık Windows ile birlikte açılacak", "Lumen will now start with Windows"), "success");
     } catch (e) {
       notify(errorText(e), "error");
     }
@@ -611,7 +704,10 @@ export const actions = {
   async setSteamKey(key: string): Promise<boolean> {
     try {
       const count = await api.setSteamKey(key);
-      notify(key.trim() ? `Steam bağlandı · ${count} oyun` : "Steam bağlantısı kaldırıldı", "success");
+      notify(
+        key.trim()
+          ? L(`Steam bağlandı · ${count} oyun`, `Steam connected · ${count} ${count === 1 ? "game" : "games"}`)
+          : L("Steam bağlantısı kaldırıldı", "Steam disconnected"), "success");
       await actions.rescan(true);
       await refreshOverview();
       return true;
@@ -624,7 +720,10 @@ export const actions = {
   async setSgdbKey(key: string): Promise<boolean> {
     try {
       await api.setSgdbKey(key);
-      notify(key.trim() ? "SteamGridDB bağlandı · eksik kapaklar indiriliyor" : "SteamGridDB bağlantısı kaldırıldı", "success");
+      notify(
+        key.trim()
+          ? L("SteamGridDB bağlandı · eksik kapaklar indiriliyor", "SteamGridDB connected · downloading missing covers")
+          : L("SteamGridDB bağlantısı kaldırıldı", "SteamGridDB disconnected"), "success");
       await refreshOverview();
       await actions.rescan(true);
       return true;
@@ -644,7 +743,7 @@ export const actions = {
     try {
       await api.kidsStart(pin, collection, dailyMinutes);
       await refreshOverview();
-      notify("Çocuk modu açık", "success");
+      notify(L("Çocuk modu açık", "Kids mode on"), "success");
       return true;
     } catch (e) {
       notify(errorText(e), "error");
@@ -656,7 +755,7 @@ export const actions = {
     try {
       await api.kidsStop(pin);
       await refreshOverview();
-      notify("Çocuk modu kapandı", "success");
+      notify(L("Çocuk modu kapandı", "Kids mode off"), "success");
       return true;
     } catch (e) {
       sfx.error();
@@ -669,10 +768,17 @@ export const actions = {
   async reportProblem() {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
-    const name = `Lumen sorun raporu ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}.${pad(now.getMinutes())}`;
+    const name = `${L("Lumen sorun raporu", "Lumen problem report")} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}.${pad(now.getMinutes())}`;
     try {
       await api.exportDiagnostics(name);
-      notify(`Masaüstüne kaydedildi: ${name}.zip · bu dosyayı geliştiriciye gönder`, "success", 10000);
+      notify(
+        L(
+          `Masaüstüne kaydedildi: ${name}.zip · bu dosyayı geliştiriciye gönder`,
+          `Saved to the desktop: ${name}.zip · send this file to the developer`,
+        ),
+        "success",
+        10000,
+      );
     } catch (e) {
       notify(errorText(e), "error");
     }
