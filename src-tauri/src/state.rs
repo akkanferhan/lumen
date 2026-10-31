@@ -82,6 +82,8 @@ pub struct RunningGame {
     /// The process is frozen by Lumen (quick menu on an emulator that can't
     /// pause on focus loss); must be thawed before resuming or closing.
     pub suspended: bool,
+    /// Lumen's extra shortcuts this game supports (rewind, discs…).
+    pub controls: crate::controls::Controls,
 }
 
 pub type Running = Arc<Mutex<Option<RunningGame>>>;

@@ -19,6 +19,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  GameControls,
   AchievementProgress,
   InstallProgress,
   Overview,
@@ -60,6 +61,7 @@ export interface Api {
   resumeGame(): Promise<void>;
   /** Slots of the running game; null when its emulator has none. */
   stateSlots(): Promise<StateSlot[] | null>;
+  gameControls(): Promise<GameControls | null>;
   saveState(slot: number): Promise<StateSlot[]>;
   loadState(slot: number): Promise<void>;
   stopGame(): Promise<void>;
@@ -153,6 +155,7 @@ const tauriApi: Api = {
   importGames: (items, mode) => invoke("import_games", { items, mode }),
   resumeGame: () => invoke("resume_game"),
   stateSlots: () => invoke("state_slots"),
+  gameControls: () => invoke("game_controls"),
   saveState: (slot) => invoke("save_state", { slot }),
   loadState: (slot) => invoke("load_state", { slot }),
   stopGame: () => invoke("stop_game"),

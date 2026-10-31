@@ -6,6 +6,7 @@ mod backup;
 mod bios_check;
 mod commands;
 mod config;
+mod controls;
 mod crash;
 mod device;
 mod filters;
@@ -114,6 +115,7 @@ pub fn run() {
             commands::import_games,
             commands::auto_fix,
             commands::state_slots,
+            commands::game_controls,
             commands::game_achievements,
             commands::save_state,
             commands::load_state,

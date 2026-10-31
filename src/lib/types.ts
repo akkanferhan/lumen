@@ -233,6 +233,12 @@ export interface AchievementProgress {
 }
 
 /** A save-state slot of the running game (RetroArch systems). */
+/** Lumen's extra shortcuts for the running game. */
+export interface GameControls {
+  rewind: boolean;
+  fastForward: boolean;
+}
+
 export interface StateSlot {
   slot: number;
   /** Unix seconds; null when the slot is empty. */

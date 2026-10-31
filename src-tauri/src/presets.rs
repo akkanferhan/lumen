@@ -37,7 +37,13 @@ pub fn apply(emu: &Emulator, exe_dir: &Path, tier: Tier) -> anyhow::Result<()> {
 }
 
 /// Extra arguments placed before the emulator's own launch arguments.
-pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier, fresh: bool) -> Vec<String> {
+pub fn launch_args(
+    emu: &Emulator,
+    exe_dir: &Path,
+    tier: Tier,
+    fresh: bool,
+    system_id: &str,
+) -> Vec<String> {
     let high = tier == Tier::High;
     match emu.id.as_str() {
         // Our settings live in their own file layered over retroarch.cfg, so
@@ -49,6 +55,9 @@ pub fn launch_args(emu: &Emulator, exe_dir: &Path, tier: Tier, fresh: bool) -> V
             ];
             if fresh {
                 layers.push(exe_dir.join(RETROARCH_FRESH));
+            }
+            if crate::controls::REWIND_SYSTEMS.contains(&system_id) {
+                layers.push(exe_dir.join(RETROARCH_REWIND));
             }
             let layers: Vec<String> = layers
                 .iter()
@@ -395,6 +404,8 @@ fn azahar(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
 const RETROARCH_OVERRIDES: &str = "lumen.cfg";
 /// Layered on top for "start over": skips loading the auto save state.
 const RETROARCH_FRESH: &str = "lumen-fresh.cfg";
+/// Layered on top for systems light enough to rewind (see `controls`).
+const RETROARCH_REWIND: &str = "lumen-rewind.cfg";
 
 fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
     let on = |v: bool| if v { "true" } else { "false" }.to_string();
@@ -440,6 +451,26 @@ fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("pause_nonactive", on(true)),
             ("menu_driver", "ozone".into()),
             ("config_save_on_exit", on(false)),
+            // Select + LT / RT (read by Lumen, see `controls`): rewind is
+            // switched on per system by its own layer; fast-forward runs 3×.
+            ("rewind_enable", on(false)),
+            ("fastforward_ratio", "3.0".into()),
+        ]
+        .into_iter()
+        .chain(
+            crate::controls::RETROARCH_KEYS
+                .iter()
+                .map(|(k, v)| (*k, v.to_string())),
+        )
+        .collect::<Vec<_>>(),
+    )?;
+    set_cfg(
+        &exe_dir.join(RETROARCH_REWIND),
+        &[
+            ("rewind_enable", on(true)),
+            ("rewind_granularity", "1".into()),
+            // 64 MB: about a minute of an 8/16-bit game.
+            ("rewind_buffer_size", (64u64 << 20).to_string()),
         ],
     )?;
     set_cfg(
@@ -491,9 +522,18 @@ fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
 }
 
 fn duckstation(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
+    let hotkeys = crate::controls::DUCKSTATION_KEYS
+        .iter()
+        .map(|(k, v)| ("Hotkeys", *k, v.to_string()));
     set_ini(
         &exe_dir.join("settings.ini"),
         &[
+            // Select + LT rewinds (read by Lumen, see `controls`): a state
+            // every half second, twenty seconds back. Select + RT runs 3×.
+            ("Main", "RewindEnable", "true".into()),
+            ("Main", "RewindFrequency", "0.5".into()),
+            ("Main", "RewindSaveSlots", "40".into()),
+            ("Main", "FastForwardSpeed", "3".into()),
             ("Main", "StartFullscreen", "true".into()),
             ("Main", "HideCursorInFullscreen", "true".into()),
             ("Main", "ConfirmPowerOff", "false".into()),
@@ -520,7 +560,10 @@ fn duckstation(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             ("Display", "VSync", "true".into()),
             ("Display", "OptimalFramePacing", "true".into()),
             ("BIOS", "PatchFastBoot", "true".into()),
-        ],
+        ]
+        .into_iter()
+        .chain(hotkeys)
+        .collect::<Vec<_>>(),
     )
 }
 
@@ -654,17 +697,47 @@ mod tests {
     #[test]
     fn xenia_settings_go_on_the_command_line() {
         let xenia = crate::manifest::emulator("xenia").unwrap();
-        let standard = launch_args(xenia, Path::new("."), Tier::Standard, false);
-        let high = launch_args(xenia, Path::new("."), Tier::High, false);
+        let standard = launch_args(xenia, Path::new("."), Tier::Standard, false, "x360");
+        let high = launch_args(xenia, Path::new("."), Tier::High, false, "x360");
         assert!(standard.contains(&"--draw_resolution_scale_x=1".to_string()));
         assert!(high.contains(&"--draw_resolution_scale_x=2".to_string()));
         assert!(standard.iter().all(|a| !a.ends_with('=')), "no empty cvars");
     }
 
     #[test]
+    fn retroarch_rewinds_light_systems_only() {
+        let retroarch = crate::manifest::emulator("retroarch").unwrap();
+        let layers =
+            |system| launch_args(retroarch, Path::new("."), Tier::High, false, system)[1].clone();
+        assert!(layers("snes").contains(RETROARCH_REWIND));
+        assert!(!layers("n64").contains(RETROARCH_REWIND));
+    }
+
+    #[test]
+    fn hotkeys_are_bound_in_retroarch_and_duckstation() {
+        let dir = std::env::temp_dir().join(format!("lumen-hotkeys-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        retroarch(&dir, true).unwrap();
+        duckstation(&dir, true).unwrap();
+        let cfg = fs::read_to_string(dir.join(RETROARCH_OVERRIDES)).unwrap();
+        assert!(cfg.contains("input_rewind = \"f5\""), "{cfg}");
+        assert!(cfg.contains("input_hold_fast_forward = \"f6\""));
+        assert!(fs::read_to_string(dir.join(RETROARCH_REWIND))
+            .unwrap()
+            .contains("rewind_enable = \"true\""));
+        let ini = fs::read_to_string(dir.join("settings.ini")).unwrap();
+        assert!(
+            ini.contains("[Hotkeys]") && ini.contains("Rewind = Keyboard/F5"),
+            "{ini}"
+        );
+        assert!(ini.contains("RewindEnable = true"));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
     fn sharpemu_runs_borderless_with_a_writable_app0() {
         let sharpemu = crate::manifest::emulator("sharpemu").unwrap();
-        let args = launch_args(sharpemu, Path::new("."), Tier::Standard, false);
+        let args = launch_args(sharpemu, Path::new("."), Tier::Standard, false, "ps5");
         assert!(args.contains(&"--window-mode=borderless".to_string()));
         assert!(args.contains(&"--overlay=off".to_string()));
         assert_eq!(launch_env(sharpemu), &[("SHARPEMU_WRITABLE_APP0", "1")]);
