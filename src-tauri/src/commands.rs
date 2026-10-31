@@ -1230,6 +1230,17 @@ pub async fn take_screenshot(app: AppHandle) -> CmdResult<()> {
     Ok(())
 }
 
+/// A game's play sessions, newest first (its sheet's "Geçmiş").
+#[tauri::command]
+pub fn game_sessions(state: State<'_, AppState>, game_id: String) -> Vec<crate::stats::Session> {
+    let mut sessions: Vec<_> = crate::stats::load(&state.dirs.data)
+        .into_iter()
+        .filter(|s| s.game_id == game_id)
+        .collect();
+    sessions.sort_by_key(|s| std::cmp::Reverse(s.start));
+    sessions
+}
+
 #[tauri::command]
 pub fn list_screenshots(
     state: State<'_, AppState>,

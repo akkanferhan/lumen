@@ -35,7 +35,7 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
       shortcuts: [
         { keys: ["lb", "rb"], join: "/", label: "Sekme değiştir" },
         { keys: ["lt", "rt"], join: "/", label: "Harf harf atla (A, B, C…)" },
-        { keys: ["a"], label: "Oyunu aç: oyna, devam et, koleksiyona ekle, güç modu (⚡)" },
+        { keys: ["a"], label: "Oyunu aç: oyna, devam et, koleksiyona ekle, güç modu (⚡), geçmiş (🕘)" },
         { keys: ["up"], label: <>En üstteki <b>Devam et</b> kartı: kaldığın oyuna tek tuşla dön</> },
         { keys: ["y"], label: "Favorilere ekle" },
         { keys: ["x"], label: "Ara" },
@@ -123,6 +123,7 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
         { keys: ["a"], label: <><b>Devam et</b> kartında: kaldığın yerden oyna</> },
         { keys: ["select"], label: "Ne oynasam? Rastgele bir oyun aç" },
         { keys: [], label: <>Oyun sayfasında <b>⚡</b> ile o oyunun güç modunu seç, <b>▣</b> ile ekran görüntülerine bak</> },
+        { keys: [], label: <>Oyun sayfasında <b>🕘 Geçmiş</b>: her oturum, süresi ve o oturumda aldığın görüntüler</> },
         { keys: [], label: "Çok diskli oyunlar (Disc 1, Disc 2…) artık tek oyun olarak görünür" },
         { keys: [], label: "Steam, Xbox, Epic, PlayStation ve Nintendo sekmeleri en başta" },
       ],

@@ -20,6 +20,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  Session,
   M2Action,
   CloudFolder,
   Shot,
@@ -79,6 +80,7 @@ export interface Api {
   /** Back to the game, then a screenshot of it. */
   takeScreenshot(): Promise<void>;
   listScreenshots(gameId: string): Promise<Shot[]>;
+  gameSessions(gameId: string): Promise<Session[]>;
   deleteScreenshot(path: string): Promise<void>;
   saveState(slot: number): Promise<StateSlot[]>;
   loadState(slot: number): Promise<void>;
@@ -191,6 +193,7 @@ const tauriApi: Api = {
   switchDisc: (next) => invoke("switch_disc", { next }),
   takeScreenshot: () => invoke("take_screenshot"),
   listScreenshots: (gameId) => invoke("list_screenshots", { gameId }),
+  gameSessions: (gameId) => invoke("game_sessions", { gameId }),
   deleteScreenshot: (path) => invoke("delete_screenshot", { path }),
   saveState: (slot) => invoke("save_state", { slot }),
   loadState: (slot) => invoke("load_state", { slot }),

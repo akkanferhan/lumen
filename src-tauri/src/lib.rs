@@ -142,6 +142,7 @@ pub fn run() {
             commands::set_game_power,
             commands::take_screenshot,
             commands::list_screenshots,
+            commands::game_sessions,
             commands::delete_screenshot,
             commands::game_achievements,
             commands::save_state,

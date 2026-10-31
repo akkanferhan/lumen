@@ -277,6 +277,15 @@ export interface GameControls {
   discs: boolean;
 }
 
+/** One play session of a game. */
+export interface Session {
+  gameId: string;
+  systemId: string;
+  /** Unix seconds. */
+  start: number;
+  seconds: number;
+}
+
 /** A screenshot of a game, on disk. */
 export interface Shot {
   path: string;
