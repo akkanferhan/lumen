@@ -2276,6 +2276,27 @@ button {
   opacity: 1;
 }
 
+/* ---------- Game history (from the game sheet) ---------- */
+
+.history-shots {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.history-shots img {
+  height: 2.6rem;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.35rem;
+}
+
+.history-shots span {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
 /* ---------- Screenshot gallery (from the game sheet) ---------- */
 
 .shot-gallery {

@@ -15,8 +15,19 @@ export const shotUrl = (path: string) => (/^https?:/.test(path) ? path : convert
  * A game's screenshots, one at a time, full size: left/right to browse,
  * X twice to delete one.
  */
-export function ShotGallery({ shots, onChange, onClose }: { shots: Shot[]; onChange: () => void; onClose: () => void }) {
-  const [index, setIndex] = useState(0);
+export function ShotGallery({
+  shots,
+  start,
+  onChange,
+  onClose,
+}: {
+  shots: Shot[];
+  /** Opens on this screenshot (from the history). */
+  start?: Shot;
+  onChange: () => void;
+  onClose: () => void;
+}) {
+  const [index, setIndex] = useState(() => Math.max(0, start ? shots.findIndex((s) => s.path === start.path) : 0));
   const [armed, setArmed] = useState(false);
   const shot = shots[Math.min(index, shots.length - 1)];
   useEffect(() => setArmed(false), [index]);

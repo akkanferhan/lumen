@@ -331,6 +331,16 @@ export const mockApi: Api = {
         ]
       : [],
   deleteScreenshot: async () => {},
+  gameSessions: async (gameId) => {
+    const now = Math.floor(Date.now() / 1000);
+    return gameId.startsWith("mock-") && !/steam|epic|xbox/.test(gameId)
+      ? [
+          { gameId, systemId: "gba", start: now - 900, seconds: 840 },
+          { gameId, systemId: "gba", start: now - 90_500, seconds: 2_400 },
+          { gameId, systemId: "gba", start: now - 3 * 86_400, seconds: 1_250 },
+        ]
+      : [];
+  },
   saveState: async (slot) => {
     await sleep(300);
     mockSlots = mockSlots.map((s) => (s.slot === slot ? { ...s, savedAt: Math.floor(Date.now() / 1000) } : s));
