@@ -30,6 +30,7 @@ export function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [steamOpen, setSteamOpen] = useState(false);
   const [artOpen, setArtOpen] = useState(false);
   const [raLoginOpen, setRaLoginOpen] = useState(false);
@@ -47,6 +48,14 @@ export function App() {
     if (ready && !romRoot) setOnboarding((o) => o ?? "welcome");
   }, [ready, romRoot]);
 
+  // Once per release with new features: new installs see them in the setup
+  // tour, everyone else gets "Yenilikler" on the next start.
+  useEffect(() => {
+    if (!ready) return;
+    if (!romRoot || onboarding) markWhatsNewSeen();
+    else if (!whatsNewSeen()) setWhatsNewOpen(true);
+  }, [ready, romRoot, onboarding]);
+
   if (!ready) return <Splash />;
 
   return (
@@ -63,12 +72,22 @@ export function App() {
             onMenu={() => setMenuOpen(true)}
             onImport={() => setImportOpen(true)}
             onStore={() => setStoreOpen(true)}
-            covered={!!openGameId || menuOpen || storeOpen || importOpen || statsOpen || tourOpen || steamOpen || artOpen || raLoginOpen}
+            covered={!!openGameId || menuOpen || storeOpen || importOpen || statsOpen || tourOpen || whatsNewOpen || steamOpen || artOpen || raLoginOpen}
           />
           {storeOpen && <HomebrewStore onClose={() => setStoreOpen(false)} />}
           {importOpen && <ImportGames onClose={() => setImportOpen(false)} />}
           {statsOpen && <StatsScreen onClose={() => setStatsOpen(false)} />}
           {tourOpen && <Tour layer={Layer.sheet} onDone={() => setTourOpen(false)} />}
+          {whatsNewOpen && !tourOpen && (
+            <Tour
+              layer={Layer.sheet}
+              whatsNew
+              onDone={() => {
+                markWhatsNewSeen();
+                setWhatsNewOpen(false);
+              }}
+            />
+          )}
           {steamOpen && <SteamLink onClose={() => setSteamOpen(false)} />}
           {artOpen && <ArtLink onClose={() => setArtOpen(false)} />}
           {raLoginOpen && <RaLogin onClose={() => setRaLoginOpen(false)} />}
@@ -147,4 +166,24 @@ function Splash() {
       </div>
     </div>
   );
+}
+
+/** Bump when a release brings features worth a "Yenilikler" screen. */
+const WHATS_NEW = "2026-10-31";
+const WHATS_NEW_KEY = "lumen.whatsNew";
+
+function whatsNewSeen(): boolean {
+  try {
+    return localStorage.getItem(WHATS_NEW_KEY) === WHATS_NEW;
+  } catch {
+    return true; // no storage: don't nag every start
+  }
+}
+
+function markWhatsNewSeen() {
+  try {
+    localStorage.setItem(WHATS_NEW_KEY, WHATS_NEW);
+  } catch {
+    // Nothing to remember it in; it shows again next time.
+  }
 }
