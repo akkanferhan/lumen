@@ -1,0 +1,19 @@
+src-tauri/src/windows.rs
+  s_e07464b85ba926::t_017a15a4144260 299
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0237cfbb78aafd48f3d1e1f8fbeba7e04941a5f4",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
