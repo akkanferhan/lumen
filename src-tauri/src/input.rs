@@ -1,6 +1,7 @@
 //! Background controller listener. While an emulator owns the screen the
 //! webview cannot see the gamepad, so the in-game combo is detected here:
 //! tap Select + Start for Lumen's quick menu, hold it to save and quit.
+//! Holding Select + LT rewinds and Select + RT fast-forwards (see `controls`).
 
 use crate::state::Running;
 use gilrs::{Button, Gilrs};
@@ -17,6 +18,9 @@ pub fn spawn(app: AppHandle, running: Running) {
         let Ok(mut gilrs) = Gilrs::new() else { return };
         // When the combo went down, and whether the hold already fired.
         let mut held: Option<(Instant, bool)> = None;
+        // Hotkeys Lumen is holding down in the game.
+        let mut rewinding = false;
+        let mut fast = false;
 
         loop {
             while gilrs.next_event().is_some() {}
@@ -51,6 +55,36 @@ pub fn spawn(app: AppHandle, running: Running) {
                 }
                 (false, Some(_)) => held = None,
                 _ => {}
+            }
+
+            let (want_rewind, want_fast) = {
+                let pads: Vec<_> = gilrs.gamepads().map(|(_, pad)| pad).collect();
+                let with = |button| {
+                    pads.iter()
+                        .any(|p| p.is_pressed(Button::Select) && p.is_pressed(button))
+                };
+                // Only into the game's own window: a key in Lumen (F5) would
+                // reload its page.
+                let game = running
+                    .lock()
+                    .unwrap()
+                    .as_ref()
+                    .and_then(|g| g.pid.filter(|_| !g.suspended).map(|pid| (pid, g.controls)));
+                match game {
+                    Some((pid, controls)) if crate::windows::is_foreground(pid) => (
+                        controls.rewind && with(Button::LeftTrigger2),
+                        controls.fast_forward && with(Button::RightTrigger2),
+                    ),
+                    _ => (false, false),
+                }
+            };
+            if want_rewind != rewinding {
+                crate::controls::press(crate::controls::Hotkey::Rewind, want_rewind);
+                rewinding = want_rewind;
+            }
+            if want_fast != fast {
+                crate::controls::press(crate::controls::Hotkey::FastForward, want_fast);
+                fast = want_fast;
             }
 
             std::thread::sleep(Duration::from_millis(16));

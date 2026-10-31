@@ -222,6 +222,29 @@ pub fn set_process_suspended(_pid: u32, _suspend: bool) -> bool {
     false
 }
 
+/// Presses or releases a key in the foreground window (the game) by scan
+/// code, which both window messages and raw-input readers see.
+#[cfg(windows)]
+pub fn send_key(scan: u16, down: bool) {
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE,
+    };
+    let input = INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: 0,
+                wScan: scan,
+                dwFlags: KEYEVENTF_SCANCODE | if down { 0 } else { KEYEVENTF_KEYUP },
+                time: 0,
+                dwExtraInfo: 0,
+            },
+        },
+    };
+    // SAFETY: one fully initialised INPUT with its own size.
+    unsafe { SendInput(1, &input, std::mem::size_of::<INPUT>() as i32) };
+}
+
 /// Turns a window into one that never takes focus, even when tapped, and
 /// stays out of Alt+Tab (the in-game menu button).
 #[cfg(windows)]

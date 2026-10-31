@@ -962,6 +962,12 @@ pub async fn game_achievements(
         .map_err(err)
 }
 
+/// Lumen's extra shortcuts the running game supports (rewind…).
+#[tauri::command]
+pub fn game_controls(state: State<'_, AppState>) -> Option<crate::controls::Controls> {
+    state.running.lock().unwrap().as_ref().map(|g| g.controls)
+}
+
 /// Save-state slots of the running game; None when its emulator has none.
 #[tauri::command]
 pub fn state_slots(state: State<'_, AppState>) -> Option<Vec<crate::states::Slot>> {

@@ -8,7 +8,7 @@ import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, notify, useStore } from "../lib/store";
 import { formatLastPlayed } from "../lib/format";
-import type { StateSlot } from "../lib/types";
+import type { GameControls, StateSlot } from "../lib/types";
 
 /** Today's saves by time (slots are often minutes apart), older ones by day. */
 function savedWhen(unixSeconds: number): string {
@@ -33,6 +33,12 @@ export function Running({ gameId }: { gameId: string }) {
   const [slot, setSlot] = useState(0);
   const [slotBusy, setSlotBusy] = useState(false);
   const system = game && systemOf(game.systemId);
+  // Rewind / fast-forward hints, for emulators Lumen can drive.
+  const [controls, setControls] = useState<GameControls | null>(null);
+
+  useEffect(() => {
+    api.gameControls().then(setControls).catch(() => setControls(null));
+  }, [gameId]);
 
   useEffect(() => {
     if (!quickMenu) return;
@@ -199,6 +205,26 @@ export function Running({ gameId }: { gameId: string }) {
               </button>
             </div>
           </>
+        )}
+        {controls && (controls.rewind || controls.fastForward) && (
+          <div className="running-shortcuts">
+            {controls.rewind && (
+              <span>
+                <span className="combo">
+                  <Glyph action="select" /> + <Glyph action="lt" />
+                </span>{" "}
+                basılı tut: geri sar
+              </span>
+            )}
+            {controls.fastForward && (
+              <span>
+                <span className="combo">
+                  <Glyph action="select" /> + <Glyph action="rt" />
+                </span>{" "}
+                basılı tut: 3× hızlı
+              </span>
+            )}
+          </div>
         )}
       </div>
       <HintBar

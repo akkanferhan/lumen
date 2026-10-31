@@ -943,6 +943,17 @@ button {
   margin: 0 0 2rem;
 }
 
+/* Rewind / fast-forward shortcuts under the in-game screen. */
+.running-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 1.6rem;
+  margin-top: 1.8rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
 .running.quick {
   background: var(--scrim-strong);
 }

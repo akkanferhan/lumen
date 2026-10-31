@@ -157,19 +157,20 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         }
         None => Vec::new(),
     };
-    let args: Vec<String> = crate::presets::launch_args(emu, exe_dir, state.tier(), fresh)
-        .into_iter()
-        .chain(log_args)
-        .chain(filter_args)
-        .chain(resume_args)
-        .chain(emu.args.iter().flat_map(|a| {
-            if a == "{rom}" {
-                rom_args.clone()
-            } else {
-                vec![a.replace("{rom}", &rom).replace("{core}", &core)]
-            }
-        }))
-        .collect();
+    let args: Vec<String> =
+        crate::presets::launch_args(emu, exe_dir, state.tier(), fresh, &system.id)
+            .into_iter()
+            .chain(log_args)
+            .chain(filter_args)
+            .chain(resume_args)
+            .chain(emu.args.iter().flat_map(|a| {
+                if a == "{rom}" {
+                    rom_args.clone()
+                } else {
+                    vec![a.replace("{rom}", &rom).replace("{core}", &core)]
+                }
+            }))
+            .collect();
 
     let mut child = tokio::process::Command::new(&exe)
         .args(&args)
@@ -196,6 +197,7 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
         pid: child.id(),
         emulator: emu.id.clone(),
         suspended: false,
+        controls: crate::controls::for_game(&emu.id, &system.id),
     });
     let session_start = SystemTime::now();
 
