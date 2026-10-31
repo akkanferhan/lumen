@@ -10,6 +10,10 @@ pub const LABEL: &str = "overlay";
 /// Logical size of the button window and its distance from the screen edges.
 #[cfg(windows)]
 const SIZE: f64 = 64.0;
+/// Width with the battery and clock beside the button (the page shows them
+/// when it is this wide, see `.overlay-status`).
+#[cfg(windows)]
+const WIDE: f64 = 200.0;
 #[cfg(windows)]
 const MARGIN: f64 = 16.0;
 
@@ -45,12 +49,11 @@ pub fn create(app: &AppHandle) {
 }
 
 pub fn show(app: &AppHandle) {
-    let enabled = app
-        .state::<crate::state::AppState>()
-        .settings
-        .lock()
-        .unwrap()
-        .overlay_button;
+    let (enabled, status) = {
+        let state = app.state::<crate::state::AppState>();
+        let settings = state.settings.lock().unwrap();
+        (settings.overlay_button, settings.overlay_status)
+    };
     #[cfg(windows)]
     if let (true, Some(window)) = (enabled, app.get_webview_window(LABEL)) {
         // Top-right corner of the screen the game is on (the built-in one).
@@ -59,13 +62,14 @@ pub fn show(app: &AppHandle) {
         };
         let scale = monitor.scale_factor();
         let size = (SIZE * scale).round() as i32;
+        let width = ((if status { WIDE } else { SIZE }) * scale).round() as i32;
         let margin = (MARGIN * scale).round() as i32;
-        let x = monitor.position().x + monitor.size().width as i32 - size - margin;
+        let x = monitor.position().x + monitor.size().width as i32 - width - margin;
         let y = monitor.position().y + margin;
-        crate::windows::show_topmost_no_activate(hwnd.0 as isize, x, y, size, size);
+        crate::windows::show_topmost_no_activate(hwnd.0 as isize, x, y, width, size);
     }
     #[cfg(not(windows))]
-    let _ = enabled;
+    let _ = (enabled, status);
 }
 
 pub fn hide(app: &AppHandle) {

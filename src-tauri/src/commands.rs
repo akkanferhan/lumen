@@ -661,6 +661,12 @@ pub fn set_quick_combo(state: State<'_, AppState>, enabled: bool) -> CmdResult<(
 }
 
 #[tauri::command]
+pub fn set_overlay_status(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().overlay_status = enabled;
+    state.save_settings().map_err(err)
+}
+
+#[tauri::command]
 pub fn set_overlay_button(app: AppHandle, enabled: bool) -> CmdResult<()> {
     let state = app.state::<AppState>();
     state.settings.lock().unwrap().overlay_button = enabled;

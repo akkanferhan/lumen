@@ -5,7 +5,7 @@ interface BatteryManager extends EventTarget {
   charging: boolean;
 }
 
-function useClock() {
+export function useClock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 15_000);
@@ -14,7 +14,7 @@ function useClock() {
   return now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function useBattery() {
+export function useBattery() {
   const [battery, setBattery] = useState<{ level: number; charging: boolean } | null>(null);
   useEffect(() => {
     const nav = navigator as Navigator & { getBattery?: () => Promise<BatteryManager> };

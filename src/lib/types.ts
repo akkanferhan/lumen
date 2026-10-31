@@ -59,6 +59,8 @@ export interface Settings {
   quickCombo: boolean;
   /** Touch button over the game opens the quick menu. */
   overlayButton: boolean;
+  /** Battery and clock beside the in-game menu button. */
+  overlayStatus: boolean;
 }
 
 export interface RaUser {

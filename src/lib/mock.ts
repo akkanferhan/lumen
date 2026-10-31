@@ -95,6 +95,7 @@ let steamLinked = false;
 let sgdbLinked = false;
 let quickCombo = true;
 let overlayButton = true;
+let overlayStatus = true;
 const homebrewInstalled = new Set<string>();
 let mockSlots: StateSlot[] = [1, 2, 3, 4].map((slot) => ({
   slot,
@@ -163,7 +164,7 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, quickCombo, overlayButton },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, quickCombo, overlayButton, overlayStatus },
     collections,
     steamAccount: true,
     steamLinked,
@@ -426,6 +427,9 @@ export const mockApi: Api = {
   },
   setOverlayButton: async (enabled) => {
     overlayButton = enabled;
+  },
+  setOverlayStatus: async (enabled) => {
+    overlayStatus = enabled;
   },
   setSteamKey: async (key) => {
     await sleep(500);

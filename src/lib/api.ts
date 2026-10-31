@@ -84,6 +84,7 @@ export interface Api {
   setSgdbKey(key: string): Promise<void>;
   setQuickCombo(enabled: boolean): Promise<void>;
   setOverlayButton(enabled: boolean): Promise<void>;
+  setOverlayStatus(enabled: boolean): Promise<void>;
   createCollection(name: string): Promise<Collection[]>;
   /** Local midnights come from the UI, which knows the time zone. */
   playStats(today: number, year: number, yearStart: number): Promise<PlayStats>;
@@ -183,6 +184,7 @@ const tauriApi: Api = {
   setSgdbKey: (key) => invoke("set_sgdb_key", { key }),
   setQuickCombo: (enabled) => invoke("set_quick_combo", { enabled }),
   setOverlayButton: (enabled) => invoke("set_overlay_button", { enabled }),
+  setOverlayStatus: (enabled) => invoke("set_overlay_status", { enabled }),
   createCollection: (name) => invoke("create_collection", { name }),
   playStats: (today, year, yearStart) => invoke("play_stats", { today, year, yearStart }),
   deleteCollection: (id) => invoke("delete_collection", { id }),

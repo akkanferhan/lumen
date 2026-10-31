@@ -2383,6 +2383,38 @@ html.overlay-window #root {
   touch-action: manipulation;
 }
 
+/* Battery and clock left of the button; only when Lumen made the window
+   wide for them (Menü → Oyun içi pil ve saat). */
+.overlay-status {
+  display: none;
+}
+
+@media (min-width: 120px) {
+  .overlay-status {
+    position: fixed;
+    top: 16px;
+    right: 66px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 0.8rem;
+    border-radius: 999px;
+    background: rgba(10, 12, 17, 0.55);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .overlay-status.low {
+    background: rgba(200, 40, 40, 0.8);
+    color: #fff;
+  }
+}
+
 .overlay-button:hover,
 .overlay-button:active {
   opacity: 1;
