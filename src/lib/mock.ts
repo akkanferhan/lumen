@@ -96,6 +96,7 @@ let sgdbLinked = false;
 let quickCombo = true;
 let overlayButton = true;
 let overlayStatus = true;
+let backButtons = true;
 let kids: { active: boolean; pinHash: string | null; collection: string | null; dailyMinutes: number | null } = {
   active: false,
   pinHash: null,
@@ -170,7 +171,7 @@ function games(): Game[] {
 function overview(): Overview {
   const list = games();
   return {
-    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, quickCombo, overlayButton, overlayStatus, kids: { ...kids, pinHash: kids.pinHash && "" } },
+    settings: { romRoot: store.romRoot, sounds: true, graphics, power, backup, raHardcore, theme, filter, quickCombo, overlayButton, overlayStatus, backButtons, kids: { ...kids, pinHash: kids.pinHash && "" } },
     collections,
     steamAccount: true,
     steamLinked,
@@ -443,6 +444,9 @@ export const mockApi: Api = {
   },
   setOverlayStatus: async (enabled) => {
     overlayStatus = enabled;
+  },
+  setBackButtons: async (enabled) => {
+    backButtons = enabled;
   },
   kidsStart: async (pin, collection, dailyMinutes) => {
     if (pin && !/^\d{4,}$/.test(pin)) throw "PIN en az 4 rakam olmalı";

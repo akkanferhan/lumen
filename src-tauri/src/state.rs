@@ -39,7 +39,15 @@ pub struct Settings {
     pub overlay_status: bool,
     /// Kids mode: one collection, no settings, a daily play limit.
     pub kids: crate::kids::Kids,
+    /// ROG Ally: the back buttons (M1/M2) open the in-game menu; the game
+    /// never sees them.
+    pub back_buttons: bool,
+    /// Bumped when the in-game menu shortcuts' defaults change (1: the
+    /// back buttons replace Select + Start on the Ally).
+    pub combo_version: u32,
 }
+
+const COMBO_VERSION: u32 = 1;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -52,10 +60,13 @@ impl Default for Settings {
             ra_hardcore: false,
             theme: "lumen".into(),
             filter: crate::filters::FilterSetting::Original,
-            quick_combo: true,
+            // The Ally has back buttons for it instead (see `back_buttons`).
+            quick_combo: crate::device::device().model.is_none(),
             overlay_button: true,
             overlay_status: true,
             kids: crate::kids::Kids::default(),
+            back_buttons: true,
+            combo_version: COMBO_VERSION,
         }
     }
 }
@@ -152,8 +163,21 @@ impl AppState {
         fs::create_dir_all(&dirs.emulators)?;
         fs::create_dir_all(&dirs.downloads)?;
 
+        let mut settings: Settings =
+            read_json(&dirs.data.join("settings.json")).unwrap_or_default();
+        // Select + Start reaches the game too (Start pauses it); on the Ally
+        // the back buttons take over, once, for settings saved before them.
+        if settings.combo_version < COMBO_VERSION {
+            if crate::device::device().model.is_some() {
+                settings.quick_combo = false;
+                settings.back_buttons = true;
+            }
+            settings.combo_version = COMBO_VERSION;
+            let _ = write_json(&dirs.data.join("settings.json"), &settings);
+        }
+
         Ok(Self {
-            settings: Mutex::new(read_json(&dirs.data.join("settings.json")).unwrap_or_default()),
+            settings: Mutex::new(settings),
             library: Mutex::new(read_json(&dirs.data.join("library.json")).unwrap_or_default()),
             user: Mutex::new(read_json(&dirs.data.join("userdata.json")).unwrap_or_default()),
             running: Arc::new(Mutex::new(None)),

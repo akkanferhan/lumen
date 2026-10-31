@@ -20,12 +20,13 @@ function savedWhen(unixSeconds: number): string {
 
 /**
  * While a game runs Lumen sits behind the emulator showing this screen.
- * Tapping Select + Start in-game brings it to the front as the quick menu
+ * Tapping a back button (Ally) or Select + Start in game brings it to the front as the quick menu
  * (the emulator pauses on focus loss).
  */
 export function Running({ gameId }: { gameId: string }) {
   const game = useStore((s) => s.games.find((g) => g.id === gameId));
   const quickMenu = useStore((s) => s.quickMenu);
+  const backButtons = useStore((s) => !!s.overview?.device.model && !!s.overview?.settings.backButtons);
   const [stopping, setStopping] = useState(false);
   const [focus, setFocus] = useState(0);
   // Save-state slots (RetroArch systems); null hides the row.
@@ -194,11 +195,20 @@ export function Running({ gameId }: { gameId: string }) {
         ) : (
           <>
             <p>
-              Oyun içinde <span className="combo">
-                <Glyph action="select" /> + <Glyph action="start" />
-              </span>{" "}
-              menüyü açar, basılı tutmak kaydedip çıkar. Ekranın sağ üst köşesindeki ☰ düğmesine dokunmak da menüyü
-              açar ve oyuna hiçbir tuş göndermez.
+              {backButtons ? (
+                <>
+                  Oyun içinde <b>arka tuşa (M1/M2)</b> dokunmak menüyü açar, basılı tutmak kaydedip çıkar; oyuna hiçbir
+                  tuş gitmez.
+                </>
+              ) : (
+                <>
+                  Oyun içinde <span className="combo">
+                    <Glyph action="select" /> + <Glyph action="start" />
+                  </span>{" "}
+                  menüyü açar, basılı tutmak kaydedip çıkar.
+                </>
+              )}{" "}
+              Ekranın sağ üst köşesindeki ☰ düğmesine dokunmak da menüyü açar.
               {!isTauri && " (Tarayıcı önizlemesi: menü için Q + E'ye birlikte bas.)"}
             </p>
             <div className="quick-list">

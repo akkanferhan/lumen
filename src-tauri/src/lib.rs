@@ -64,7 +64,14 @@ pub fn run() {
             input::spawn(app.handle().clone(), running);
             sleep::watch(app.handle().clone());
             overlay::create(app.handle());
-            ally::force_gamepad_mode();
+            let back_buttons = app
+                .state::<state::AppState>()
+                .settings
+                .lock()
+                .unwrap()
+                .back_buttons;
+            ally::set_back_buttons(back_buttons);
+            ally::start_hook();
             Ok(())
         })
         // Armoury Crate may switch the Ally to desktop (keyboard/mouse) mode
@@ -97,6 +104,7 @@ pub fn run() {
             commands::set_quick_combo,
             commands::set_overlay_button,
             commands::set_overlay_status,
+            commands::set_back_buttons,
             commands::kids_start,
             commands::kids_stop,
             commands::played_since,
@@ -139,6 +147,12 @@ pub fn run() {
             commands::install_app_update,
             commands::set_autostart,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Lumen");
+        .build(tauri::generate_context!())
+        .expect("error while running Lumen")
+        .run(|_, event| {
+            // M1/M2 go back to ASUS's defaults when Lumen isn't there to read them.
+            if let tauri::RunEvent::Exit = event {
+                ally::restore_back_buttons();
+            }
+        });
 }

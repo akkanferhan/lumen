@@ -736,6 +736,14 @@ pub fn set_quick_combo(state: State<'_, AppState>, enabled: bool) -> CmdResult<(
     state.save_settings().map_err(err)
 }
 
+/// ROG Ally back buttons for the in-game menu (off: ASUS's own M1/M2).
+#[tauri::command]
+pub fn set_back_buttons(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().back_buttons = enabled;
+    crate::ally::set_back_buttons(enabled);
+    state.save_settings().map_err(err)
+}
+
 #[tauri::command]
 pub fn set_overlay_status(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
     state.settings.lock().unwrap().overlay_status = enabled;

@@ -278,10 +278,21 @@ export function Menu({
           },
         ]
       : []),
+    ...(overview?.device.model
+      ? [
+          {
+            id: "back-buttons",
+            title: "Arka tuşlarla menü (M1/M2)",
+            sub: "Oyunda arka tuşa dokun: menü, basılı tut: kaydet ve çık. Oyuna hiçbir tuş gitmez",
+            value: overview.settings.backButtons ? "Açık" : "Kapalı",
+            run: () => actions.setBackButtons(!overview.settings.backButtons),
+          },
+        ]
+      : []),
     {
       id: "combo",
       title: "Select + Start kısayolu",
-      sub: "Oyunda menüyü açar, basılı tutmak kaydedip çıkar. Bazı oyunlarda bu tuşlar oyuna da gider",
+      sub: "Oyunda menüyü açar, basılı tutmak kaydedip çıkar. Bu tuşlar oyuna da gider (Start oyunu duraklatabilir)",
       value: overview?.settings.quickCombo ? "Açık" : "Kapalı",
       run: () => actions.setQuickCombo(!overview?.settings.quickCombo),
     },
