@@ -1,0 +1,33 @@
+src-tauri/src/lib.rs
+  s_e07464b85ba926::t_4800f14ed16a62 12,110
+src-tauri/src/diagnostics.rs
+  s_e07464b85ba926::t_aa18c2b60cbd3a 1-110
+src-tauri/src/commands.rs
+  s_e07464b85ba926::t_4800f14ed16a62 739-765
+src/components/Tour.tsx
+  s_e07464b85ba926::t_27f0e2e66f655c 95,138
+src/lib/api.ts
+  s_e07464b85ba926::t_37e5874e853fba 100-101,210
+src/lib/mock.ts
+  s_e07464b85ba926::t_20975c49542913 455
+src/lib/store.ts
+  s_e07464b85ba926::t_bd2d7227b972e4 668-680
+src/screens/Menu.tsx
+  s_e07464b85ba926::t_8ca4020d68173b 362-367
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "43e15d2791c12a539c05123a2ecf7da7013fb407",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
