@@ -665,6 +665,19 @@ export const actions = {
     }
   },
 
+  /** Saves the problem report to the desktop and says where. */
+  async reportProblem() {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const name = `Lumen sorun raporu ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}.${pad(now.getMinutes())}`;
+    try {
+      await api.exportDiagnostics(name);
+      notify(`Masaüstüne kaydedildi: ${name}.zip · bu dosyayı geliştiriciye gönder`, "success", 10000);
+    } catch (e) {
+      notify(errorText(e), "error");
+    }
+  },
+
   async setM2Action(action: M2Action) {
     await api.setM2Action(action);
     await refreshOverview();

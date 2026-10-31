@@ -92,6 +92,7 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
         { keys: ["start"], label: <><b>RetroAchievements</b> ve <b>Kayıt yedekleme</b> (bulut klasörü, cihazlar arası senkron)</> },
         { keys: ["start"], label: <><b>Kapak görselleri</b>: kapağı olmayan oyunlara SteamGridDB'den kapak</> },
         { keys: ["start"], label: <><b>Çocuk modu</b>: PIN'li sade kütüphane ve günlük süre sınırı</> },
+        { keys: ["start"], label: <><b>Sorun bildir</b>: günlükler tek dosyada masaüstüne</> },
       ],
     },
   ];
@@ -134,6 +135,7 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
         { keys: ["start"], label: <><b>Kayıt yedekleme</b>: bulut klasörü seçimi ve cihazlar arası senkron</> },
         { keys: ["start"], label: <><b>Kapak görselleri</b>: kapağı olmayan oyunlara SteamGridDB'den kapak</> },
         { keys: ["start"], label: <><b>Çocuk modu</b>: PIN'li sade kütüphane ve günlük süre sınırı</> },
+        { keys: ["start"], label: <><b>Sorun bildir</b>: bir şey ters giderse günlükleri tek dosyada masaüstüne kaydeder</> },
         { keys: ["start"], label: <><b>Kısa tur</b>: tüm kısayollar bir arada</> },
       ],
     },

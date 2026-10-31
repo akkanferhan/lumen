@@ -97,6 +97,8 @@ export interface Api {
   setOverlayStatus(enabled: boolean): Promise<void>;
   setBackButtons(enabled: boolean): Promise<void>;
   setM2Action(action: M2Action): Promise<void>;
+  /** "Sorun bildir": writes the report zip to the desktop; returns its path. */
+  exportDiagnostics(name: string): Promise<string>;
   createCollection(name: string): Promise<Collection[]>;
   /** Local midnights come from the UI, which knows the time zone. */
   playStats(today: number, year: number, yearStart: number): Promise<PlayStats>;
@@ -205,6 +207,7 @@ const tauriApi: Api = {
   setOverlayStatus: (enabled) => invoke("set_overlay_status", { enabled }),
   setBackButtons: (enabled) => invoke("set_back_buttons", { enabled }),
   setM2Action: (action) => invoke("set_m2_action", { action }),
+  exportDiagnostics: (name) => invoke("export_diagnostics", { name }),
   createCollection: (name) => invoke("create_collection", { name }),
   playStats: (today, year, yearStart) => invoke("play_stats", { today, year, yearStart }),
   deleteCollection: (id) => invoke("delete_collection", { id }),

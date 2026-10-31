@@ -452,6 +452,7 @@ export const mockApi: Api = {
   setM2Action: async (action) => {
     m2Action = action;
   },
+  exportDiagnostics: async (name) => `C:\\Users\\Oyuncu\\Desktop\\${name}.zip`,
   kidsStart: async (pin, collection, dailyMinutes) => {
     if (pin && !/^\d{4,}$/.test(pin)) throw "PIN en az 4 rakam olmalı";
     kids = { active: true, pinHash: pin || kids.pinHash, collection, dailyMinutes };
