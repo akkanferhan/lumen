@@ -73,6 +73,12 @@ const GUIDE: { systems: string; how: string; result: string }[] = [
   },
 ];
 
+const INTRO = [
+  { title: "Oyun dosyası seç", sub: "Seçtiğin dosyalar oyun klasöründe doğru sistemin klasörüne taşınır" },
+  { title: "Klasör seç", sub: "Seçtiğin klasör ve alt klasörleri taranır" },
+  { title: "Nasıl döküm alınır?", sub: "Kartuş ve disklerini bilgisayara aktarma rehberi" },
+];
+
 type Phase = "intro" | "guide" | "scanning" | "review" | "importing" | "done";
 
 interface Row extends ImportCandidate {
@@ -96,26 +102,47 @@ export function ImportGames({ onClose }: { onClose: () => void }) {
 
   const chosen = useMemo(() => rows.filter((r) => r.pick), [rows]);
   const chosenBytes = chosen.reduce((sum, r) => sum + r.size, 0);
-  const listLength = phase === "guide" ? GUIDE.length : phase === "intro" ? 2 : rows.length;
+  const listLength = phase === "guide" ? GUIDE.length : phase === "intro" ? INTRO.length : rows.length;
   const index = Math.min(focus, Math.max(0, listLength - 1));
 
   useEffect(() => {
     listRef.current?.children[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [index, phase]);
 
-  const pickFolder = async () => {
-    const path = await api.pickFolder("İçe aktarılacak oyunların klasörünü seç");
-    if (!path) return;
-    setSource(path);
+  /** Scans what the user picked; picked files are moved by default. */
+  const scan = async (paths: string[], label: string, defaultMode: ImportMode) => {
+    setSource(label);
+    setMode(defaultMode);
     setPhase("scanning");
     try {
-      const found = await api.importScan(path);
+      const found = await api.importScan(paths);
       setRows(found.map((c) => ({ ...c, pick: c.systemId })));
       setFocus(0);
       setPhase("review");
     } catch (e) {
       notify(String(e), "error", 6000);
       setPhase("intro");
+    }
+  };
+
+  const pickFiles = async () => {
+    const paths = await api.pickGameFiles("Oyun klasörüne taşınacak oyun dosyalarını seç");
+    if (!paths.length) return;
+    const label = paths.length === 1 ? paths[0] : `${paths.length} dosya seçildi`;
+    await scan(paths, label, "move");
+  };
+
+  const pickFolder = async () => {
+    const path = await api.pickFolder("İçe aktarılacak oyunların klasörünü seç");
+    if (path) await scan([path], path, "copy");
+  };
+
+  const openIntro = (i: number) => {
+    if (i === 0) pickFiles();
+    else if (i === 1) pickFolder();
+    else {
+      setPhase("guide");
+      setFocus(0);
     }
   };
 
@@ -176,11 +203,7 @@ export function ImportGames({ onClose }: { onClose: () => void }) {
       case "a":
         if (phase === "intro") {
           sfx.confirm();
-          if (index === 0) pickFolder();
-          else {
-            setPhase("guide");
-            setFocus(0);
-          }
+          openIntro(index);
         } else if (phase === "review") toggle();
         else if (phase === "done") onClose();
         break;
@@ -197,7 +220,7 @@ export function ImportGames({ onClose }: { onClose: () => void }) {
         sfx.back();
         if (phase === "guide" || phase === "review") {
           setPhase("intro");
-          setFocus(phase === "guide" ? 1 : 0);
+          setFocus(phase === "guide" ? INTRO.length - 1 : 0);
         } else onClose();
         break;
     }
@@ -226,14 +249,11 @@ export function ImportGames({ onClose }: { onClose: () => void }) {
         <div className="store-grid-scroll">
           {phase === "intro" && (
             <div className="menu-list import-list" ref={listRef}>
-              {[
-                { title: "Klasör seç", sub: "Seçtiğin klasör ve alt klasörleri taranır" },
-                { title: "Nasıl döküm alınır?", sub: "Kartuş ve disklerini bilgisayara aktarma rehberi" },
-              ].map((item, i) => (
+              {INTRO.map((item, i) => (
                 <button
                   key={item.title}
                   className={`menu-item${i === index ? " focused" : ""}`}
-                  onClick={() => (i === 0 ? pickFolder() : setPhase("guide"))}
+                  onClick={() => openIntro(i)}
                   tabIndex={-1}
                 >
                   <div className="menu-item-main">
@@ -260,10 +280,10 @@ export function ImportGames({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          {phase === "scanning" && <p className="import-status">Klasör taranıyor…</p>}
+          {phase === "scanning" && <p className="import-status">Oyunlar taranıyor…</p>}
 
           {(phase === "review" || phase === "importing" || phase === "done") && rows.length === 0 && (
-            <p className="import-status">Bu klasörde oyun bulunamadı.</p>
+            <p className="import-status">Seçtiğin yerde tanınan bir oyun dosyası bulunamadı.</p>
           )}
 
           {(phase === "review" || phase === "importing") && rows.length > 0 && (

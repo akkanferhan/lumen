@@ -849,19 +849,19 @@ pub async fn install_homebrew(app: AppHandle, slug: String) -> CmdResult<Vec<Gam
     scan_library(app.clone()).await
 }
 
-/// Lists the games in a folder the user picked (USB stick, Downloads) with
-/// their detected systems, ready for `import_games`.
+/// Lists the games in the folder or files the user picked (USB stick,
+/// Downloads) with their detected systems, ready for `import_games`.
 #[tauri::command]
 pub async fn import_scan(
     app: AppHandle,
-    path: PathBuf,
+    paths: Vec<PathBuf>,
 ) -> CmdResult<Vec<crate::importer::Candidate>> {
     let state = app.state::<AppState>();
     let root = state.rom_root().ok_or("Önce bir oyun klasörü seç")?;
-    if path.starts_with(&root) {
-        return Err("Bu klasör zaten Lumen'in oyun klasöründe".into());
+    if paths.iter().any(|p| p.starts_with(&root)) {
+        return Err("Seçtiğin oyun zaten Lumen'in oyun klasöründe".into());
     }
-    tauri::async_runtime::spawn_blocking(move || crate::importer::scan(&path))
+    tauri::async_runtime::spawn_blocking(move || crate::importer::scan_all(&paths))
         .await
         .map_err(err)
 }

@@ -116,7 +116,7 @@ export function Menu({
     {
       id: "import",
       title: "Oyunlarını içe aktar",
-      sub: "USB bellek veya klasördeki dökümlerin doğru sisteme yerleşir",
+      sub: "Bir oyun dosyası veya klasör seç, Lumen doğru sistemin klasörüne koyar",
       value: "›",
       run: onOpenImport,
     },
