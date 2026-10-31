@@ -8,11 +8,12 @@ import { boxArtUrl, homebrew, isPcSystem, systemOf, systems } from "../lib/catal
 import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { actions, useStore } from "../lib/store";
+import { api } from "../lib/api";
 import type { Collection, Game } from "../lib/types";
 
 const EMPTY_COLLECTIONS: Collection[] = [];
 import { useColumns } from "../lib/useColumns";
-import { fold, groupLetter } from "../lib/format";
+import { fold, groupLetter, todayStart } from "../lib/format";
 import { SearchKeyboard } from "../components/SearchKeyboard";
 import { themeOf } from "../lib/themes";
 import { formatLastPlayed, formatPlaytime } from "../lib/format";
@@ -85,11 +86,22 @@ export function Library({
   /** An overlay owns the hint bar. */
   covered: boolean;
 }) {
-  const games = useStore((s) => s.games);
+  const allGames = useStore((s) => s.games);
   const overview = useStore((s) => s.overview);
   const layout = themeOf(overview?.settings.theme).layout;
   const scanning = useStore((s) => s.scanning);
-  const tabs = useTabs(games, overview?.collections ?? EMPTY_COLLECTIONS);
+  // Kids mode: only the chosen collection (or every console game), no
+  // store games, no empty system tabs that lead to importing.
+  const kids = overview?.settings.kids;
+  const games = useMemo(() => {
+    if (!kids?.active) return allGames;
+    const allowed = kids.collection
+      ? new Set(overview?.collections.find((c) => c.id === kids.collection)?.games ?? [])
+      : null;
+    return allGames.filter((g) => !isPcSystem(g.systemId) && !g.notInstalled && (!allowed || allowed.has(g.id)));
+  }, [allGames, kids?.active, kids?.collection, overview?.collections]);
+  const allTabs = useTabs(games, kids?.active ? EMPTY_COLLECTIONS : (overview?.collections ?? EMPTY_COLLECTIONS));
+  const tabs = useMemo(() => (kids?.active ? allTabs.filter((t) => !t.empty) : allTabs), [allTabs, kids?.active]);
 
   const [tabId, setTabId] = useState("all");
   const tabIndex = Math.max(0, tabs.findIndex((t) => t.id === tabId));
@@ -369,6 +381,7 @@ export function Library({
           <BrandMark className="brand-mark" />
           Lumen
         </div>
+        {kids?.active && <KidsTimer minutes={kids.dailyMinutes} played={allGames} />}
         <StatusBar />
       </header>
 
@@ -533,6 +546,23 @@ function GameCard({
 }
 
 /** Blurred box art of the focused game, cross-faded. */
+/** Kids mode's chip in the top bar: time left today, or just the mode. */
+function KidsTimer({ minutes, played }: { minutes: number | null; played: Game[] }) {
+  const [used, setUsed] = useState<number | null>(null);
+  // Re-read when a session ends (last played changes).
+  const latest = played.reduce((max, g) => Math.max(max, g.lastPlayed ?? 0), 0);
+  useEffect(() => {
+    if (!minutes) return;
+    api.playedSince(todayStart()).then(setUsed).catch(() => setUsed(null));
+  }, [minutes, latest]);
+  const left = minutes && used !== null ? Math.max(0, minutes - Math.floor(used / 60)) : null;
+  return (
+    <span className={`kids-chip${left === 0 ? " over" : ""}`}>
+      Çocuk modu{left !== null && (left > 0 ? ` · ${left} dk kaldı` : " · bugünlük süre doldu")}
+    </span>
+  );
+}
+
 /** The last game played, one press away (see `heroGame`). */
 function ContinueCard({ game, focused, onPlay }: { game: Game; focused: boolean; onPlay: () => void }) {
   const system = systemOf(game.systemId);

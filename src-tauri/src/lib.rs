@@ -19,6 +19,7 @@ mod importer;
 mod input;
 mod installer;
 mod itch;
+mod kids;
 mod launch_check;
 mod launcher;
 mod library;
@@ -96,6 +97,9 @@ pub fn run() {
             commands::set_quick_combo,
             commands::set_overlay_button,
             commands::set_overlay_status,
+            commands::kids_start,
+            commands::kids_stop,
+            commands::played_since,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,

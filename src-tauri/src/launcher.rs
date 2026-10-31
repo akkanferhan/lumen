@@ -19,6 +19,8 @@ pub const EXITED_EVENT: &str = "game-exited";
 /// The game's window is up (or Lumen stopped waiting for it): the loading
 /// screen can go.
 pub const SHOWN_EVENT: &str = "game-shown";
+/// Kids mode: today's play time ran out; the game is being saved and closed.
+pub const KIDS_TIME_UP_EVENT: &str = "kids-time-up";
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,7 +32,14 @@ pub struct Exited {
 }
 
 /// `fresh` starts from the beginning instead of the last resume state.
-pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result<()> {
+/// `time_left`: kids mode's play time left today (seconds); the game is
+/// saved and closed when it runs out.
+pub async fn launch(
+    app: &AppHandle,
+    game: &Game,
+    fresh: bool,
+    time_left: Option<u64>,
+) -> anyhow::Result<()> {
     let state = app.state::<AppState>();
     if state.running.lock().unwrap().is_some() {
         bail!("Zaten bir oyun çalışıyor");
@@ -227,10 +236,21 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     let core = runner.core.map(String::from);
     tauri::async_runtime::spawn(async move {
         let started = Instant::now();
-        // None when Lumen closed it (quick menu, home combo).
+        // None when Lumen closed it (quick menu, home combo, kids' time up).
+        let time_up = async {
+            match time_left {
+                Some(secs) => tokio::time::sleep(Duration::from_secs(secs)).await,
+                None => std::future::pending().await,
+            }
+        };
         let exit = tokio::select! {
             status = child.wait() => Some(status.ok().and_then(|s| s.code())),
             _ = stop_rx => {
+                close_gracefully(&mut child).await;
+                None
+            }
+            _ = time_up => {
+                let _ = app.emit(KIDS_TIME_UP_EVENT, ());
                 close_gracefully(&mut child).await;
                 None
             }

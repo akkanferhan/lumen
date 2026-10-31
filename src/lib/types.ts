@@ -46,6 +46,17 @@ export interface BackupReport {
   bytes: number;
 }
 
+/** Kids mode (the PIN itself never reaches the UI). */
+export interface KidsSettings {
+  active: boolean;
+  /** Non-null once a PIN is set. */
+  pinHash: string | null;
+  /** The only collection shown; null shows every emulated game. */
+  collection: string | null;
+  /** Minutes of play per day; null for no limit. */
+  dailyMinutes: number | null;
+}
+
 export interface Settings {
   romRoot: string | null;
   backup: BackupSettings;
@@ -61,6 +72,7 @@ export interface Settings {
   overlayButton: boolean;
   /** Battery and clock beside the in-game menu button. */
   overlayStatus: boolean;
+  kids: KidsSettings;
 }
 
 export interface RaUser {

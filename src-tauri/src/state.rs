@@ -37,6 +37,8 @@ pub struct Settings {
     pub overlay_button: bool,
     /// Battery and clock beside the in-game menu button.
     pub overlay_status: bool,
+    /// Kids mode: one collection, no settings, a daily play limit.
+    pub kids: crate::kids::Kids,
 }
 
 impl Default for Settings {
@@ -53,6 +55,7 @@ impl Default for Settings {
             quick_combo: true,
             overlay_button: true,
             overlay_status: true,
+            kids: crate::kids::Kids::default(),
         }
     }
 }
