@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Cover } from "../components/Cover";
 import { Glyph } from "../components/Glyph";
 import { HintBar } from "../components/HintBar";
@@ -36,6 +36,8 @@ export function Running({ gameId }: { gameId: string }) {
   const [slot, setSlot] = useState(0);
   const [slotBusy, setSlotBusy] = useState(false);
   const system = game && systemOf(game.systemId);
+  // Small screens can't fit every quick-menu row: keep the focused one in view.
+  const scrollRef = useRef<HTMLDivElement>(null);
   // Rewind / fast-forward hints, for emulators Lumen can drive.
   const [controls, setControls] = useState<GameControls | null>(null);
 
@@ -98,6 +100,12 @@ export function Running({ gameId }: { gameId: string }) {
   const onSlots = items[focus]?.id === "slots";
   const onDisc = items[focus]?.id === "disc";
 
+  useEffect(() => {
+    scrollRef.current
+      ?.querySelector(".quick-list .focused, .slot-row.focused")
+      ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [focus, quickMenu]);
+
   useInput((action) => {
     if (!quickMenu) {
       // Lumen only shows this while the emulator isn't in front: a press
@@ -145,6 +153,7 @@ export function Running({ gameId }: { gameId: string }) {
       className={`running${quickMenu ? " quick" : ""}`}
       style={{ "--accent": system?.accent, "--card-accent": system?.accent } as CSSProperties}
     >
+      <div className="running-scroll" ref={scrollRef}>
       <div className="running-inner">
         {game && (
           <div className="running-art">
@@ -276,6 +285,7 @@ export function Running({ gameId }: { gameId: string }) {
             </span>
           </div>
         )}
+      </div>
       </div>
       <HintBar
         hints={

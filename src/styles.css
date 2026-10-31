@@ -907,7 +907,29 @@ button {
   animation: fade-in 300ms var(--ease-out);
 }
 
+/* Scrolls when the quick menu is taller than the screen; the hint bar
+   stays put below it. */
+.running-scroll {
+  position: absolute;
+  inset: 0 0 4.2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.running-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Room around the focused row when it's scrolled into view. */
+.running-scroll .focused {
+  scroll-margin: 1.5rem;
+}
+
 .running-inner {
+  /* Centred while it fits, top-aligned and scrollable when it doesn't. */
+  margin: auto;
   max-width: 34rem;
   padding: var(--gutter);
   animation: rise 420ms var(--ease-out);
