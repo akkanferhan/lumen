@@ -359,6 +359,12 @@ export function Menu({
       run: () => setPage("kids"),
     },
     { id: "tour", title: "Kısa tur", sub: "Nerede ne var, önemli kısayollar", value: "›", run: onOpenTour },
+    {
+      id: "report",
+      title: "Sorun bildir",
+      sub: "Günlükler ve cihaz bilgisi masaüstüne zip olarak kaydedilir; hesap anahtarların eklenmez",
+      run: () => actions.reportProblem(),
+    },
     { id: "sounds", title: "Arayüz sesleri", value: sounds ? "Açık" : "Kapalı", run: () => actions.setSounds(!sounds) },
     {
       id: "root",

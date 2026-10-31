@@ -9,6 +9,7 @@ mod config;
 mod controls;
 mod crash;
 mod device;
+mod diagnostics;
 mod discs;
 mod filters;
 mod formats;
@@ -106,6 +107,7 @@ pub fn run() {
             commands::set_overlay_status,
             commands::set_back_buttons,
             commands::set_m2_action,
+            commands::export_diagnostics,
             commands::kids_start,
             commands::kids_stop,
             commands::played_since,

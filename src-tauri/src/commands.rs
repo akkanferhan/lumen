@@ -736,6 +736,33 @@ pub fn set_quick_combo(state: State<'_, AppState>, enabled: bool) -> CmdResult<(
     state.save_settings().map_err(err)
 }
 
+/// "Sorun bildir": the report zip on the desktop, shown in Explorer.
+/// `name` comes from the UI (it knows the local date).
+#[tauri::command]
+pub async fn export_diagnostics(app: AppHandle, name: String) -> CmdResult<String> {
+    let dir = app
+        .path()
+        .desktop_dir()
+        .or_else(|_| app.path().document_dir())
+        .map_err(err)?;
+    let name: String = name
+        .chars()
+        .filter(|c| !matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|'))
+        .collect();
+    let app2 = app.clone();
+    let path = tauri::async_runtime::spawn_blocking(move || {
+        crate::diagnostics::export(&app2.state::<AppState>(), &dir, &name)
+    })
+    .await
+    .map_err(err)?
+    .map_err(err)?;
+    #[cfg(windows)]
+    let _ = std::process::Command::new("explorer")
+        .arg(format!("/select,{}", path.display()))
+        .spawn();
+    Ok(path.to_string_lossy().into_owned())
+}
+
 #[tauri::command]
 pub fn set_m2_action(
     state: State<'_, AppState>,
