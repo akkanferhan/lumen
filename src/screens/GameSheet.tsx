@@ -126,6 +126,13 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   // The buttons wrap onto several rows: up/down moves to the closest button
   // in the row above or below, by where they actually are on screen.
   const actionsRef = useRef<HTMLDivElement>(null);
+  // The sheet scrolls when it's taller than the screen.
+  const sheetRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    actionsRef.current
+      ?.querySelectorAll<HTMLElement>(":scope > button")
+      [focus]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [focus]);
   const verticalNeighbour = (direction: "up" | "down"): number | null => {
     const els = Array.from(actionsRef.current?.querySelectorAll<HTMLElement>(":scope > button") ?? []);
     if (els.length !== buttons.length || !els[focus]) return null;
@@ -175,10 +182,18 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
       }
       case "up":
       case "down": {
-        const next = verticalNeighbour(action);
+        // Buttons first; past the last row (or above the first), or while
+        // the focused button is scrolled away, the sheet itself scrolls.
+        const sheet = sheetRef.current;
+        const button = actionsRef.current?.querySelectorAll<HTMLElement>(":scope > button")[focus];
+        const hidden =
+          !!sheet && !!button && action === "up" && button.getBoundingClientRect().top < sheet.getBoundingClientRect().top;
+        const next = hidden ? null : verticalNeighbour(action);
         if (next !== null && next !== focus) {
           sfx.move();
           setFocus(next);
+        } else if (sheet) {
+          sheet.scrollBy({ top: (action === "down" ? 1 : -1) * sheet.clientHeight * 0.45, behavior: "smooth" });
         }
         break;
       }
@@ -234,7 +249,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
   return (
     <>
       <div className="scrim" onClick={onClose} />
-      <section className="sheet" style={{ "--accent": system.accent, "--card-accent": system.accent } as CSSProperties}>
+      <section className="sheet" ref={sheetRef} style={{ "--accent": system.accent, "--card-accent": system.accent } as CSSProperties}>
         <div className="sheet-art">
           <Cover game={game} />
         </div>

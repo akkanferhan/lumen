@@ -53,6 +53,13 @@ export function Tour({ layer, onDone, whatsNew = false }: { layer: number; onDon
             <>The <b>Continue</b> card at the top: back to your last game in one press</>,
           ),
         },
+        {
+          keys: ["x"],
+          label: L(
+            <><b>Devam et</b> kartında: kartı kapat (bir dahaki oyuna kadar)</>,
+            <>On the <b>Continue</b> card: hide it (until you play again)</>,
+          ),
+        },
         { keys: ["y"], label: L("Favorilere ekle", "Add to favorites") },
         { keys: ["x"], label: L("Ara", "Search") },
         { keys: ["select"], label: L("Ne oynasam? Rastgele bir oyun aç", "What to play? Open a random game") },

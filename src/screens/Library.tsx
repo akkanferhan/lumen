@@ -141,15 +141,29 @@ export function Library({
   // "Devam et": the last game played, above "Tümü". Lumen opens on it, so
   // one press of A continues where you left off; up from the top row
   // reaches it again.
-  const heroGame = useMemo(
+  // Closed with ✕ / X: hidden until that game (or another) is played again.
+  const [hiddenHero, setHiddenHero] = useState(readHiddenHero);
+  const lastGame = useMemo(
     () =>
-      tab?.id === "all" && !searching
-        ? games
-            .filter((g) => g.lastPlayed && !g.notInstalled)
-            .sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))[0]
-        : undefined,
-    [games, tab?.id, searching],
+      games
+        .filter((g) => g.lastPlayed && !g.notInstalled)
+        .sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))[0],
+    [games],
   );
+  const heroGame =
+    tab?.id === "all" && !searching && lastGame && heroKey(lastGame) !== hiddenHero ? lastGame : undefined;
+  const hideHero = () => {
+    if (!lastGame) return;
+    sfx.back();
+    const key = heroKey(lastGame);
+    try {
+      localStorage.setItem(HIDDEN_HERO, key);
+    } catch {
+      // Not remembered: it's back on the next start.
+    }
+    setHiddenHero(key);
+    setHeroFocus(false);
+  };
   const [heroFocus, setHeroFocus] = useState(true);
   const onHero = heroFocus && !!heroGame;
   const focused = onHero ? undefined : list[index];
@@ -282,6 +296,7 @@ export function Library({
   useInput((action) => {
     if (onHero && heroGame) {
       if (action === "a") return continueHero();
+      if (action === "x") return hideHero();
       if (action === "y") {
         sfx.confirm();
         return onOpen(heroGame);
@@ -413,6 +428,7 @@ export function Library({
           game={heroGame}
           focused={onHero}
           onPlay={() => (onHero ? continueHero() : setHeroFocus(true))}
+          onHide={hideHero}
         />
       )}
 
@@ -516,6 +532,7 @@ export function Library({
           ] : onHero ? [
             { action: "a", label: L("Devam et", "Resume") },
             { action: "y", label: L("Ayrıntılar", "Details") },
+            { action: "x", label: L("Kartı kapat", "Hide card") },
             { action: "down", label: L("Kütüphane", "Library") },
             { action: "start", label: L("Menü", "Menu") },
           ] : [
@@ -585,15 +602,36 @@ function KidsTimer({ minutes, played }: { minutes: number | null; played: Game[]
 }
 
 /** The last game played, one press away (see `heroGame`). */
-function ContinueCard({ game, focused, onPlay }: { game: Game; focused: boolean; onPlay: () => void }) {
+function ContinueCard({
+  game,
+  focused,
+  onPlay,
+  onHide,
+}: {
+  game: Game;
+  focused: boolean;
+  onPlay: () => void;
+  onHide: () => void;
+}) {
   const system = systemOf(game.systemId);
   return (
-    <button
+    <div
       className={`continue-card${focused ? " focused" : ""}`}
       style={{ "--card-accent": system?.accent } as CSSProperties}
       onClick={onPlay}
-      tabIndex={-1}
+      role="button"
     >
+      <button
+        className="continue-close"
+        aria-label={L("Kartı kapat", "Hide card")}
+        onClick={(e) => {
+          e.stopPropagation();
+          onHide();
+        }}
+        tabIndex={-1}
+      >
+        ✕
+      </button>
       <span className="continue-art">
         <Cover game={game} />
       </span>
@@ -608,8 +646,20 @@ function ContinueCard({ game, focused, onPlay }: { game: Game; focused: boolean;
       <span className="continue-play" aria-hidden>
         ▶
       </span>
-    </button>
+    </div>
   );
+}
+
+/** localStorage: the "Devam et" card closed for this game and session. */
+const HIDDEN_HERO = "lumen.continueHidden";
+const heroKey = (game: Game) => `${game.id}:${game.lastPlayed}`;
+
+function readHiddenHero(): string | null {
+  try {
+    return localStorage.getItem(HIDDEN_HERO);
+  } catch {
+    return null;
+  }
 }
 
 export function Ambient({ art }: { art: string | null }) {
