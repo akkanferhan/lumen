@@ -1,0 +1,21 @@
+src/components/Tour.tsx
+  s_e07464b85ba926::t_b08a9cface1c1b 40,51-52
+src/screens/Library.tsx
+  s_e07464b85ba926::t_94938f6a744cc6 172-199,306-308,435
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2bed3dec914e4022c7e259e300669ca98bb81ea7",
+  "prompts": {},
+  "sessions": {
+    "s_e07464b85ba926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "556d0056-d31c-4fbd-aa27-1c4de72546a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ferhan Akkan <ferhanakkan@gmail.com>"
+    }
+  }
+}
