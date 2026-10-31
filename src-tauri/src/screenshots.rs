@@ -101,7 +101,8 @@ pub fn take(app: &AppHandle) -> anyhow::Result<PathBuf> {
     crate::overlay::hide(app);
     std::thread::sleep(Duration::from_millis(120));
     let frame = crate::windows::capture_screen();
-    if in_front {
+    // Back only if the game is still there (it may have closed meanwhile).
+    if in_front && pid.is_some_and(crate::windows::is_foreground) {
         crate::overlay::show(app);
     }
     let (width, height, pixels) = frame.ok_or_else(|| {

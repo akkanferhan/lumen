@@ -72,8 +72,15 @@ pub fn show(app: &AppHandle) {
     let _ = (enabled, status);
 }
 
+/// Hidden through Win32 like it's shown (`show`): Tauri never saw it go
+/// visible, so its own `hide()` thinks there's nothing to do.
 pub fn hide(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(LABEL) {
+        #[cfg(windows)]
+        if let Ok(hwnd) = window.hwnd() {
+            crate::windows::hide_window(hwnd.0 as isize);
+            return;
+        }
         let _ = window.hide();
     }
 }

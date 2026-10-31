@@ -328,6 +328,14 @@ pub fn make_no_activate(hwnd: isize) {
     }
 }
 
+/// Hides a window (the in-game menu button).
+#[cfg(windows)]
+pub fn hide_window(hwnd: isize) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE};
+    // SAFETY: plain Win32 call on a window handle; an invalid one just fails.
+    unsafe { ShowWindow(hwnd as windows_sys::Win32::Foundation::HWND, SW_HIDE) };
+}
+
 /// Places a window at the given physical rect and shows it above everything
 /// in one step, without taking focus from the game: it is never on screen at
 /// a stale size or position (the in-game menu button).

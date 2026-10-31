@@ -286,6 +286,8 @@ pub async fn launch(
         let diagnosis = exit
             .and_then(|code| crate::launch_check::early_exit(&launch, code, ran, log.as_deref()));
         let session_seconds = ran.as_secs();
+        // The game is gone: no menu button over the desktop while saves back up.
+        crate::overlay::hide(&app);
 
         let state = app.state::<AppState>();
         match &diagnosis {
