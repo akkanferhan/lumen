@@ -435,6 +435,8 @@ fn retroarch(exe_dir: &Path, high: bool) -> anyhow::Result<()> {
             // ROMs), so resume detection and backups know where to look.
             ("savefile_directory", path(exe_dir.join("saves"))),
             ("savestate_directory", path(exe_dir.join("states"))),
+            // Screenshots (Select + Y) land here for Lumen to pick up.
+            ("screenshot_directory", path(exe_dir.join("screenshots"))),
             // Resume where you left off.
             ("savestate_auto_save", on(true)),
             ("savestate_auto_load", on(true)),

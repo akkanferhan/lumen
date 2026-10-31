@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { CollectionPicker } from "../components/CollectionPicker";
+import { ShotGallery } from "../components/ShotGallery";
 import { Cover } from "../components/Cover";
 import { HintBar } from "../components/HintBar";
 import { ProgressBar } from "../components/Toasts";
@@ -9,7 +10,7 @@ import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
-import type { AchievementProgress, Game, GameInfo, PowerMode, UninstallPlan } from "../lib/types";
+import type { AchievementProgress, Game, GameInfo, PowerMode, Shot, UninstallPlan } from "../lib/types";
 
 /** A game's power choices, in the order A steps through them (null: its system's). */
 const GAME_POWER: (PowerMode | null)[] = [null, "silent", "performance", "turbo"];
@@ -42,6 +43,14 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     };
   }, [gameId, game?.lastPlayed]);
 
+  // The player's own screenshots of this game.
+  const [shots, setShots] = useState<Shot[]>([]);
+  const [viewingShots, setViewingShots] = useState(false);
+  const loadShots = () => {
+    api.listScreenshots(gameId).then(setShots).catch(() => setShots([]));
+  };
+  useEffect(loadShots, [gameId, game?.lastPlayed]);
+
   const system = game && systemOf(game.systemId);
   const status = overview?.systems.find((s) => s.id === game?.systemId);
   const fallback = !!status?.usingFallback;
@@ -58,7 +67,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
 
   // Per-game power mode: only where Lumen sets ASUS power modes at all.
   const powerChoice = !!overview?.powerAvailable && overview.settings.power !== "off" && !pc;
-  type Button = "play" | "fresh" | "fav" | "lists" | "power" | "remove";
+  type Button = "play" | "fresh" | "fav" | "lists" | "shots" | "power" | "remove";
   const buttons: Button[] = game?.notInstalled
     ? ["play", "fav", "lists"]
     : [
@@ -66,6 +75,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         ...(resumable ? (["fresh"] as const) : []),
         "fav",
         "lists",
+        ...(shots.length ? (["shots"] as const) : []),
         ...(powerChoice ? (["power"] as const) : []),
         "remove",
       ];
@@ -131,6 +141,10 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         else if (buttons[focus] === "fresh") play(game, true);
         else if (buttons[focus] === "remove") remove();
         else if (buttons[focus] === "power") cyclePower();
+        else if (buttons[focus] === "shots") {
+          sfx.confirm();
+          setViewingShots(true);
+        }
         else if (buttons[focus] === "lists") {
           sfx.confirm();
           setPicking(true);
@@ -278,6 +292,11 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <button className={`btn${focusOf("lists") ? " focused" : ""}`} onClick={() => setPicking(true)}>
               {inLists ? `☰ ${inLists} listede` : "☰ Koleksiyona ekle"}
             </button>
+            {shots.length > 0 && !game.notInstalled && (
+              <button className={`btn${focusOf("shots") ? " focused" : ""}`} onClick={() => setViewingShots(true)}>
+                ▣ {shots.length} ekran görüntüsü
+              </button>
+            )}
             {powerChoice && !game.notInstalled && (
               <button
                 className={`btn${focusOf("power") ? " focused" : ""}`}
@@ -313,7 +332,9 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         </div>
       </section>
 
-      {picking ? (
+      {viewingShots ? (
+        <ShotGallery shots={shots} onChange={loadShots} onClose={() => setViewingShots(false)} />
+      ) : picking ? (
         <CollectionPicker gameId={game.id} title={game.title} onClose={() => setPicking(false)} />
       ) : (
         <HintBar

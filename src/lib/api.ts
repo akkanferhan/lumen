@@ -19,6 +19,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  Shot,
   PowerMode,
   GameControls,
   AchievementProgress,
@@ -65,6 +66,10 @@ export interface Api {
   gameControls(): Promise<GameControls | null>;
   /** Back to the game, then its next (or previous) disc. */
   switchDisc(next: boolean): Promise<void>;
+  /** Back to the game, then a screenshot of it. */
+  takeScreenshot(): Promise<void>;
+  listScreenshots(gameId: string): Promise<Shot[]>;
+  deleteScreenshot(path: string): Promise<void>;
   saveState(slot: number): Promise<StateSlot[]>;
   loadState(slot: number): Promise<void>;
   stopGame(): Promise<void>;
@@ -163,6 +168,9 @@ const tauriApi: Api = {
   stateSlots: () => invoke("state_slots"),
   gameControls: () => invoke("game_controls"),
   switchDisc: (next) => invoke("switch_disc", { next }),
+  takeScreenshot: () => invoke("take_screenshot"),
+  listScreenshots: (gameId) => invoke("list_screenshots", { gameId }),
+  deleteScreenshot: (path) => invoke("delete_screenshot", { path }),
   saveState: (slot) => invoke("save_state", { slot }),
   loadState: (slot) => invoke("load_state", { slot }),
   stopGame: () => invoke("stop_game"),
