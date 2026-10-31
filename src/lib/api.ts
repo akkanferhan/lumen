@@ -91,6 +91,8 @@ export interface Api {
   updateEmulator(id: string): Promise<void>;
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
+  /** The game's window is up (or Lumen stopped waiting): loading is over. */
+  onGameShown(cb: () => void): () => void;
   onQuickMenu(cb: () => void): () => void;
   onSystemResumed(cb: () => void): () => void;
 }
@@ -168,6 +170,7 @@ const tauriApi: Api = {
   updateEmulator: (id) => invoke("update_emulator", { id }),
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),
+  onGameShown: (cb) => subscribe<null>("game-shown", () => cb()),
   onQuickMenu: (cb) => subscribe<null>("quick-menu", () => cb()),
   onSystemResumed: (cb) => subscribe<null>("system-resumed", () => cb()),
 };

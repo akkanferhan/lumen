@@ -8,6 +8,7 @@ import { Library } from "./screens/Library";
 import { Menu } from "./screens/Menu";
 import { Onboarding } from "./screens/Onboarding";
 import { Running } from "./screens/Running";
+import { LaunchLoading } from "./screens/LaunchLoading";
 import { HomebrewStore } from "./screens/HomebrewStore";
 import { ImportGames } from "./screens/ImportGames";
 import { StatsScreen } from "./screens/StatsScreen";
@@ -20,6 +21,7 @@ export function App() {
   const ready = useStore((s) => s.ready);
   const romRoot = useStore((s) => s.overview?.settings.romRoot);
   const runningGameId = useStore((s) => s.runningGameId);
+  const launchingGameId = useStore((s) => s.launchingGameId);
 
   const [openGameId, setOpenGameId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -104,6 +106,7 @@ export function App() {
         </>
       )}
       {runningGameId && <Running gameId={runningGameId} />}
+      {launchingGameId && <LaunchLoading gameId={launchingGameId} />}
       <Toasts hideInstalls={!!onboarding} />
     </div>
   );

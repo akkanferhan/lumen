@@ -36,6 +36,8 @@ interface State {
   games: Game[];
   installs: Record<string, InstallProgress>;
   runningGameId: string | null;
+  /** Game starting: from "play" until its window is up (loading screen). */
+  launchingGameId: string | null;
   notices: Notice[];
   scanning: boolean;
   /** Emulator id → update available; null until checked this session. */
@@ -58,6 +60,7 @@ let state: State = {
   games: [],
   installs: {},
   runningGameId: null,
+  launchingGameId: null,
   notices: [],
   scanning: false,
   updates: null,
@@ -149,11 +152,12 @@ export const actions = {
     api.onQuickMenu(() => {
       if (!state.runningGameId || state.quickMenu) return;
       sfx.confirm();
-      set({ quickMenu: true });
+      set({ quickMenu: true, launchingGameId: null });
     });
+    api.onGameShown(() => set({ launchingGameId: null }));
     api.onSystemResumed(() => notify("Uykudan döndün · oyun duraklatıldı, hazır olunca devam et", "info", 6000));
     api.onGameExited(async (exited) => {
-      set({ runningGameId: null, quickMenu: false });
+      set({ runningGameId: null, launchingGameId: null, quickMenu: false });
       if (exited.error) {
         sfx.error();
         notify(exited.error, "error", 15000);
@@ -299,11 +303,13 @@ export const actions = {
       notify(`${systemOf(game.systemId)?.short ?? ""} için emülatör hazırlanıyor…`);
       if (!(await actions.install([game.systemId]))) return;
     }
+    set({ launchingGameId: game.id });
     try {
       await api.launchGame(game.id, fresh);
       sfx.launch();
       set({ runningGameId: game.id });
     } catch (e) {
+      set({ launchingGameId: null });
       sfx.error();
       notify(errorText(e), "error", 12000);
       await tryAutoFix(game, fresh);

@@ -86,6 +86,7 @@ function save() {
 
 const progressListeners = new Set<(p: InstallProgress) => void>();
 const exitListeners = new Set<(e: GameExited) => void>();
+const shownListeners = new Set<() => void>();
 let running: { id: string; started: number } | null = null;
 let graphics: GraphicsSetting = "auto";
 let filter: FilterSetting = "original";
@@ -322,6 +323,8 @@ export const mockApi: Api = {
       return;
     }
     running = { id: gameId, started: Date.now() };
+    // An emulator takes a moment to put its window up.
+    setTimeout(() => shownListeners.forEach((cb) => cb()), 2500);
   },
   stopGame: async () => {
     if (!running) return;
@@ -466,6 +469,10 @@ export const mockApi: Api = {
   onGameExited: (cb) => {
     exitListeners.add(cb);
     return () => exitListeners.delete(cb);
+  },
+  onGameShown: (cb) => {
+    shownListeners.add(cb);
+    return () => shownListeners.delete(cb);
   },
 };
 
