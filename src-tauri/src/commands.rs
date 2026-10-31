@@ -71,6 +71,8 @@ pub struct GameView {
     pub favorite: bool,
     pub last_played: Option<u64>,
     pub play_seconds: u64,
+    /// Power mode chosen for this game; None follows its system.
+    pub power: Option<crate::power::PowerMode>,
 }
 
 // Startup commands run off the main thread (async), so a bug that blocks
@@ -166,6 +168,7 @@ fn library_view(state: &AppState) -> Vec<GameView> {
                 favorite: data.favorite,
                 last_played: data.last_played,
                 play_seconds: data.play_seconds,
+                power: data.power,
             }
         })
         .collect()
@@ -474,6 +477,17 @@ pub fn toggle_favorite(state: State<'_, AppState>, game_id: String) -> CmdResult
     };
     state.save_user().map_err(err)?;
     Ok(favorite)
+}
+
+/// The power mode for one game; None goes back to its system's.
+#[tauri::command]
+pub fn set_game_power(
+    state: State<'_, AppState>,
+    game_id: String,
+    power: Option<crate::power::PowerMode>,
+) -> CmdResult<()> {
+    state.user.lock().unwrap().entry(game_id).or_default().power = power;
+    state.save_user().map_err(err)
 }
 
 #[tauri::command]

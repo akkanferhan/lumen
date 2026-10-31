@@ -4,7 +4,7 @@
 import type { Api } from "./api";
 import { emulatorOf, systemOf, systems } from "./catalog";
 import { cleanTitle } from "./format";
-import type { Collection, FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerSetting } from "./types";
+import type { Collection, FilterSetting, StateSlot, BackupSettings, Game, GameExited, GameInfo, GraphicsSetting, InstallProgress, Overview, PowerMode, PowerSetting } from "./types";
 
 const SAMPLE: [string, string][] = [
   ["snes", "Super Mario World (USA)"],
@@ -56,7 +56,7 @@ const SAMPLE_INFO: Record<string, GameInfo> = {
 interface MockStore {
   romRoot: string | null;
   installed: string[];
-  user: Record<string, { favorite: boolean; lastPlayed: number | null; playSeconds: number }>;
+  user: Record<string, { favorite: boolean; lastPlayed: number | null; playSeconds: number; power?: PowerMode | null }>;
 }
 
 const KEY = "lumen-mock";
@@ -339,6 +339,10 @@ export const mockApi: Api = {
     const event = { gameId: running.id, sessionSeconds, error: null };
     running = null;
     exitListeners.forEach((cb) => cb(event));
+  },
+  setGamePower: async (gameId, power) => {
+    touchUser(gameId).power = power;
+    save();
   },
   toggleFavorite: async (gameId) => {
     const user = touchUser(gameId);

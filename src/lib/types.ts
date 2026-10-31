@@ -29,6 +29,8 @@ export interface EmulatorDef {
 
 export type Tier = "standard" | "high";
 export type PowerSetting = "auto" | "off" | "silent" | "performance" | "turbo";
+/** An ASUS power mode (a game's own choice). */
+export type PowerMode = "silent" | "performance" | "turbo";
 export type GraphicsSetting = "auto" | Tier;
 /** Display filter for RetroArch systems. */
 export type FilterSetting = "auto" | "original" | "smooth" | "crt" | "lcd";
@@ -142,6 +144,8 @@ export interface Game {
   /** Unix seconds. */
   lastPlayed: number | null;
   playSeconds: number;
+  /** Power mode chosen for this game; null follows its system. */
+  power?: PowerMode | null;
   /** Owned in a store (or in its catalog) but not installed; `path` installs it. */
   notInstalled?: boolean;
 }

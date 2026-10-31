@@ -201,9 +201,20 @@ pub async fn launch(app: &AppHandle, game: &Game, fresh: bool) -> anyhow::Result
     });
     let session_start = SystemTime::now();
 
-    // Match the ASUS power mode to the system; Performance (the default) is
-    // restored when the game ends.
-    let power = state.settings.lock().unwrap().power.resolve(system.power);
+    // Match the ASUS power mode to the game (its own choice, else its
+    // system's); Performance (the default) is restored when the game ends.
+    let game_power = state
+        .user
+        .lock()
+        .unwrap()
+        .get(&game.id)
+        .and_then(|u| u.power);
+    let power = state
+        .settings
+        .lock()
+        .unwrap()
+        .power
+        .resolve_for_game(game_power, system.power);
     let power_changed = power.is_some_and(crate::power::set);
 
     let app = app.clone();

@@ -19,6 +19,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  PowerMode,
   GameControls,
   AchievementProgress,
   InstallProgress,
@@ -68,6 +69,7 @@ export interface Api {
   loadState(slot: number): Promise<void>;
   stopGame(): Promise<void>;
   toggleFavorite(gameId: string): Promise<boolean>;
+  setGamePower(gameId: string, power: PowerMode | null): Promise<void>;
   setSounds(enabled: boolean): Promise<void>;
   setGraphics(graphics: GraphicsSetting): Promise<void>;
   setFilter(filter: FilterSetting): Promise<void>;
@@ -163,6 +165,7 @@ const tauriApi: Api = {
   loadState: (slot) => invoke("load_state", { slot }),
   stopGame: () => invoke("stop_game"),
   toggleFavorite: (gameId) => invoke("toggle_favorite", { gameId }),
+  setGamePower: (gameId, power) => invoke("set_game_power", { gameId, power }),
   setSounds: (enabled) => invoke("set_sounds", { enabled }),
   setGraphics: (graphics) => invoke("set_graphics", { graphics }),
   setFilter: (filter) => invoke("set_filter", { filter }),

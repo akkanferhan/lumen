@@ -36,6 +36,20 @@ impl PowerSetting {
             PowerSetting::Turbo => Some(PowerMode::Turbo),
         }
     }
+
+    /// Like `resolve`, but a mode the user picked for this game wins over
+    /// everything except "leave it alone".
+    pub fn resolve_for_game(
+        self,
+        game_mode: Option<PowerMode>,
+        system_mode: PowerMode,
+    ) -> Option<PowerMode> {
+        match (self, game_mode) {
+            (PowerSetting::Off, _) => None,
+            (_, Some(mode)) => Some(mode),
+            (setting, None) => setting.resolve(system_mode),
+        }
+    }
 }
 
 #[cfg(windows)]
@@ -136,6 +150,22 @@ pub fn available() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_game_mode_wins_unless_lumen_leaves_power_alone() {
+        use PowerMode::*;
+        let auto = PowerSetting::Auto;
+        assert_eq!(auto.resolve_for_game(None, Silent), Some(Silent));
+        assert_eq!(auto.resolve_for_game(Some(Turbo), Silent), Some(Turbo));
+        assert_eq!(
+            PowerSetting::Performance.resolve_for_game(Some(Silent), Turbo),
+            Some(Silent)
+        );
+        assert_eq!(
+            PowerSetting::Off.resolve_for_game(Some(Turbo), Silent),
+            None
+        );
+    }
 
     #[test]
     fn settings_resolve_against_system_profile() {
