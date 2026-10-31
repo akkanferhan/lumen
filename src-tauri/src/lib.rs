@@ -9,6 +9,7 @@ mod config;
 mod controls;
 mod crash;
 mod device;
+mod discs;
 mod filters;
 mod formats;
 mod gog;
@@ -116,6 +117,7 @@ pub fn run() {
             commands::auto_fix,
             commands::state_slots,
             commands::game_controls,
+            commands::switch_disc,
             commands::game_achievements,
             commands::save_state,
             commands::load_state,

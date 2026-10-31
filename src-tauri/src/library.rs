@@ -64,6 +64,34 @@ pub fn scan(root: &Path) -> Vec<Game> {
     games
 }
 
+/// Joins loose multi-disc sets into playlists in every system folder that
+/// takes them (see `discs`); returns what was written.
+pub fn make_disc_playlists(root: &Path) -> Vec<crate::discs::Created> {
+    let Ok(entries) = fs::read_dir(root) else {
+        return Vec::new();
+    };
+    let mut created = Vec::new();
+    for entry in entries.flatten().filter(|e| e.path().is_dir()) {
+        let name = entry.file_name().to_string_lossy().to_lowercase();
+        if let Some(system) = manifest()
+            .systems
+            .iter()
+            .find(|s| s.folders.contains(&name) && s.extensions.iter().any(|e| e == "m3u"))
+        {
+            created.extend(crate::discs::make_playlists(
+                &entry.path(),
+                &system.extensions,
+            ));
+        }
+    }
+    created
+}
+
+/// A game's id: stable as long as its file stays where it is.
+pub fn game_id(path: &Path) -> String {
+    format!("{:016x}", fnv1a(path.to_string_lossy().as_bytes()))
+}
+
 fn scan_system(system: &System, dir: &Path, out: &mut Vec<Game>) {
     let mut files = Vec::new();
     let mut walker = WalkDir::new(dir).min_depth(1).max_depth(4).into_iter();
@@ -189,7 +217,7 @@ fn make_game(system: &System, path: &Path) -> Game {
         .unwrap_or_default();
 
     Game {
-        id: format!("{:016x}", fnv1a(path.to_string_lossy().as_bytes())),
+        id: game_id(path),
         system_id: system.id.clone(),
         title: clean_title(&stem),
         thumb_name: stem.replace(

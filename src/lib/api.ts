@@ -62,6 +62,8 @@ export interface Api {
   /** Slots of the running game; null when its emulator has none. */
   stateSlots(): Promise<StateSlot[] | null>;
   gameControls(): Promise<GameControls | null>;
+  /** Back to the game, then its next (or previous) disc. */
+  switchDisc(next: boolean): Promise<void>;
   saveState(slot: number): Promise<StateSlot[]>;
   loadState(slot: number): Promise<void>;
   stopGame(): Promise<void>;
@@ -156,6 +158,7 @@ const tauriApi: Api = {
   resumeGame: () => invoke("resume_game"),
   stateSlots: () => invoke("state_slots"),
   gameControls: () => invoke("game_controls"),
+  switchDisc: (next) => invoke("switch_disc", { next }),
   saveState: (slot) => invoke("save_state", { slot }),
   loadState: (slot) => invoke("load_state", { slot }),
   stopGame: () => invoke("stop_game"),

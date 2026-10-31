@@ -237,6 +237,8 @@ export interface AchievementProgress {
 export interface GameControls {
   rewind: boolean;
   fastForward: boolean;
+  /** Multi-disc playlist: the quick menu can switch discs. */
+  discs: boolean;
 }
 
 export interface StateSlot {
