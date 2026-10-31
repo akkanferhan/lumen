@@ -25,6 +25,13 @@ static BACK_DOWN: AtomicBool = AtomicBool::new(false);
 static M2_DOWN: AtomicBool = AtomicBool::new(false);
 /// A game runs: the hook takes the App-menu key instead of passing it on.
 static SWALLOW: AtomicBool = AtomicBool::new(false);
+/// M1 / M2 went down while swallowing: their release is swallowed too,
+/// even if the game has ended meanwhile (hold to save and quit). Windows
+/// opens a context menu when the App-menu key is released.
+#[cfg(windows)]
+static M1_TAKEN: AtomicBool = AtomicBool::new(false);
+#[cfg(windows)]
+static M2_TAKEN: AtomicBool = AtomicBool::new(false);
 
 /// Firmware codes in the controller's key table (the same table G-Helper
 /// uses): M1 sends App-menu (the in-game menu), M2 right Ctrl (its own
@@ -33,11 +40,12 @@ static SWALLOW: AtomicBool = AtomicBool::new(false);
 const APP_MENU: u8 = 0x84;
 #[cfg(windows)]
 const RIGHT_CTRL: u8 = 0x8D;
-/// ASUS's own M1 / M2 codes, restored when Lumen lets go of the buttons.
+/// ASUS's own M1 / M2 codes, restored when Lumen lets go of the buttons
+/// (the bytes Armoury Crate and G-Helper write: 0x8E first, 0x8F second).
 #[cfg(windows)]
-const DEFAULT_M1: u8 = 0x8F;
+const DEFAULT_M1: u8 = 0x8E;
 #[cfg(windows)]
-const DEFAULT_M2: u8 = 0x8E;
+const DEFAULT_M2: u8 = 0x8F;
 
 /// Turns the back-button menu on or off; the controller is re-bound with
 /// the next burst (see `force_gamepad_mode`).
@@ -108,17 +116,24 @@ unsafe extern "system" fn keyboard_hook(
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         CallNextHookEx, HC_ACTION, KBDLLHOOKSTRUCT, WM_KEYDOWN, WM_SYSKEYDOWN,
     };
-    if code == HC_ACTION as i32 && SWALLOW.load(Ordering::SeqCst) {
+    if code == HC_ACTION as i32 {
         let key = &*(lparam as *const KBDLLHOOKSTRUCT);
-        let flag = match key.vkCode {
-            k if k == u32::from(VK_APPS) => Some(&BACK_DOWN),
-            k if k == u32::from(VK_RCONTROL) => Some(&M2_DOWN),
+        let button = match key.vkCode {
+            k if k == u32::from(VK_APPS) => Some((&BACK_DOWN, &M1_TAKEN)),
+            k if k == u32::from(VK_RCONTROL) => Some((&M2_DOWN, &M2_TAKEN)),
             _ => None,
         };
-        if let Some(flag) = flag {
+        if let Some((held, taken)) = button {
             let down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
-            flag.store(down, Ordering::SeqCst);
-            return 1; // never reaches the game
+            if down && (SWALLOW.load(Ordering::SeqCst) || taken.load(Ordering::SeqCst)) {
+                taken.store(true, Ordering::SeqCst);
+                held.store(true, Ordering::SeqCst);
+                return 1; // never reaches the game
+            }
+            if !down && taken.swap(false, Ordering::SeqCst) {
+                held.store(false, Ordering::SeqCst);
+                return 1; // nor does its release, wherever focus is now
+            }
         }
     }
     CallNextHookEx(std::ptr::null_mut(), code, wparam, lparam)
@@ -130,9 +145,11 @@ unsafe extern "system" fn keyboard_hook(
 fn back_button_binding(m1: u8, m2: u8) -> [u8; 50] {
     let mut report = [0u8; 50];
     report[..5].copy_from_slice(&[0x5A, 0xD1, 0x02, 0x08, 0x2C]);
-    // Each binding is 10 bytes: [0x02 = keyboard, 0, key, 0…]; the zone
-    // lists M2 then M1, each with a second-layer copy.
-    for (offset, key) in [(5, m2), (16, m2), (27, m1), (38, m1)] {
+    // Each binding is 10 bytes: [0x02 = keyboard, 0, key, 0…]. The first
+    // pair is the button marked M1 on the device, the second M2 (G-Helper's
+    // code names them the other way round; on a 2023 Ally its first pair
+    // turned out to be M1), each with a second-layer copy.
+    for (offset, key) in [(5, m1), (16, m1), (27, m2), (38, m2)] {
         report[offset] = 0x02;
         report[offset + 2] = key;
     }
