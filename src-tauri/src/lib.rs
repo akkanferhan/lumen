@@ -100,6 +100,8 @@ pub fn run() {
             commands::kids_start,
             commands::kids_stop,
             commands::played_since,
+            commands::cloud_folders,
+            commands::set_backup_sync,
             commands::set_theme,
             commands::check_updates,
             commands::update_emulator,

@@ -1317,6 +1317,18 @@ pub fn set_backup(
     state.save_settings().map_err(err)
 }
 
+/// Cloud drives synced on this PC, to back up into with one press.
+#[tauri::command]
+pub fn cloud_folders() -> Vec<crate::backup::CloudFolder> {
+    crate::backup::cloud_folders()
+}
+
+#[tauri::command]
+pub fn set_backup_sync(state: State<'_, AppState>, enabled: bool) -> CmdResult<()> {
+    state.settings.lock().unwrap().backup.sync = enabled;
+    state.save_settings().map_err(err)
+}
+
 fn backup_all(
     emulators: &Path,
     data: &Path,

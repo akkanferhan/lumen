@@ -38,6 +38,9 @@ pub struct BackupSettings {
     pub dir: Option<PathBuf>,
     /// Unix seconds of the last successful backup.
     pub last_backup: Option<u64>,
+    /// Before each game, newer saves for its emulator are pulled from the
+    /// backup folder (played on another device sharing the cloud folder).
+    pub sync: bool,
 }
 
 impl BackupSettings {
@@ -46,12 +49,70 @@ impl BackupSettings {
             enabled: true,
             dir: None,
             last_backup: None,
+            sync: false,
         }
     }
 
     pub fn target(&self) -> PathBuf {
         self.dir.clone().unwrap_or_else(default_dir)
     }
+}
+
+/// A cloud drive's synced folder on this PC.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CloudFolder {
+    pub name: &'static str,
+    /// Where Lumen's backup goes inside it.
+    pub path: PathBuf,
+}
+
+/// Cloud drives with a synced folder here: OneDrive, Google Drive (its
+/// own drive letter, "My Drive"), Dropbox and iCloud Drive.
+pub fn cloud_folders() -> Vec<CloudFolder> {
+    let env = |name: &str| std::env::var_os(name).map(PathBuf::from);
+    let home = env("USERPROFILE");
+    let mut found: Vec<(&'static str, PathBuf)> = Vec::new();
+    for var in ["OneDrive", "OneDriveConsumer"] {
+        if let Some(dir) = env(var) {
+            found.push(("OneDrive", dir));
+        }
+    }
+    for letter in b'D'..=b'Z' {
+        for name in ["My Drive", "Drive'ım"] {
+            found.push((
+                "Google Drive",
+                PathBuf::from(format!("{}:\\{name}", letter as char)),
+            ));
+        }
+    }
+    if let Some(home) = &home {
+        found.push(("Google Drive", home.join("Google Drive")));
+    }
+    // Dropbox says where it syncs in info.json.
+    for base in [env("APPDATA"), env("LOCALAPPDATA")].into_iter().flatten() {
+        let info: Option<serde_json::Value> = fs::read(base.join("Dropbox").join("info.json"))
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok());
+        if let Some(path) = info.as_ref().and_then(|i| i["personal"]["path"].as_str()) {
+            found.push(("Dropbox", PathBuf::from(path)));
+        }
+    }
+    if let Some(home) = &home {
+        found.push(("Dropbox", home.join("Dropbox")));
+        found.push(("iCloud Drive", home.join("iCloudDrive")));
+    }
+
+    let mut folders: Vec<CloudFolder> = Vec::new();
+    for (name, dir) in found {
+        if dir.is_dir() && !folders.iter().any(|f| f.name == name) {
+            folders.push(CloudFolder {
+                name,
+                path: dir.join("Lumen Yedek"),
+            });
+        }
+    }
+    folders
 }
 
 /// OneDrive when it's set up (synced to the cloud), Documents otherwise.

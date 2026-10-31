@@ -20,6 +20,7 @@ import type {
   ImportMode,
   ImportReport,
   StateSlot,
+  CloudFolder,
   Shot,
   PowerMode,
   GameControls,
@@ -113,6 +114,8 @@ export interface Api {
   setRaHardcore(enabled: boolean): Promise<void>;
   restoreBackup(): Promise<BackupReport>;
   setBackup(enabled: boolean, dir?: string | null): Promise<void>;
+  setBackupSync(enabled: boolean): Promise<void>;
+  cloudFolders(): Promise<CloudFolder[]>;
   updateEmulator(id: string): Promise<void>;
   onInstallProgress(cb: (p: InstallProgress) => void): () => void;
   onGameExited(cb: (e: GameExited) => void): () => void;
@@ -215,6 +218,8 @@ const tauriApi: Api = {
   setRaHardcore: (enabled) => invoke("set_ra_hardcore", { enabled }),
   restoreBackup: () => invoke("restore_backup"),
   setBackup: (enabled, dir) => invoke("set_backup", { enabled, dir: dir ?? null }),
+  setBackupSync: (enabled) => invoke("set_backup_sync", { enabled }),
+  cloudFolders: () => invoke("cloud_folders"),
   updateEmulator: (id) => invoke("update_emulator", { id }),
   onInstallProgress: (cb) => subscribe("install-progress", cb),
   onGameExited: (cb) => subscribe("game-exited", cb),
