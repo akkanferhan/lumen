@@ -296,7 +296,7 @@ pub fn capture_screen() -> Option<(u32, u32, Vec<u8>)> {
             return None;
         }
         // BGRA → RGBA, opaque.
-        for px in pixels.chunks_exact_mut(4) {
+        for px in pixels.as_chunks_mut::<4>().0 {
             px.swap(0, 2);
             px[3] = 255;
         }
