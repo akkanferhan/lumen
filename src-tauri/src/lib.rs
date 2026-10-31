@@ -118,6 +118,7 @@ pub fn run() {
             commands::state_slots,
             commands::game_controls,
             commands::switch_disc,
+            commands::set_game_power,
             commands::game_achievements,
             commands::save_state,
             commands::load_state,

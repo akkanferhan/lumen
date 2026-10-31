@@ -332,6 +332,20 @@ export const actions = {
     await api.stopGame();
   },
 
+  /** A power mode for one game (null: follow its system). */
+  async setGamePower(gameId: string, power: Game["power"]) {
+    const apply = (value: Game["power"]) =>
+      set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, power: value } : g)) }));
+    const before = state.games.find((g) => g.id === gameId)?.power ?? null;
+    apply(power);
+    try {
+      await api.setGamePower(gameId, power ?? null);
+    } catch (e) {
+      apply(before);
+      notify(errorText(e), "error");
+    }
+  },
+
   async toggleFavorite(gameId: string) {
     // Optimistic: flip locally, reconcile with the answer.
     const flip = (value?: boolean) =>

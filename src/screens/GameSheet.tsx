@@ -9,7 +9,11 @@ import { Layer, rumble, useInput } from "../lib/input";
 import { sfx } from "../lib/sfx";
 import { api } from "../lib/api";
 import { actions, useStore } from "../lib/store";
-import type { AchievementProgress, Game, GameInfo, UninstallPlan } from "../lib/types";
+import type { AchievementProgress, Game, GameInfo, PowerMode, UninstallPlan } from "../lib/types";
+
+/** A game's power choices, in the order A steps through them (null: its system's). */
+const GAME_POWER: (PowerMode | null)[] = [null, "silent", "performance", "turbo"];
+const GAME_POWER_LABEL: Record<PowerMode, string> = { silent: "Sessiz", performance: "Performans", turbo: "Turbo" };
 import { formatBytes } from "../lib/format";
 
 export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => void }) {
@@ -52,11 +56,19 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     : undefined;
   const canPlay = missing.length === 0 && !busy;
 
-  const buttons = game?.notInstalled
-    ? (["play", "fav", "lists"] as const)
-    : resumable
-      ? (["play", "fresh", "fav", "lists", "remove"] as const)
-      : (["play", "fav", "lists", "remove"] as const);
+  // Per-game power mode: only where Lumen sets ASUS power modes at all.
+  const powerChoice = !!overview?.powerAvailable && overview.settings.power !== "off" && !pc;
+  type Button = "play" | "fresh" | "fav" | "lists" | "power" | "remove";
+  const buttons: Button[] = game?.notInstalled
+    ? ["play", "fav", "lists"]
+    : [
+        "play",
+        ...(resumable ? (["fresh"] as const) : []),
+        "fav",
+        "lists",
+        ...(powerChoice ? (["power"] as const) : []),
+        "remove",
+      ];
   const [picking, setPicking] = useState(false);
 
   // Removing needs a second press; the first shows what will happen.
@@ -82,6 +94,13 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
     setRemoving(false);
     setConfirmRemove(false);
     if (gone) onClose();
+  };
+
+  const cyclePower = () => {
+    if (!game) return;
+    sfx.confirm();
+    const next = GAME_POWER[(GAME_POWER.indexOf(game.power ?? null) + 1) % GAME_POWER.length];
+    actions.setGamePower(game.id, next);
   };
 
   const play = async (g: Game, fresh = false) => {
@@ -111,6 +130,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
         if (buttons[focus] === "play") play(game);
         else if (buttons[focus] === "fresh") play(game, true);
         else if (buttons[focus] === "remove") remove();
+        else if (buttons[focus] === "power") cyclePower();
         else if (buttons[focus] === "lists") {
           sfx.confirm();
           setPicking(true);
@@ -144,7 +164,7 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
       : resumable
         ? "Devam et"
         : "Oyna";
-  const focusOf = (id: (typeof buttons)[number]) => (buttons as readonly string[]).indexOf(id) === focus;
+  const focusOf = (id: Button) => buttons.indexOf(id) === focus;
   const inLists = (overview?.collections ?? []).filter((c) => c.games.includes(game.id)).length;
 
   return (
@@ -258,6 +278,15 @@ export function GameSheet({ gameId, onClose }: { gameId: string; onClose: () => 
             <button className={`btn${focusOf("lists") ? " focused" : ""}`} onClick={() => setPicking(true)}>
               {inLists ? `☰ ${inLists} listede` : "☰ Koleksiyona ekle"}
             </button>
+            {powerChoice && !game.notInstalled && (
+              <button
+                className={`btn${focusOf("power") ? " focused" : ""}`}
+                onClick={cyclePower}
+                title="Bu oyun açılınca kullanılacak ASUS güç modu"
+              >
+                ⚡ {game.power ? GAME_POWER_LABEL[game.power] : "Güç: sisteme göre"}
+              </button>
+            )}
             {!game.notInstalled && (
             <button
               className={`btn danger${focusOf("remove") ? " focused" : ""}${confirmRemove ? " armed" : ""}`}

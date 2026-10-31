@@ -63,6 +63,8 @@ pub struct UserData {
     pub play_seconds: u64,
     /// Emulator resume state written at the end of the last session.
     pub resume_state: Option<PathBuf>,
+    /// ASUS power mode for this game; None follows its system.
+    pub power: Option<crate::power::PowerMode>,
 }
 
 pub struct Dirs {
